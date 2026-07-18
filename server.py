@@ -11,6 +11,7 @@ import json
 import re
 import tempfile
 import threading
+import time
 from datetime import datetime
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlparse
@@ -27,6 +28,54 @@ PASSWORD_PATTERN = re.compile(r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]
 # two overlapping DeepFace calls could race on that same cache file. Serialize
 # just the DeepFace calls (not the rest of each request) with this lock.
 DEEPFACE_LOCK = threading.Lock()
+
+# Brute-force protection for /api/login: after MAX_LOGIN_ATTEMPTS failures
+# for the same (client IP, username) within LOGIN_WINDOW_SECONDS, that pair
+# is locked out for LOGIN_LOCKOUT_SECONDS. Keyed on the pair (not IP alone)
+# so one attacker can't lock out every other account sharing their network,
+# and not on username alone so it can't be used to lock a real user out from
+# their own IP by failing from elsewhere.
+LOGIN_ATTEMPTS_LOCK = threading.Lock()
+login_attempts = {}
+MAX_LOGIN_ATTEMPTS = 5
+LOGIN_WINDOW_SECONDS = 5 * 60
+LOGIN_LOCKOUT_SECONDS = 5 * 60
+
+
+def check_login_rate_limit(key):
+    """Returns seconds remaining if `key` is currently locked out, else None."""
+    with LOGIN_ATTEMPTS_LOCK:
+        entry = login_attempts.get(key)
+        if not entry:
+            return None
+        now = time.time()
+        locked_until = entry.get("locked_until")
+        if locked_until:
+            if now < locked_until:
+                return round(locked_until - now)
+            del login_attempts[key]
+            return None
+        if now - entry["window_start"] > LOGIN_WINDOW_SECONDS:
+            del login_attempts[key]
+        return None
+
+
+def register_failed_login(key):
+    with LOGIN_ATTEMPTS_LOCK:
+        now = time.time()
+        entry = login_attempts.get(key)
+        if not entry or now - entry["window_start"] > LOGIN_WINDOW_SECONDS:
+            entry = {"count": 0, "window_start": now, "locked_until": None}
+        entry["count"] += 1
+        if entry["count"] >= MAX_LOGIN_ATTEMPTS:
+            entry["locked_until"] = now + LOGIN_LOCKOUT_SECONDS
+        login_attempts[key] = entry
+
+
+def reset_login_attempts(key):
+    with LOGIN_ATTEMPTS_LOCK:
+        login_attempts.pop(key, None)
+
 
 MOOD_TRANSLATION = {
     "happy": "Vui vẻ 😊",
@@ -188,13 +237,27 @@ class EmployeeFaceAIRequestHandler(BaseHTTPRequestHandler):
 
             username = data.get("username")
             password = data.get("password")
+            rate_limit_key = (self.client_address[0], (username or "").strip().lower())
+
+            retry_after = check_login_rate_limit(rate_limit_key)
+            if retry_after is not None:
+                self.send_json_response(
+                    429,
+                    {
+                        "success": False,
+                        "error": f"Quá nhiều lần đăng nhập sai. Vui lòng thử lại sau {retry_after} giây.",
+                    },
+                )
+                return
 
             employee_id = db.verify_login_credentials(username, password)
             if employee_id:
+                reset_login_attempts(rate_limit_key)
                 tokens = db.create_session(employee_id)
                 user = db.get_employee_basic(employee_id)
                 self.send_json_response(200, {"success": True, "tokens": tokens, "user": user})
             else:
+                register_failed_login(rate_limit_key)
                 self.send_json_response(401, {"success": False, "error": "Username hoặc mật khẩu không đúng."})
         except Exception as e:
             self.send_json_response(400, {"success": False, "error": f"Lỗi yêu cầu: {str(e)}"})

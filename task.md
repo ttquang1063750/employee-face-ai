@@ -16,7 +16,7 @@ Quy trình: làm từng mục một, hỏi xác nhận trước khi chuyển san
 ## Bảo mật
 
 - [x] Hash mật khẩu (hiện đang lưu plaintext) — cả bảng `employees` và luồng login/create/update liên quan
-- [ ] Rate-limit cho `POST /api/login` để chống brute-force
+- [x] Rate-limit cho `POST /api/login` để chống brute-force
 - [ ] Giới hạn kích thước ảnh upload/base64 trước khi ghi file & đưa vào DeepFace (chặn ảnh quá khổ)
 
 ## Hiệu năng / Vận hành
