@@ -203,8 +203,8 @@
                   }
                   <div class="photo-controls">
                     <button class="hud-btn-outline" (click)="startWebcam()">📸 CAMERA CHỤP TRỰC TIẾP</button>
-                    <input type="file" id="file-uploader" (change)="handleFileUpload($event)" style="display:none;" accept="image/*">
-                    <button class="hud-btn-outline" onclick="document.getElementById('file-uploader').click()">📁 TẢI LÊN FILE ẢNH</button>
+                    <input #fileInputElement type="file" (change)="handleFileUpload($event)" style="display:none;" accept="image/*">
+                    <button class="hud-btn-outline" (click)="triggerFileInput()">📁 TẢI LÊN FILE ẢNH</button>
                   </div>
                 }
               </div>

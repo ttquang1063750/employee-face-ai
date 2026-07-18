@@ -19,16 +19,8 @@ import {
   generateRandomPassword,
 } from '../../../core/services/credentials.util';
 import { ApiResponse } from '../../../core/models/api-response.model';
+import { EmployeeBase } from '../../../core/models/employee.model';
 import { WebcamCaptureService, readFileAsBase64 } from '../../../core/services/webcam-capture.service';
-
-export interface EmployeeBase {
-  id: number;
-  name: string;
-  age: number;
-  image_path: string;
-  role: string;
-  current_position: string;
-}
 
 @Component({
   selector: 'app-employee-list',
@@ -47,6 +39,7 @@ export class EmployeeListComponent implements OnInit {
 
   videoElement = viewChild<ElementRef<HTMLVideoElement>>('videoElement');
   canvasElement = viewChild<ElementRef<HTMLCanvasElement>>('canvasElement');
+  fileInputElement = viewChild<ElementRef<HTMLInputElement>>('fileInputElement');
 
   employees = signal<EmployeeBase[]>([]);
   searchQuery = signal<string>('');
@@ -237,8 +230,7 @@ export class EmployeeListComponent implements OnInit {
   }
 
   triggerFileInput(): void {
-    const fileInput = document.getElementById('employee-file-input') as HTMLInputElement;
-    if (fileInput) fileInput.click();
+    this.fileInputElement()?.nativeElement.click();
   }
 
   async handleFileUpload(event: Event): Promise<void> {
