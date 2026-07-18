@@ -20,13 +20,13 @@
     </div>
 
     @if (isLoading()) {
-      <div class="loading-state">
-        <div class="radial-spinner"></div>
+      <div class="hud-loading-state">
+        <div class="hud-spinner"></div>
         <p>Đang truy xuất hồ sơ nhân sự...</p>
       </div>
     } @else if (errorMsg()) {
       <div class="error-state">
-        <p>⚠️ Lỗi: {{ errorMsg() }}</p>
+        <p class="err-text">⚠️ Lỗi: {{ errorMsg() }}</p>
         <button class="retry-btn" (click)="loadEmployees()">Tải lại</button>
       </div>
     } @else {

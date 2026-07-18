@@ -41,7 +41,7 @@ Quy trình: làm từng mục một, hỏi xác nhận trước khi chuyển san
 
 ## Từ audit các trang admin (mức trung bình)
 
-- [ ] Thống nhất `.hud-pagination`/error-state dùng `_hud-form.scss` ở cả 3 trang (đang tự định nghĩa lại cục bộ, dễ lệch style)
+- [x] Thống nhất `.hud-pagination`/error-state dùng `_hud-form.scss` ở cả 3 trang (đang tự định nghĩa lại cục bộ, dễ lệch style) — xoá luôn bản trùng lặp `.loading-state`/`.radial-spinner`/`.hud-pagination`/`.error-state` ở dashboard, employee-list, employee-detail, leave-requests; thêm `.err-text`/nút "Thử lại" cho employee-detail (trước đây không có)
 - [ ] `employee-detail.ts`: các ngày mặc định (thêm chức vụ/lương/dự án, bộ lọc chấm công) chỉ tính 1 lần lúc tải trang — cần tính lại mỗi lần mở modal/áp dụng filter
 - [ ] `employee-detail.ts`: tách bớt full-page spinner khi reload sau khi lưu (hiện y hệt lần tải đầu, giật cục không cần thiết)
 - [x] `leave-requests.ts`: import `LeaveRequest` từ model (đã làm ở trên); xử lý lỗi polling nền giờ theo đúng 1 chính sách chung trong `RealtimeService` (im lặng bỏ qua có chủ đích, thay vì thiếu xử lý hoàn toàn như code cũ)

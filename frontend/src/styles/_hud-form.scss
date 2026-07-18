@@ -3,7 +3,8 @@
 //  Shared HUD Form Components — Employee Face AI Design System
 //  Provides: .hud-filter-bar, .hud-field, .hud-input, .hud-label,
 //            .hud-pagination, .hud-search-input, .hud-skeleton,
-//            .err-text, .retry-btn, .hud-loading-state, .hud-spinner
+//            .err-text, .retry-btn, .hud-loading-state, .hud-spinner,
+//            .error-state
 // ============================================================
 
 // ─── Filter Bar Container ───────────────────────────────────
@@ -622,5 +623,23 @@
 
 @keyframes hud-spin {
   to { transform: rotate(360deg); }
+}
+
+// ─── Error State Container ───────────────────────────────────
+// Usage:
+//   <div class="error-state">
+//     <p class="err-text">⚠️ {{ errorMsg() }}</p>
+//     <button class="retry-btn" (click)="reload()">Thử lại</button>
+//   </div>
+.error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  gap: var(--space-4);
+  color: var(--color-text-secondary);
+  font-family: 'Inter', sans-serif;
+  width: 100%;
 }
 

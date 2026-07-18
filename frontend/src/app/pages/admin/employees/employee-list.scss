@@ -213,30 +213,6 @@
   padding: var(--space-8);
 }
 
-.loading-state, .error-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 250px;
-  color: var(--color-text-muted);
-  font-family: 'Inter', sans-serif;
-  width: 100%;
-}
-
-.radial-spinner {
-  width: 28px;
-  height: 28px;
-  border: 3px solid rgba(var(--color-cyan-rgb), 0.1);
-  border-radius: 50%;
-  border-top-color: var(--color-cyan);
-  animation: spin 0.8s linear infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
 /* ================= MODERN MODAL CSS ================= */
 .modal-backdrop {
   position: fixed;
@@ -425,46 +401,3 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
-.hud-pagination {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: var(--space-6);
-  margin-top: var(--space-8);
-  font-family: 'Orbitron', sans-serif;
-  width: 100%;
-
-  .pag-info {
-    font-size: 0.75rem;
-    color: var(--color-text-muted);
-    letter-spacing: 1px;
-    font-weight: 600;
-  }
-
-  .pag-btn {
-    background: transparent;
-    border: 1px solid rgba(var(--color-cyan-rgb), 0.3);
-    color: var(--color-cyan);
-    padding: 0.4rem var(--space-5);
-    font-size: 0.7rem;
-    font-weight: 700;
-    cursor: pointer;
-    border-radius: var(--radius-sm);
-    transition: all 0.2s ease;
-    box-shadow: 0 0 6px rgba(var(--color-cyan-rgb), 0.1);
-
-    &:hover:not([disabled]) {
-      background: rgba(var(--color-cyan-rgb), 0.1);
-      box-shadow: 0 0 12px rgba(var(--color-cyan-rgb), 0.3);
-      border-color: var(--color-cyan);
-    }
-
-    &[disabled] {
-      opacity: 0.4;
-      cursor: not-allowed;
-      border-color: rgba(var(--color-text-secondary-rgb), 0.2);
-      color: var(--color-text-muted);
-      box-shadow: none;
-    }
-  }
-}

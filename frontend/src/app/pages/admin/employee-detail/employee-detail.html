@@ -5,13 +5,14 @@
     </div>
 
     @if (isLoading()) {
-      <div class="loading-state">
-        <div class="radial-spinner"></div>
+      <div class="hud-loading-state">
+        <div class="hud-spinner"></div>
         <p>Đang truy xuất hồ sơ Mainframe...</p>
       </div>
     } @else if (errorMsg()) {
       <div class="error-state">
-        <p>⚠️ {{ errorMsg() }}</p>
+        <p class="err-text">⚠️ {{ errorMsg() }}</p>
+        <button class="retry-btn" (click)="loadEmployeeDetails()">Thử lại</button>
       </div>
     } @else {
       <!-- 1. Employee Profile Header -->
