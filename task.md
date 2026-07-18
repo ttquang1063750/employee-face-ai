@@ -21,7 +21,7 @@ Quy trình: làm từng mục một, hỏi xác nhận trước khi chuyển san
 
 ## Hiệu năng / Vận hành
 
-- [ ] Thống nhất `detector_backend` giữa luồng đăng ký (duplicate-check) và luồng chấm công — hiện dùng 2 backend khác nhau (`opencv` vs `retinaface`) nên duy trì 2 cache `.pkl` riêng, tốn gấp đôi công tính embedding
+- [x] Thống nhất `detector_backend` giữa luồng đăng ký (duplicate-check) và luồng chấm công — hiện dùng 2 backend khác nhau (`opencv` vs `retinaface`) nên duy trì 2 cache `.pkl` riêng, tốn gấp đôi công tính embedding
 - [ ] Log rotation / giới hạn dung lượng cho `backend.log`, `frontend.log`, `logs/` (ảnh audit chấm công)
 
 ## Chất lượng code

@@ -77,6 +77,16 @@ def reset_login_attempts(key):
         login_attempts.pop(key, None)
 
 
+# DeepFace keys its embeddings cache (database/*.pkl) by detector_backend, so
+# using a different backend for registration's face checks than for check-in
+# silently doubles cache/compute cost — every photo gets embedded once per
+# backend ever used against it. Registration's has_detectable_face/
+# find_duplicate_face default to this, matching handle_attendance's default,
+# so the common case shares one cache; an operator can still pick a
+# different detector at check-in time (kiosk.ts's detector selector) without
+# affecting this shared default.
+DEFAULT_DETECTOR_BACKEND = "retinaface"
+
 MOOD_TRANSLATION = {
     "happy": "Vui vẻ 😊",
     "sad": "Buồn bã 😢",
@@ -380,7 +390,9 @@ class EmployeeFaceAIRequestHandler(BaseHTTPRequestHandler):
                 return False
 
             with DEEPFACE_LOCK:
-                faces = DeepFace.extract_faces(img_path=temp_img_path, enforce_detection=True)
+                faces = DeepFace.extract_faces(
+                    img_path=temp_img_path, detector_backend=DEFAULT_DETECTOR_BACKEND, enforce_detection=True
+                )
             return len(faces) > 0
         except Exception as e:
             print(f"Face detection failed: {e}", flush=True)
@@ -407,7 +419,13 @@ class EmployeeFaceAIRequestHandler(BaseHTTPRequestHandler):
                 return None
 
             with DEEPFACE_LOCK:
-                dfs = DeepFace.find(img_path=temp_img_path, db_path="database", enforce_detection=False, silent=True)
+                dfs = DeepFace.find(
+                    img_path=temp_img_path,
+                    db_path="database",
+                    detector_backend=DEFAULT_DETECTOR_BACKEND,
+                    enforce_detection=False,
+                    silent=True,
+                )
 
             if not dfs or len(dfs) == 0 or len(dfs[0]) == 0:
                 return None
@@ -796,7 +814,7 @@ class EmployeeFaceAIRequestHandler(BaseHTTPRequestHandler):
 
             img_base64 = data.get("img")
             action = data.get("action")  # CHECK_IN or CHECK_OUT
-            detector_backend = data.get("detector_backend", "retinaface")
+            detector_backend = data.get("detector_backend", DEFAULT_DETECTOR_BACKEND)
 
             if not img_base64 or not action:
                 self.send_json_response(
