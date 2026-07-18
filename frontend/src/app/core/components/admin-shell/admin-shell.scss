@@ -75,7 +75,7 @@
     }
 
     &.active {
-      color: #ffffff;
+      color: var(--color-heading);
       background: var(--color-cyan);
       box-shadow: 0 3px 10px rgba(var(--color-cyan-rgb), 0.35);
     }
@@ -112,7 +112,7 @@
 
 .pending-badge {
   background: var(--color-red);
-  color: #ffffff;
+  color: var(--color-heading);
   font-size: 0.65rem;
   font-weight: 700;
   padding: 0.15rem 0.45rem;

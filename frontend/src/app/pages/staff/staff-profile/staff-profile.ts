@@ -21,6 +21,7 @@ import { DatePickerComponent } from '../../../core/components/date-picker/date-p
 import { ApiResponse } from '../../../core/models/api-response.model';
 import { DetailedEmployee, AttendanceLog } from '../../../core/models/employee.model';
 import { LeaveRequest } from '../../../core/models/leave-request.model';
+import { WebcamCaptureService, readFileAsBase64 } from '../../../core/services/webcam-capture.service';
 
 @Component({
   selector: 'app-staff-profile',
@@ -29,12 +30,14 @@ import { LeaveRequest } from '../../../core/models/leave-request.model';
   templateUrl: './staff-profile.html',
   styleUrls: ['./staff-profile.scss', '../../admin/employee-detail/employee-detail.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  providers: [WebcamCaptureService],
 })
 export class StaffProfileComponent implements OnInit, OnDestroy {
   private http = inject(HttpClient);
   private authService = inject(AuthService);
   private router = inject(Router);
   private dialogService = inject(DialogService);
+  private webcam = inject(WebcamCaptureService);
 
   videoElement = viewChild<ElementRef<HTMLVideoElement>>('videoElement');
   canvasElement = viewChild<ElementRef<HTMLCanvasElement>>('canvasElement');
@@ -60,7 +63,6 @@ export class StaffProfileComponent implements OnInit, OnDestroy {
   imgBase64 = signal<string>('');
   showWebcam = signal<boolean>(false);
   isSavingAvatar = signal<boolean>(false);
-  private webcamStream: MediaStream | null = null;
 
   // --- Leave requests ---
   showLeaveModal = signal<boolean>(false);
@@ -348,12 +350,10 @@ export class StaffProfileComponent implements OnInit, OnDestroy {
   async startWebcam(): Promise<void> {
     this.showWebcam.set(true);
     try {
-      this.webcamStream = await navigator.mediaDevices.getUserMedia({
-        video: { width: 400, height: 300, facingMode: 'user' },
-      });
+      const stream = await this.webcam.start();
       setTimeout(() => {
         if (this.videoElement()) {
-          this.videoElement()!.nativeElement.srcObject = this.webcamStream;
+          this.videoElement()!.nativeElement.srcObject = stream;
         }
       }, 100);
     } catch (err) {
@@ -364,33 +364,16 @@ export class StaffProfileComponent implements OnInit, OnDestroy {
   }
 
   stopWebcam(): void {
-    if (this.webcamStream) {
-      this.webcamStream.getTracks().forEach((track) => track.stop());
-      this.webcamStream = null;
-    }
+    this.webcam.stop();
     this.showWebcam.set(false);
   }
 
   capturePhoto(): void {
-    if (!this.webcamStream) return;
     const video = this.videoElement()!.nativeElement;
     const canvas = this.canvasElement()!.nativeElement;
-    const ctx = canvas.getContext('2d');
-
-    if (ctx) {
-      canvas.width = 400;
-      canvas.height = 300;
-
-      // Mirror the webcam frame during snapshot
-      ctx.translate(canvas.width, 0);
-      ctx.scale(-1, 1);
-
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-      // Reset transform
-      ctx.setTransform(1, 0, 0, 1, 0, 0);
-
-      this.imgBase64.set(canvas.toDataURL('image/jpeg', 0.95));
+    const dataUrl = this.webcam.capture(video, canvas, { width: 400, height: 300, quality: 0.95 });
+    if (dataUrl) {
+      this.imgBase64.set(dataUrl);
       this.stopWebcam();
     }
   }
@@ -400,14 +383,10 @@ export class StaffProfileComponent implements OnInit, OnDestroy {
     if (fileInput) fileInput.click();
   }
 
-  handleFileUpload(event: Event): void {
+  async handleFileUpload(event: Event): Promise<void> {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files[0]) {
-      const reader = new FileReader();
-      reader.onload = (e: ProgressEvent<FileReader>) => {
-        this.imgBase64.set(e.target?.result as string);
-      };
-      reader.readAsDataURL(input.files[0]);
+      this.imgBase64.set(await readFileAsBase64(input.files[0]));
     }
   }
 

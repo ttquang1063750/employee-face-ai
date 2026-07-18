@@ -71,9 +71,9 @@
             <div class="widget-chip">✓</div>
             <span class="widget-status">info</span>
           </div>
-          <div class="widget-label">CHẤM CÔNG HÔM NAY</div>
-          <div class="widget-value">{{ totalLogsToday() }}</div>
-          <div class="widget-footer">Lượt quét hôm nay</div>
+          <div class="widget-label">LƯỢT CHẤM CÔNG</div>
+          <div class="widget-value">{{ totalLogsInRange() }}</div>
+          <div class="widget-footer">Lượt quét trong khoảng đã chọn</div>
         </div>
         <div class="widget-card" [class.kind-success]="happinessLevel() === 'success'"
              [class.kind-warning]="happinessLevel() === 'warning'"
@@ -83,7 +83,7 @@
             <span class="widget-status">{{ happinessStatusLabel() }}</span>
           </div>
           <div class="widget-label">CHỈ SỐ HẠNH PHÚC</div>
-          <div class="widget-value">{{ moodStats().happy }}%</div>
+          <div class="widget-value">{{ hasMoodData() ? moodStats().happy + '%' : '--' }}</div>
           <div class="widget-footer">Cảm xúc tích cực · mục tiêu ≥ 60%</div>
         </div>
       </div>

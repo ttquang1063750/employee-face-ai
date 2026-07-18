@@ -52,7 +52,7 @@
   background: rgba(var(--color-bg-card-rgb), 1);
   border-radius: 14px;
   padding: var(--space-6);
-  box-shadow: 0 10px 24px -16px rgba(0, 0, 0, 0.5);
+  box-shadow: var(--shadow-card);
   position: relative;
 }
 
@@ -136,7 +136,7 @@
   background: rgba(var(--color-bg-card-rgb), 1);
   border-radius: 14px;
   padding: var(--space-6);
-  box-shadow: 0 10px 24px -16px rgba(0, 0, 0, 0.5);
+  box-shadow: var(--shadow-card);
 }
 
 .chart-title {
@@ -270,7 +270,7 @@
   background: rgba(var(--color-bg-card-rgb), 1);
   border-radius: 14px;
   padding: var(--space-6);
-  box-shadow: 0 10px 24px -16px rgba(0, 0, 0, 0.5);
+  box-shadow: var(--shadow-card);
 }
 
 .logs-header {

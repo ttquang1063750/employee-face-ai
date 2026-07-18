@@ -50,7 +50,7 @@
     width: 6px;
   }
   &::-webkit-scrollbar-track {
-    background: rgba(8, 18, 12, 0.4);
+    background: rgba(var(--color-bg-deep-rgb), 0.4);
     border-radius: var(--radius-sm);
   }
   &::-webkit-scrollbar-thumb {

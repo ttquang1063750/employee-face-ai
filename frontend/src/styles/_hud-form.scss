@@ -32,6 +32,7 @@
 
   @media (max-width: 768px) {
     flex-direction: column;
+    align-items: stretch;
     gap: var(--space-3);
   }
 }
@@ -113,7 +114,7 @@
   padding: var(--input-padding-y) var(--input-padding-x);
   outline: none;
   transition: var(--transition-base);
-  box-shadow: inset 0 1px 3px rgba(0,0,0,0.3);
+  box-shadow: var(--shadow-inset);
   appearance: none;
   -webkit-appearance: none;
 
@@ -292,7 +293,7 @@
     list-style: none;
     margin: 0;
     padding: var(--space-1) 0;
-    box-shadow: var(--glow-cyan), 0 8px 32px rgba(0,0,0,0.5);
+    box-shadow: var(--glow-cyan), var(--shadow-autocomplete);
     backdrop-filter: blur(12px);
     overflow: hidden;
     animation: acDropIn 0.15s ease;
@@ -366,7 +367,7 @@
 .camera-viewport-frame {
   border: 1px solid rgba(var(--color-border-rgb), 0.7);
   border-radius: var(--radius-md);
-  background-color: #000000;
+  background-color: var(--color-black);
   aspect-ratio: 4/3;
   overflow: hidden;
   position: relative;
@@ -395,7 +396,7 @@
   border-radius: var(--radius-sm);
   cursor: pointer;
   box-shadow: 0 0 10px rgba(var(--color-cyan-rgb), 0.2);
-  &:hover { background: var(--color-cyan); color: #000000; }
+  &:hover { background: var(--color-cyan); color: var(--color-black); }
 }
 
 .captured-preview-img {
@@ -441,7 +442,7 @@
     white-space: nowrap;
     padding: 0.3rem 0.65rem;
     border-radius: var(--radius-sm);
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
+    box-shadow: var(--shadow-tooltip);
     opacity: 0;
     transform: translateY(-4px);
     pointer-events: none;

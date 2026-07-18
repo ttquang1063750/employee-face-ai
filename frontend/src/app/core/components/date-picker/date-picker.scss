@@ -40,7 +40,7 @@
   background: rgba(var(--color-bg-card-rgb), 1);
   border: 1px solid rgba(var(--color-cyan-rgb), 0.35);
   border-radius: var(--radius-md);
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+  box-shadow: var(--shadow-dropdown);
   padding: var(--space-4);
   animation: datePanelIn 0.15s ease;
 }
@@ -134,7 +134,7 @@
   &.selected {
     background: var(--color-cyan);
     border-color: var(--color-cyan);
-    color: #ffffff;
+    color: var(--color-heading);
     font-weight: 700;
   }
 }

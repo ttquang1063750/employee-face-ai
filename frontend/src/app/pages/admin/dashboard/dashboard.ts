@@ -66,10 +66,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   // Computed stats widgets (using overall logs)
   totalEmployees = computed(() => this.employees().length);
-  totalLogsToday = computed(() => {
-    const todayStr = new Date().toISOString().split('T')[0];
-    return this.logs().filter((log) => log.timestamp.startsWith(todayStr)).length;
-  });
 
   // Computed: Filtered attendance logs in selected time range / employee search scope
   filteredLogs = computed(() => {
@@ -86,6 +82,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
       return dateInRange && nameMatches;
     });
   });
+
+  totalLogsInRange = computed(() => this.filteredLogs().length);
 
   // Computed: Unique employee name suggestions filtered by current input
   employeeSuggestions = computed(() => {
@@ -142,9 +140,19 @@ export class DashboardComponent implements OnInit, OnDestroy {
     };
   });
 
+  // Donut chart segments for the mood breakdown (cumulative offsets around
+  // a circle whose circumference is normalized to 100 units).
+  hasMoodData = computed(() => {
+    const m = this.moodStats();
+    return m.happy + m.neutral + m.sad + m.stressed > 0;
+  });
+
   // Happiness widget tone: reflects the actual value against a target,
   // rather than a fixed color regardless of how good or bad the number is.
-  happinessLevel = computed<'success' | 'warning' | 'danger'>(() => {
+  // Falls back to a neutral "no data" state instead of implying a bad score
+  // when there simply aren't any attendance logs in the selected range.
+  happinessLevel = computed<'success' | 'warning' | 'danger' | 'none'>(() => {
+    if (!this.hasMoodData()) return 'none';
     const happy = this.moodStats().happy;
     if (happy >= 60) return 'success';
     if (happy >= 20) return 'warning';
@@ -157,16 +165,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
         return 'Đạt mục tiêu';
       case 'warning':
         return 'Thấp';
-      default:
+      case 'danger':
         return 'Rất thấp';
+      default:
+        return 'Chưa có dữ liệu';
     }
-  });
-
-  // Donut chart segments for the mood breakdown (cumulative offsets around
-  // a circle whose circumference is normalized to 100 units).
-  hasMoodData = computed(() => {
-    const m = this.moodStats();
-    return m.happy + m.neutral + m.sad + m.stressed > 0;
   });
 
   moodDonut = computed(() => {

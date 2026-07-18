@@ -4,6 +4,7 @@ import { HudDialogComponent } from './core/components/hud-dialog/hud-dialog';
 
 @Component({
   selector: 'app-root',
+  standalone: true,
   imports: [RouterOutlet, HudDialogComponent],
   templateUrl: './app.html',
   styleUrl: './app.scss',

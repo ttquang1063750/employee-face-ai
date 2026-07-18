@@ -27,7 +27,7 @@
 .hud-login-box {
   background: rgba(var(--color-bg-card-rgb), 1);
   border: 1px solid rgba(var(--color-border-rgb), 0.5);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+  box-shadow: var(--shadow-elevated);
   border-radius: 6px;
   max-width: 420px;
   width: 100%;

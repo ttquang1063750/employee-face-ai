@@ -11,6 +11,7 @@ import {
 import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { ApiResponse } from '../../core/models/api-response.model';
+import { WebcamCaptureService } from '../../core/services/webcam-capture.service';
 
 export interface AttendanceResult {
   employee_name: string;
@@ -26,9 +27,11 @@ export interface AttendanceResult {
   templateUrl: './kiosk.html',
   styleUrl: './kiosk.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  providers: [WebcamCaptureService],
 })
 export class KioskComponent implements OnInit, OnDestroy {
   private http = inject(HttpClient);
+  private webcam = inject(WebcamCaptureService);
 
   videoElement = viewChild<ElementRef<HTMLVideoElement>>('videoElement');
   canvasElement = viewChild<ElementRef<HTMLCanvasElement>>('canvasElement');
@@ -41,7 +44,6 @@ export class KioskComponent implements OnInit, OnDestroy {
   isSuccess = signal<boolean>(false);
   resultData = signal<AttendanceResult | null>(null);
 
-  private stream: MediaStream | null = null;
   private readonly apiUrl = 'http://localhost:8000/api';
 
   ngOnInit(): void {
@@ -54,12 +56,9 @@ export class KioskComponent implements OnInit, OnDestroy {
 
   async startCamera(): Promise<void> {
     try {
-      this.stream = await navigator.mediaDevices.getUserMedia({
-        video: { width: 640, height: 480, facingMode: 'user' },
-        audio: false,
-      });
+      const stream = await this.webcam.start({ width: 640, height: 480 });
       if (this.videoElement()) {
-        this.videoElement()!.nativeElement.srcObject = this.stream;
+        this.videoElement()!.nativeElement.srcObject = stream;
       }
     } catch (err) {
       console.error('Error starting webcam:', err);
@@ -72,10 +71,7 @@ export class KioskComponent implements OnInit, OnDestroy {
   }
 
   stopCamera(): void {
-    if (this.stream) {
-      this.stream.getTracks().forEach((track) => track.stop());
-      this.stream = null;
-    }
+    this.webcam.stop();
   }
 
   selectAction(action: 'CHECK_IN' | 'CHECK_OUT'): void {
@@ -83,7 +79,7 @@ export class KioskComponent implements OnInit, OnDestroy {
   }
 
   submitAttendance(): void {
-    if (!this.stream) {
+    if (!this.webcam.isActive) {
       alert('Camera chưa sẵn sàng!');
       return;
     }
@@ -94,19 +90,9 @@ export class KioskComponent implements OnInit, OnDestroy {
 
     const video = this.videoElement()!.nativeElement;
     const canvas = this.canvasElement()!.nativeElement;
+    const base64Data = this.webcam.capture(video, canvas);
 
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    const ctx = canvas.getContext('2d');
-
-    if (ctx) {
-      // Mirror image capture
-      ctx.translate(canvas.width, 0);
-      ctx.scale(-1, 1);
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-      const base64Data = canvas.toDataURL('image/jpeg');
-
+    if (base64Data) {
       this.http
         .post<ApiResponse<AttendanceResult>>(`${this.apiUrl}/attendance`, {
           img: base64Data,

@@ -92,6 +92,18 @@
   --glow-orange:  0 0 14px rgba(var(--color-orange-rgb), 0.4);
   --glow-info:    0 0 14px rgba(var(--color-info-rgb), 0.4);
 
+  // Neutral black-based elevation shadows (independent of the accent palette)
+  --shadow-card:     0 10px 24px -16px rgba(0, 0, 0, 0.5);   // widget/list cards
+  --shadow-elevated: 0 4px 6px -1px rgba(0, 0, 0, 0.2);      // profile/section cards
+  --shadow-dropdown: 0 12px 30px rgba(0, 0, 0, 0.4);         // floating popovers/panels
+  --shadow-tooltip:  0 4px 10px rgba(0, 0, 0, 0.35);         // hover tooltip elevation
+  --shadow-inset:    inset 0 1px 3px rgba(0, 0, 0, 0.3);     // recessed input fields
+  --shadow-autocomplete: 0 8px 32px rgba(0, 0, 0, 0.5);      // autocomplete suggestion list
+
+  // Literal black — camera/video letterbox backgrounds, text-on-bright-accent
+  // hover states. Not theme-derived, so it isn't one of the palette colors above.
+  --color-black: #000000;
+
   // ─── Transitions ───────────────────────────────────────
   --transition-fast: all 0.18s ease;
   --transition-base: all 0.25s ease;
