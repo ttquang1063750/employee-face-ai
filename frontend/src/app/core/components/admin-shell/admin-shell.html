@@ -1,7 +1,7 @@
 <div class="shell">
   <aside class="sidebar">
     <div class="brand">
-      <div class="brand-mark">💻</div>
+      <img class="brand-logo-img" src="logo.svg" alt="Employee Face AI Logo">
       <div class="brand-text">
         <b>HR Control Panel</b>
         <span>Mainframe Security Console</span>
@@ -11,6 +11,12 @@
     <nav class="side-nav">
       <a routerLink="/admin/dashboard" routerLinkActive="active">📊 Bảng thống kê</a>
       <a routerLink="/admin/employees" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: false }">👥 Quản lý Nhân viên</a>
+      <a routerLink="/admin/leave-requests" routerLinkActive="active">
+        <span>🌴 Đơn xin nghỉ</span>
+        @if (pendingCount() > 0) {
+          <span class="pending-badge">{{ pendingCount() }}</span>
+        }
+      </a>
     </nav>
 
     <button class="logout" (click)="logout()">⏻ Đăng xuất</button>

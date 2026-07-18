@@ -4,7 +4,7 @@ import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { DialogService } from '../../../core/services/dialog.service';
 import { UsernameCheckService } from '../../../core/services/username-check.service';
-import { isPasswordValid, PASSWORD_HINT } from '../../../core/services/credentials.util';
+import { isPasswordValid, PASSWORD_HINT, generateRandomPassword } from '../../../core/services/credentials.util';
 
 export interface EmployeeBase {
   id: number;
@@ -44,6 +44,7 @@ export class EmployeeListComponent implements OnInit {
   usernameStatus = signal<'idle' | 'checking' | 'available' | 'taken'>('idle');
   private usernameCheckTimer: any;
   newPassword = signal<string>('');
+  showNewPassword = signal<boolean>(false);
   readonly passwordHint = PASSWORD_HINT;
   newPosition = signal<string>('');
   newIncome = signal<number>(3000);
@@ -181,6 +182,11 @@ export class EmployeeListComponent implements OnInit {
         error: () => this.usernameStatus.set('idle')
       });
     }, 450);
+  }
+
+  generatePassword(): void {
+    this.newPassword.set(generateRandomPassword());
+    this.showNewPassword.set(true);
   }
 
   async startWebcam(): Promise<void> {

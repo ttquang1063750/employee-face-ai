@@ -1,0 +1,167 @@
+.date-picker {
+  position: relative;
+  width: 100%;
+}
+
+.date-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+
+  .placeholder {
+    color: var(--color-text-muted);
+    font-style: italic;
+    font-size: var(--text-sm);
+  }
+
+  .cal-icon {
+    opacity: 0.7;
+    margin-left: var(--space-2);
+    flex: none;
+  }
+
+  &.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.date-panel {
+  // Fixed (viewport) coordinates, positioned via inline [style.top]/[style.left]
+  // computed from the trigger's bounding rect — this is what lets the panel
+  // escape clipping by a scrollable ancestor (e.g. a modal body).
+  position: fixed;
+  z-index: 200;
+  width: 260px;
+  background: rgba(var(--color-bg-card-rgb), 1);
+  border: 1px solid rgba(var(--color-cyan-rgb), 0.35);
+  border-radius: var(--radius-md);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+  padding: var(--space-4);
+  animation: datePanelIn 0.15s ease;
+}
+
+@keyframes datePanelIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.date-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-3);
+
+  .month-label {
+    font-family: 'Orbitron', sans-serif;
+    font-size: var(--text-sm);
+    color: var(--color-heading);
+    letter-spacing: 0.5px;
+  }
+
+  .nav-btn {
+    background: transparent;
+    border: 1px solid rgba(var(--color-border-rgb), 0.5);
+    color: var(--color-cyan);
+    width: 1.8rem;
+    height: 1.8rem;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: 1rem;
+    line-height: 1;
+    transition: var(--transition-fast);
+
+    &:hover {
+      background: rgba(var(--color-cyan-rgb), 0.1);
+      border-color: var(--color-cyan);
+    }
+  }
+}
+
+.weekday-row {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  margin-bottom: var(--space-1);
+
+  .weekday {
+    text-align: center;
+    font-size: 0.65rem;
+    color: var(--color-text-muted);
+    font-weight: 600;
+  }
+}
+
+.weeks {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.week-row {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.day-cell {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--color-text-primary);
+  font-size: 0.78rem;
+  padding: 0.35rem 0;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: var(--transition-fast);
+
+  &:hover {
+    background: rgba(var(--color-cyan-rgb), 0.1);
+  }
+
+  &.outside {
+    color: var(--color-text-muted);
+    opacity: 0.5;
+  }
+
+  &.today {
+    border-color: rgba(var(--color-cyan-rgb), 0.5);
+    color: var(--color-cyan);
+  }
+
+  &.selected {
+    background: var(--color-cyan);
+    border-color: var(--color-cyan);
+    color: #ffffff;
+    font-weight: 700;
+  }
+}
+
+.date-panel-footer {
+  margin-top: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid rgba(var(--color-border-rgb), 0.2);
+  display: flex;
+  justify-content: center;
+  gap: var(--space-4);
+
+  .today-btn {
+    background: transparent;
+    border: none;
+    color: var(--color-cyan);
+    font-size: var(--text-xs);
+    cursor: pointer;
+    font-family: 'Orbitron', sans-serif;
+    letter-spacing: 0.5px;
+
+    &:hover {
+      text-decoration: underline;
+    }
+
+    &.clear-btn {
+      color: var(--color-red);
+    }
+  }
+}

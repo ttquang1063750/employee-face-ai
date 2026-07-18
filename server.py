@@ -68,8 +68,12 @@ class EmployeeFaceAIRequestHandler(BaseHTTPRequestHandler):
             self.handle_get_logs()
         elif self.path == '/api/employees':
             self.handle_get_employees()
+        elif self.path == '/api/leave-requests':
+            self.handle_get_all_leave_requests()
         elif self.path.startswith('/api/employees/check-username'):
             self.handle_check_username()
+        elif self.path.startswith('/api/employees/') and self.path.endswith('/leave-requests'):
+            self.handle_get_leave_requests()
         elif self.path.startswith('/api/employees/'):
             self.handle_get_employee_detail()
         elif self.path.startswith('/database/'):
@@ -93,16 +97,24 @@ class EmployeeFaceAIRequestHandler(BaseHTTPRequestHandler):
             self.handle_promote_position()
         elif self.path.startswith('/api/employees/') and self.path.endswith('/income'):
             self.handle_adjust_income()
+        elif self.path.startswith('/api/employees/') and self.path.endswith('/leave-requests'):
+            self.handle_create_leave_request()
         elif self.path == '/api/attendance':
             self.handle_attendance()
         else:
             self.send_error(404, 'Endpoint Not Found')
 
     def do_PUT(self):
-        if self.path.startswith('/api/employees/') and self.path.endswith('/skills'):
+        if self.path.startswith('/api/leave-requests/'):
+            self.handle_update_leave_request_status()
+        elif self.path.startswith('/api/employees/') and self.path.endswith('/skills'):
             self.handle_update_skills()
         elif self.path.startswith('/api/employees/') and self.path.endswith('/projects'):
             self.handle_update_projects()
+        elif self.path.startswith('/api/employees/') and self.path.endswith('/password'):
+            self.handle_change_password()
+        elif self.path.startswith('/api/employees/') and self.path.endswith('/avatar'):
+            self.handle_change_avatar()
         elif self.path.startswith('/api/employees/'):
             self.handle_update_employee()
         else:
@@ -435,6 +447,71 @@ class EmployeeFaceAIRequestHandler(BaseHTTPRequestHandler):
         except Exception as e:
             self.send_json_response(500, {"success": False, "error": str(e)})
 
+    def handle_change_password(self):
+        # Self-service only: any authenticated user (admin or staff) may change
+        # their own password, but never someone else's.
+        user = self.get_authenticated_user()
+        if not user:
+            self.send_json_response(401, {"success": False, "error": "Unauthorized access"})
+            return
+
+        try:
+            employee_id = int(self.path.split("/")[-2])
+            if user["employee_id"] != employee_id:
+                self.send_json_response(401, {"success": False, "error": "Unauthorized access"})
+                return
+
+            content_length = int(self.headers['Content-Length'])
+            post_data = self.rfile.read(content_length)
+            data = json.loads(post_data.decode('utf-8'))
+
+            current_password = data.get('current_password')
+            new_password = data.get('new_password')
+
+            if not db.verify_password(employee_id, current_password):
+                self.send_json_response(401, {"success": False, "error": "Mật khẩu hiện tại không đúng."})
+                return
+
+            if not new_password or not PASSWORD_PATTERN.match(new_password):
+                self.send_json_response(400, {"success": False, "error": "Mật khẩu mới phải tối thiểu 8 ký tự, bao gồm chữ hoa, chữ thường, số và ký tự đặc biệt."})
+                return
+
+            db.update_employee_password(employee_id, new_password)
+            self.send_json_response(200, {"success": True, "message": "Đổi mật khẩu thành công."})
+        except Exception as e:
+            self.send_json_response(500, {"success": False, "error": str(e)})
+
+    def handle_change_avatar(self):
+        # Self-service only: any authenticated user may replace their own reference photo.
+        user = self.get_authenticated_user()
+        if not user:
+            self.send_json_response(401, {"success": False, "error": "Unauthorized access"})
+            return
+
+        try:
+            employee_id = int(self.path.split("/")[-2])
+            if user["employee_id"] != employee_id:
+                self.send_json_response(401, {"success": False, "error": "Unauthorized access"})
+                return
+
+            content_length = int(self.headers['Content-Length'])
+            post_data = self.rfile.read(content_length)
+            data = json.loads(post_data.decode('utf-8'))
+
+            img_base64 = data.get('img')
+            if not img_base64:
+                self.send_json_response(400, {"success": False, "error": "Vui lòng chụp hoặc tải lên ảnh mới."})
+                return
+
+            final_filepath = f"database/{employee_id}.jpg"
+            if save_base64_image(img_base64, final_filepath):
+                db.update_employee_avatar(employee_id, final_filepath)
+                self.send_json_response(200, {"success": True, "message": "Cập nhật ảnh đại diện thành công."})
+            else:
+                self.send_json_response(500, {"success": False, "error": "Không thể lưu ảnh đại diện."})
+        except Exception as e:
+            self.send_json_response(500, {"success": False, "error": str(e)})
+
     def handle_delete_employee(self):
         user = self.get_authenticated_user()
         if not user or user["role"] != "admin":
@@ -649,6 +726,92 @@ class EmployeeFaceAIRequestHandler(BaseHTTPRequestHandler):
 
             db.add_employee_income(employee_id, amount, effective_date, change_reason)
             self.send_json_response(200, {"success": True, "message": "Ghi nhận điều chỉnh mức lương thành công."})
+        except Exception as e:
+            self.send_json_response(500, {"success": False, "error": str(e)})
+
+    def handle_create_leave_request(self):
+        # Self-service only: an employee submits a leave request for themselves.
+        user = self.get_authenticated_user()
+        if not user:
+            self.send_json_response(401, {"success": False, "error": "Unauthorized access"})
+            return
+        try:
+            employee_id = int(self.path.split("/")[-2])
+            if user["employee_id"] != employee_id:
+                self.send_json_response(401, {"success": False, "error": "Unauthorized access"})
+                return
+
+            content_length = int(self.headers['Content-Length'])
+            post_data = self.rfile.read(content_length)
+            data = json.loads(post_data.decode('utf-8'))
+
+            start_date = data.get('start_date')
+            end_date = data.get('end_date')
+            reason = (data.get('reason') or '').strip()
+
+            if not start_date or not end_date or not reason:
+                self.send_json_response(400, {"success": False, "error": "Vui lòng nhập đầy đủ ngày nghỉ và lý do."})
+                return
+
+            if end_date < start_date:
+                self.send_json_response(400, {"success": False, "error": "Ngày kết thúc phải sau ngày bắt đầu."})
+                return
+
+            db.create_leave_request(employee_id, start_date, end_date, reason)
+            self.send_json_response(200, {"success": True, "message": "Gửi đơn xin nghỉ thành công."})
+        except Exception as e:
+            self.send_json_response(500, {"success": False, "error": str(e)})
+
+    def handle_get_leave_requests(self):
+        # Admins can view any employee's leave requests; staff may only view their own.
+        user = self.get_authenticated_user()
+        if not user:
+            self.send_json_response(401, {"success": False, "error": "Unauthorized access"})
+            return
+        try:
+            employee_id = int(self.path.split("/")[-2])
+            if user["role"] != "admin" and user["employee_id"] != employee_id:
+                self.send_json_response(401, {"success": False, "error": "Unauthorized access"})
+                return
+
+            requests = db.get_leave_requests(employee_id)
+            self.send_json_response(200, {"success": True, "data": requests})
+        except Exception as e:
+            self.send_json_response(500, {"success": False, "error": str(e)})
+
+    def handle_get_all_leave_requests(self):
+        # Admin-only: the full review queue across every employee.
+        user = self.get_authenticated_user()
+        if not user or user["role"] != "admin":
+            self.send_json_response(401, {"success": False, "error": "Unauthorized access"})
+            return
+        try:
+            requests = db.get_all_leave_requests()
+            self.send_json_response(200, {"success": True, "data": requests})
+        except Exception as e:
+            self.send_json_response(500, {"success": False, "error": str(e)})
+
+
+    def handle_update_leave_request_status(self):
+        # Admin-only: approve or reject a submitted leave request.
+        user = self.get_authenticated_user()
+        if not user or user["role"] != "admin":
+            self.send_json_response(401, {"success": False, "error": "Unauthorized access"})
+            return
+        try:
+            request_id = int(self.path.split("/")[-1])
+            content_length = int(self.headers['Content-Length'])
+            post_data = self.rfile.read(content_length)
+            data = json.loads(post_data.decode('utf-8'))
+
+            status = data.get('status')
+            rejection_reason = data.get('rejection_reason')
+            if status not in ('pending', 'approved', 'rejected'):
+                self.send_json_response(400, {"success": False, "error": "Trạng thái không hợp lệ."})
+                return
+
+            db.update_leave_request_status(request_id, status, rejection_reason)
+            self.send_json_response(200, {"success": True, "message": "Cập nhật trạng thái đơn nghỉ thành công."})
         except Exception as e:
             self.send_json_response(500, {"success": False, "error": str(e)})
 

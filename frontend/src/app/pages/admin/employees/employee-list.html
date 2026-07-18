@@ -162,7 +162,11 @@
 
               <div class="form-group">
                 <label>MẬT KHẨU ĐĂNG NHẬP *</label>
-                <input type="password" [ngModel]="newPassword()" (ngModelChange)="newPassword.set($event)" placeholder="Nhập mật khẩu đăng nhập" class="hud-input">
+                <div class="input-with-actions">
+                  <input [type]="showNewPassword() ? 'text' : 'password'" [ngModel]="newPassword()" (ngModelChange)="newPassword.set($event)" placeholder="Nhập mật khẩu đăng nhập" class="hud-input" autocomplete="new-password">
+                  <button type="button" class="hud-btn-mini" data-tooltip="Hiện/ẩn mật khẩu" (click)="showNewPassword.set(!showNewPassword())">{{ showNewPassword() ? '🙈' : '👁' }}</button>
+                  <button type="button" class="hud-btn-mini" data-tooltip="Tạo mật khẩu ngẫu nhiên" (click)="generatePassword()">🎲</button>
+                </div>
                 @if (newPassword() && !passwordValid()) {
                   <p class="field-hint error">✖ {{ passwordHint }}</p>
                 }

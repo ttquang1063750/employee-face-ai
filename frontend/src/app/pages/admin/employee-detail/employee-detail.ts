@@ -5,12 +5,13 @@ import { FormsModule } from '@angular/forms';
 import { DialogService } from '../../../core/services/dialog.service';
 import { CommonModule } from '@angular/common';
 import { UsernameCheckService } from '../../../core/services/username-check.service';
-import { isPasswordValid, PASSWORD_HINT } from '../../../core/services/credentials.util';
+import { isPasswordValid, PASSWORD_HINT, generateRandomPassword } from '../../../core/services/credentials.util';
+import { DatePickerComponent } from '../../../core/components/date-picker/date-picker';
 
 @Component({
   selector: 'app-employee-detail',
   standalone: true,
-  imports: [RouterLink, FormsModule, CommonModule],
+  imports: [RouterLink, FormsModule, CommonModule, DatePickerComponent],
   templateUrl: './employee-detail.html',
   styleUrl: './employee-detail.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -40,6 +41,7 @@ export class EmployeeDetailComponent implements OnInit {
   usernameStatus = signal<'idle' | 'checking' | 'available' | 'taken'>('idle');
   private usernameCheckTimer: any;
   editPassword = signal<string>('');
+  showEditPassword = signal<boolean>(false);
   readonly passwordHint = PASSWORD_HINT;
 
   // 1a. Avatar update fields (webcam capture / file upload)
@@ -335,6 +337,11 @@ export class EmployeeDetailComponent implements OnInit {
         error: () => this.usernameStatus.set('idle')
       });
     }, 450);
+  }
+
+  generatePassword(): void {
+    this.editPassword.set(generateRandomPassword());
+    this.showEditPassword.set(true);
   }
 
   saveBaseProfile(): void {

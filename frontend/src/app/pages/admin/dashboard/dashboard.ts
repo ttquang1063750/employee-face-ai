@@ -1,6 +1,8 @@
-import { Component, OnInit, signal, computed, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, OnDestroy, signal, computed, ChangeDetectionStrategy, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
+import { DatePickerComponent } from '../../../core/components/date-picker/date-picker';
+import { RealtimeService } from '../../../core/services/realtime.service';
 
 export interface EmployeeBase {
   id: number;
@@ -24,12 +26,12 @@ export interface AttendanceLog {
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, DatePickerComponent],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class DashboardComponent implements OnInit {
+export class DashboardComponent implements OnInit, OnDestroy {
   employees = signal<EmployeeBase[]>([]);
   logs = signal<AttendanceLog[]>([]);
   isLoading = signal<boolean>(true);
@@ -215,6 +217,8 @@ export class DashboardComponent implements OnInit {
   hasHourlyData = computed(() => this.hourlyTimeline().points.some(pt => pt.count > 0));
 
   private readonly apiUrl = 'http://localhost:8000/api';
+  private realtimeService = inject(RealtimeService);
+  private pollIntervalId: any = null;
 
   constructor(private http: HttpClient) {}
 
@@ -232,6 +236,39 @@ export class DashboardComponent implements OnInit {
     this.filterEndDateInput.set(endStr);
 
     this.loadDashboardData();
+    this.startPolling();
+  }
+
+  startPolling(): void {
+    if (this.pollIntervalId) return;
+    this.pollIntervalId = setInterval(() => {
+      // Quiet reload: we load dashboard data directly
+      this.http.get<any>(`${this.apiUrl}/employees`).subscribe({
+        next: (res) => {
+          if (res.success) {
+            this.employees.set(res.data);
+          }
+        }
+      });
+      this.http.get<any>(`${this.apiUrl}/logs`).subscribe({
+        next: (res) => {
+          if (res.success) {
+            this.logs.set(res.data);
+          }
+        }
+      });
+    }, 3000);
+  }
+
+  stopPolling(): void {
+    if (this.pollIntervalId) {
+      clearInterval(this.pollIntervalId);
+      this.pollIntervalId = null;
+    }
+  }
+
+  ngOnDestroy(): void {
+    this.stopPolling();
   }
 
   loadDashboardData(): void {

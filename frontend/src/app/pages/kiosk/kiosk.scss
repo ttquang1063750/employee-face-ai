@@ -25,9 +25,11 @@
   align-items: center;
   gap: var(--space-3);
 
-  .logo-icon {
-    font-size: 1.75rem;
-    text-shadow: 0 0 10px var(--color-cyan);
+  .kiosk-logo-img {
+    width: 36px;
+    height: 36px;
+    flex: none;
+    filter: drop-shadow(0 0 8px rgba(var(--color-cyan-rgb), 0.6));
   }
 
   .logo-text {

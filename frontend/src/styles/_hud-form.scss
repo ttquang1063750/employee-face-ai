@@ -493,3 +493,47 @@
   &.success { color: var(--color-green); }
 }
 
+// ─── Input With Inline Action Buttons ─────────────────────────
+// Usage: an .hud-input paired with one or more .hud-btn-mini buttons
+// on the same row, e.g. a password field with show/hide + generate buttons.
+//   <div class="input-with-actions">
+//     <input class="hud-input">
+//     <button class="hud-btn-mini" data-tooltip="...">👁</button>
+//   </div>
+.input-with-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+
+  .hud-input { flex: 1; min-width: 0; }
+}
+
+// ─── Leave Request Status Badge ───────────────────────────────
+// Usage: <span class="leave-status-badge" [class]="req.status">...</span>
+// req.status is one of 'pending' | 'approved' | 'rejected'.
+.leave-status-badge {
+  display: inline-block;
+  padding: 0.2rem var(--space-2);
+  border-radius: var(--radius-sm);
+  font-family: 'Orbitron', sans-serif;
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  background: rgba(var(--color-orange-rgb), 0.1);
+  border: 1px solid rgba(var(--color-orange-rgb), 0.3);
+  color: var(--color-orange);
+
+  &.approved {
+    background: rgba(var(--color-green-rgb), 0.08);
+    border-color: rgba(var(--color-green-rgb), 0.3);
+    color: var(--color-green);
+  }
+
+  &.rejected {
+    background: rgba(var(--color-red-rgb), 0.08);
+    border-color: rgba(var(--color-red-rgb), 0.3);
+    color: var(--color-red);
+  }
+}
+

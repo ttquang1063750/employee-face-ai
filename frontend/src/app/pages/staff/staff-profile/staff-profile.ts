@@ -1,22 +1,56 @@
-import { Component, OnInit, signal, computed, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, OnDestroy, signal, computed, ElementRef, viewChild, ChangeDetectionStrategy, inject } from '@angular/core';
+import { RealtimeService } from '../../../core/services/realtime.service';
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../../core/services/auth.service';
+import { DialogService } from '../../../core/services/dialog.service';
+import { isPasswordValid, PASSWORD_HINT } from '../../../core/services/credentials.util';
+import { DatePickerComponent } from '../../../core/components/date-picker/date-picker';
 
 @Component({
   selector: 'app-staff-profile',
   standalone: true,
-  imports: [FormsModule, CommonModule],
+  imports: [FormsModule, CommonModule, DatePickerComponent],
   templateUrl: './staff-profile.html',
   styleUrls: ['./staff-profile.scss', '../../admin/employee-detail/employee-detail.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class StaffProfileComponent implements OnInit {
+export class StaffProfileComponent implements OnInit, OnDestroy {
+  videoElement = viewChild<ElementRef<HTMLVideoElement>>('videoElement');
+  canvasElement = viewChild<ElementRef<HTMLCanvasElement>>('canvasElement');
+
   employee = signal<any | null>(null);
   isLoading = signal<boolean>(true);
   errorMsg = signal<string | null>(null);
+
+  // --- Change password ---
+  showPasswordModal = signal<boolean>(false);
+  currentPassword = signal<string>('');
+  newStaffPassword = signal<string>('');
+  confirmStaffPassword = signal<string>('');
+  showCurrentPassword = signal<boolean>(false);
+  showNewStaffPassword = signal<boolean>(false);
+  isSavingPassword = signal<boolean>(false);
+  readonly passwordHint = PASSWORD_HINT;
+  passwordValid = computed(() => isPasswordValid(this.newStaffPassword()));
+  passwordsMatch = computed(() => this.newStaffPassword() === this.confirmStaffPassword());
+
+  // --- Change avatar ---
+  showAvatarModal = signal<boolean>(false);
+  imgBase64 = signal<string>('');
+  showWebcam = signal<boolean>(false);
+  isSavingAvatar = signal<boolean>(false);
+  private webcamStream: MediaStream | null = null;
+
+  // --- Leave requests ---
+  showLeaveModal = signal<boolean>(false);
+  leaveStartDate = signal<string>('');
+  leaveEndDate = signal<string>('');
+  leaveReason = signal<string>('');
+  isSavingLeave = signal<boolean>(false);
+  leaveRequests = signal<any[]>([]);
 
   // Attendance Filters (applied values used by the computed logs below;
   // the *Input signals are the draft values bound to the date pickers and
@@ -103,15 +137,57 @@ export class StaffProfileComponent implements OnInit {
   });
 
   private readonly apiUrl = 'http://localhost:8000/api';
+  private realtimeService = inject(RealtimeService);
+  private pollIntervalId: any = null;
 
   constructor(
     private http: HttpClient,
     private authService: AuthService,
-    private router: Router
+    private router: Router,
+    private dialogService: DialogService
   ) {}
 
   ngOnInit(): void {
     this.loadOwnProfile();
+    this.loadLeaveRequests();
+    this.startPolling();
+  }
+
+  startPolling(): void {
+    if (this.pollIntervalId) return;
+    this.pollIntervalId = setInterval(() => {
+      const employeeId = this.authService.currentUser()?.id;
+      if (!employeeId) return;
+
+      // Quiet reload profile details
+      this.http.get<any>(`${this.apiUrl}/employees/${employeeId}`).subscribe({
+        next: (res) => {
+          if (res.success) {
+            this.employee.set(res.data);
+          }
+        }
+      });
+
+      // Quiet reload leave requests
+      this.http.get<any>(`${this.apiUrl}/employees/${employeeId}/leave-requests`).subscribe({
+        next: (res) => {
+          if (res.success) {
+            this.leaveRequests.set(res.data);
+          }
+        }
+      });
+    }, 3000);
+  }
+
+  stopPolling(): void {
+    if (this.pollIntervalId) {
+      clearInterval(this.pollIntervalId);
+      this.pollIntervalId = null;
+    }
+  }
+
+  ngOnDestroy(): void {
+    this.stopPolling();
   }
 
   loadOwnProfile(): void {
@@ -182,5 +258,226 @@ export class StaffProfileComponent implements OnInit {
       next: () => this.router.navigate(['/login']),
       error: () => this.router.navigate(['/login'])
     });
+  }
+
+  // ===================== Change Password =====================
+  openPasswordModal(): void {
+    this.currentPassword.set('');
+    this.newStaffPassword.set('');
+    this.confirmStaffPassword.set('');
+    this.showCurrentPassword.set(false);
+    this.showNewStaffPassword.set(false);
+    this.showPasswordModal.set(true);
+  }
+
+  closePasswordModal(): void {
+    this.showPasswordModal.set(false);
+  }
+
+  async savePassword(): Promise<void> {
+    const employeeId = this.authService.currentUser()?.id;
+    if (!employeeId) return;
+
+    if (!this.currentPassword()) {
+      await this.dialogService.alert('THIẾU THÔNG TIN', 'Vui lòng nhập mật khẩu hiện tại.');
+      return;
+    }
+    if (!this.passwordValid()) {
+      await this.dialogService.alert('MẬT KHẨU KHÔNG HỢP LỆ', this.passwordHint);
+      return;
+    }
+    if (!this.passwordsMatch()) {
+      await this.dialogService.alert('MẬT KHẨU KHÔNG KHỚP', 'Mật khẩu mới và xác nhận mật khẩu không giống nhau.');
+      return;
+    }
+
+    this.isSavingPassword.set(true);
+    this.http.put<any>(`${this.apiUrl}/employees/${employeeId}/password`, {
+      current_password: this.currentPassword(),
+      new_password: this.newStaffPassword()
+    }).subscribe({
+      next: async (res) => {
+        this.isSavingPassword.set(false);
+        if (res.success) {
+          await this.dialogService.alert('THÀNH CÔNG', 'Đổi mật khẩu thành công.');
+          this.closePasswordModal();
+        } else {
+          await this.dialogService.alert('LỖI', res.error || 'Không thể đổi mật khẩu.');
+        }
+      },
+      error: async (err) => {
+        this.isSavingPassword.set(false);
+        await this.dialogService.alert('LỖI', err.error?.error || 'Lỗi kết nối máy chủ.');
+      }
+    });
+  }
+
+  // ===================== Change Avatar =====================
+  openAvatarModal(): void {
+    this.imgBase64.set('');
+    this.showWebcam.set(false);
+    this.showAvatarModal.set(true);
+  }
+
+  closeAvatarModal(): void {
+    this.stopWebcam();
+    this.showAvatarModal.set(false);
+  }
+
+  async startWebcam(): Promise<void> {
+    this.showWebcam.set(true);
+    try {
+      this.webcamStream = await navigator.mediaDevices.getUserMedia({
+        video: { width: 400, height: 300, facingMode: 'user' }
+      });
+      setTimeout(() => {
+        if (this.videoElement()) {
+          this.videoElement()!.nativeElement.srcObject = this.webcamStream;
+        }
+      }, 100);
+    } catch (err: any) {
+      await this.dialogService.alert('LỖI CAMERA', 'Không thể khởi chạy camera: ' + err.message);
+      this.showWebcam.set(false);
+    }
+  }
+
+  stopWebcam(): void {
+    if (this.webcamStream) {
+      this.webcamStream.getTracks().forEach(track => track.stop());
+      this.webcamStream = null;
+    }
+    this.showWebcam.set(false);
+  }
+
+  capturePhoto(): void {
+    if (!this.webcamStream) return;
+    const video = this.videoElement()!.nativeElement;
+    const canvas = this.canvasElement()!.nativeElement;
+    const ctx = canvas.getContext('2d');
+
+    if (ctx) {
+      canvas.width = 400;
+      canvas.height = 300;
+
+      // Mirror the webcam frame during snapshot
+      ctx.translate(canvas.width, 0);
+      ctx.scale(-1, 1);
+
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      // Reset transform
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+
+      this.imgBase64.set(canvas.toDataURL('image/jpeg', 0.95));
+      this.stopWebcam();
+    }
+  }
+
+  triggerFileInput(): void {
+    const fileInput = document.getElementById('staff-avatar-file-input') as HTMLInputElement;
+    if (fileInput) fileInput.click();
+  }
+
+  handleFileUpload(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files[0]) {
+      const reader = new FileReader();
+      reader.onload = (e: any) => {
+        this.imgBase64.set(e.target.result);
+      };
+      reader.readAsDataURL(input.files[0]);
+    }
+  }
+
+  saveAvatar(): void {
+    const employeeId = this.authService.currentUser()?.id;
+    if (!employeeId || !this.imgBase64()) return;
+
+    this.isSavingAvatar.set(true);
+    this.http.put<any>(`${this.apiUrl}/employees/${employeeId}/avatar`, { img: this.imgBase64() }).subscribe({
+      next: async (res) => {
+        this.isSavingAvatar.set(false);
+        if (res.success) {
+          await this.dialogService.alert('THÀNH CÔNG', 'Cập nhật ảnh đại diện thành công.');
+          this.closeAvatarModal();
+          this.loadOwnProfile();
+        } else {
+          await this.dialogService.alert('LỖI', res.error || 'Không thể cập nhật ảnh đại diện.');
+        }
+      },
+      error: async (err) => {
+        this.isSavingAvatar.set(false);
+        await this.dialogService.alert('LỖI', err.error?.error || 'Lỗi kết nối máy chủ.');
+      }
+    });
+  }
+
+  // ===================== Leave Requests =====================
+  openLeaveModal(): void {
+    this.leaveStartDate.set('');
+    this.leaveEndDate.set('');
+    this.leaveReason.set('');
+    this.showLeaveModal.set(true);
+  }
+
+  closeLeaveModal(): void {
+    this.showLeaveModal.set(false);
+  }
+
+  loadLeaveRequests(): void {
+    const employeeId = this.authService.currentUser()?.id;
+    if (!employeeId) return;
+
+    this.http.get<any>(`${this.apiUrl}/employees/${employeeId}/leave-requests`).subscribe({
+      next: (res) => {
+        if (res.success) {
+          this.leaveRequests.set(res.data);
+        }
+      }
+    });
+  }
+
+  async submitLeaveRequest(): Promise<void> {
+    const employeeId = this.authService.currentUser()?.id;
+    if (!employeeId) return;
+
+    if (!this.leaveStartDate() || !this.leaveEndDate() || !this.leaveReason().trim()) {
+      await this.dialogService.alert('THIẾU THÔNG TIN', 'Vui lòng nhập đầy đủ ngày nghỉ và lý do.');
+      return;
+    }
+    if (this.leaveEndDate() < this.leaveStartDate()) {
+      await this.dialogService.alert('NGÀY KHÔNG HỢP LỆ', 'Ngày kết thúc phải sau ngày bắt đầu.');
+      return;
+    }
+
+    this.isSavingLeave.set(true);
+    this.http.post<any>(`${this.apiUrl}/employees/${employeeId}/leave-requests`, {
+      start_date: this.leaveStartDate(),
+      end_date: this.leaveEndDate(),
+      reason: this.leaveReason().trim()
+    }).subscribe({
+      next: async (res) => {
+        this.isSavingLeave.set(false);
+        if (res.success) {
+          await this.dialogService.alert('THÀNH CÔNG', 'Gửi đơn xin nghỉ thành công.');
+          this.closeLeaveModal();
+          this.loadLeaveRequests();
+        } else {
+          await this.dialogService.alert('LỖI', res.error || 'Không thể gửi đơn xin nghỉ.');
+        }
+      },
+      error: async (err) => {
+        this.isSavingLeave.set(false);
+        await this.dialogService.alert('LỖI', err.error?.error || 'Lỗi kết nối máy chủ.');
+      }
+    });
+  }
+
+  leaveStatusLabel(status: string): string {
+    switch (status) {
+      case 'approved': return 'Đã duyệt';
+      case 'rejected': return 'Từ chối';
+      default: return 'Chờ duyệt';
+    }
   }
 }

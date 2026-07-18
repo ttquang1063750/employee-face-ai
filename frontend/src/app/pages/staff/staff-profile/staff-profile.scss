@@ -24,3 +24,41 @@
     margin-top: var(--space-1);
   }
 }
+
+.profile-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-left: auto;
+}
+
+@media (max-width: 768px) {
+  .profile-header-card .profile-actions {
+    margin-left: 0;
+    width: 100%;
+  }
+}
+
+.timeline-container {
+  max-height: 290px;
+  overflow-y: auto;
+  padding-right: var(--space-3);
+  margin-top: var(--space-2);
+
+  /* Webkit custom scrollbars for unified dark-green HUD look */
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  &::-webkit-scrollbar-track {
+    background: rgba(8, 18, 12, 0.4);
+    border-radius: var(--radius-sm);
+  }
+  &::-webkit-scrollbar-thumb {
+    background: var(--color-cyan);
+    border-radius: var(--radius-sm);
+    box-shadow: var(--glow-cyan);
+  }
+  &::-webkit-scrollbar-thumb:hover {
+    background: var(--color-green);
+  }
+}

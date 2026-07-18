@@ -8,7 +8,6 @@
 /* Page Layout */
 .detail-content {
   flex: 1;
-  max-width: 1200px;
   width: 100%;
   margin: var(--space-8) auto;
   padding: 0 var(--space-6);
@@ -60,6 +59,7 @@
 .avatar-frame {
   width: 90px;
   height: 90px;
+  flex: none;
   border-radius: 50%;
   border: 2px solid var(--color-cyan);
   overflow: hidden;

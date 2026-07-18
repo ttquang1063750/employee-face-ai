@@ -105,6 +105,20 @@ def init_db():
                 captured_image_path VARCHAR(255)
             );
         """)
+        # 8. employee_leave_requests
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS employee_leave_requests (
+                id SERIAL PRIMARY KEY,
+                employee_id INTEGER REFERENCES employees(id) ON DELETE CASCADE,
+                start_date DATE NOT NULL,
+                end_date DATE NOT NULL,
+                reason TEXT NOT NULL,
+                status VARCHAR(20) DEFAULT 'pending',
+                requested_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                rejection_reason TEXT DEFAULT NULL
+            );
+        """)
+        cur.execute("ALTER TABLE employee_leave_requests ADD COLUMN IF NOT EXISTS rejection_reason TEXT DEFAULT NULL;")
         conn.commit()
         print("Database schemas initialized.", flush=True)
 
@@ -489,6 +503,119 @@ def update_employee_profile(employee_id, name, age, role, username, password=Non
                 SET name = %s, age = %s, role = %s, username = %s
                 WHERE id = %s;
             """, (name, age, role, username, employee_id))
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        raise e
+    finally:
+        cur.close()
+        conn.close()
+
+def verify_password(employee_id, password):
+    conn = get_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute("SELECT id FROM employees WHERE id = %s AND password = %s;", (employee_id, password))
+        return cur.fetchone() is not None
+    finally:
+        cur.close()
+        conn.close()
+
+def update_employee_password(employee_id, new_password):
+    conn = get_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute("UPDATE employees SET password = %s WHERE id = %s;", (new_password, employee_id))
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        raise e
+    finally:
+        cur.close()
+        conn.close()
+
+def update_employee_avatar(employee_id, image_path):
+    conn = get_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute("UPDATE employees SET image_path = %s WHERE id = %s;", (image_path, employee_id))
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        raise e
+    finally:
+        cur.close()
+        conn.close()
+
+def create_leave_request(employee_id, start_date, end_date, reason):
+    conn = get_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute("""
+            INSERT INTO employee_leave_requests (employee_id, start_date, end_date, reason)
+            VALUES (%s, %s, %s, %s) RETURNING id;
+        """, (employee_id, start_date, end_date, reason))
+        request_id = cur.fetchone()[0]
+        conn.commit()
+        return request_id
+    except Exception as e:
+        conn.rollback()
+        raise e
+    finally:
+        cur.close()
+        conn.close()
+
+def get_leave_requests(employee_id):
+    conn = get_connection()
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    try:
+        cur.execute("""
+            SELECT id, start_date, end_date, reason, status, requested_at, rejection_reason
+            FROM employee_leave_requests
+            WHERE employee_id = %s
+            ORDER BY requested_at DESC;
+        """, (employee_id,))
+        rows = cur.fetchall()
+        for r in rows:
+            r['start_date'] = r['start_date'].isoformat()
+            r['end_date'] = r['end_date'].isoformat()
+            r['requested_at'] = r['requested_at'].isoformat()
+        return rows
+    finally:
+        cur.close()
+        conn.close()
+
+def get_all_leave_requests():
+    conn = get_connection()
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    try:
+        cur.execute("""
+            SELECT lr.id, lr.employee_id, e.name AS employee_name,
+                   (SELECT title FROM employee_positions WHERE employee_id = e.id AND end_date IS NULL LIMIT 1) AS current_position,
+                   lr.start_date, lr.end_date, lr.reason, lr.status, lr.requested_at, lr.rejection_reason
+            FROM employee_leave_requests lr
+            JOIN employees e ON lr.employee_id = e.id
+            ORDER BY (lr.status = 'pending') DESC, lr.requested_at DESC;
+        """)
+        rows = cur.fetchall()
+        for r in rows:
+            r['start_date'] = r['start_date'].isoformat()
+            r['end_date'] = r['end_date'].isoformat()
+            r['requested_at'] = r['requested_at'].isoformat()
+        return rows
+    finally:
+        cur.close()
+        conn.close()
+
+def update_leave_request_status(request_id, status, rejection_reason=None):
+    conn = get_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute("""
+            UPDATE employee_leave_requests 
+            SET status = %s, rejection_reason = %s 
+            WHERE id = %s;
+        """, (status, rejection_reason, request_id))
         conn.commit()
     except Exception as e:
         conn.rollback()

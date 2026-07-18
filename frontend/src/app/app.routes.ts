@@ -10,10 +10,12 @@ export const routes: Routes = [
   },
   {
     path: 'kiosk',
+    title: 'Kiosk Chấm Công - Employee Face AI',
     loadComponent: () => import('./pages/kiosk/kiosk').then(m => m.KioskComponent)
   },
   {
     path: 'login',
+    title: 'Xác Thực Hệ Thống - Employee Face AI',
     loadComponent: () => import('./pages/login/login').then(m => m.LoginComponent)
   },
   {
@@ -28,25 +30,35 @@ export const routes: Routes = [
       },
       {
         path: 'dashboard',
+        title: 'Bảng Thống Kê - HR Control Panel',
         loadComponent: () => import('./pages/admin/dashboard/dashboard').then(m => m.DashboardComponent)
       },
       {
         path: 'employees',
+        title: 'Quản Lý Nhân Viên - HR Control Panel',
         loadComponent: () => import('./pages/admin/employees/employee-list').then(m => m.EmployeeListComponent)
       },
       {
         path: 'employees/:id',
+        title: 'Hồ Sơ Nhân Viên - HR Control Panel',
         loadComponent: () => import('./pages/admin/employee-detail/employee-detail').then(m => m.EmployeeDetailComponent)
+      },
+      {
+        path: 'leave-requests',
+        title: 'Duyệt Đơn Xin Nghỉ - HR Control Panel',
+        loadComponent: () => import('./pages/admin/leave-requests/leave-requests').then(m => m.LeaveRequestsComponent)
       }
     ]
   },
   {
     path: 'staff',
+    title: 'Cổng Thông Tin Nhân Sự - Employee Face AI',
     canActivate: [staffGuard],
     loadComponent: () => import('./pages/staff/staff-profile/staff-profile').then(m => m.StaffProfileComponent)
   },
   {
     path: 'not-found',
+    title: 'Trang Không Tìm Thấy - Employee Face AI',
     loadComponent: () => import('./pages/not-found/not-found').then(m => m.NotFoundComponent)
   },
   {

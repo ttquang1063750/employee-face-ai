@@ -1,0 +1,18 @@
+.review-actions {
+  display: flex;
+  gap: var(--space-3);
+}
+
+.reviewed-dash {
+  color: var(--color-text-muted);
+}
+
+.action-btn.approve-btn {
+  border-color: var(--color-green);
+  color: var(--color-green);
+
+  &:hover {
+    background: rgba(var(--color-green-rgb), 0.1);
+    box-shadow: 0 0 10px rgba(var(--color-green-rgb), 0.3);
+  }
+}

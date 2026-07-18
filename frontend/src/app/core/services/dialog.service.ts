@@ -44,4 +44,22 @@ export class DialogService {
       });
     });
   }
+
+  prompt(title: string, message: string, placeholder: string = '', confirmText: string = 'XÁC NHẬN', cancelText: string = 'HỦY'): Promise<string | null> {
+    return new Promise<string | null>((resolve) => {
+      this.dialogState.set({
+        title,
+        message,
+        type: 'prompt',
+        confirmText,
+        cancelText,
+        placeholder,
+        resolve: (result: string | null) => {
+          this.dialogState.set(null);
+          resolve(result);
+        }
+      });
+    });
+  }
 }
+

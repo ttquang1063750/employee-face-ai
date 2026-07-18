@@ -1,6 +1,7 @@
-import { Component, ChangeDetectionStrategy } from '@angular/core';
+import { Component, ChangeDetectionStrategy, computed, inject, OnInit } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
+import { RealtimeService } from '../../services/realtime.service';
 
 @Component({
   selector: 'app-admin-shell',
@@ -10,8 +11,16 @@ import { AuthService } from '../../services/auth.service';
   styleUrl: './admin-shell.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class AdminShellComponent {
-  constructor(private authService: AuthService, private router: Router) {}
+export class AdminShellComponent implements OnInit {
+  private authService = inject(AuthService);
+  private router = inject(Router);
+  realtimeService = inject(RealtimeService);
+
+  pendingCount = computed(() => this.realtimeService.pendingLeaveCount());
+
+  ngOnInit(): void {
+    this.realtimeService.refreshPendingCount();
+  }
 
   logout(): void {
     this.authService.logout().subscribe(() => {

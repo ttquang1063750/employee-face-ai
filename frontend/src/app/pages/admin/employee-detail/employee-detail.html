@@ -53,11 +53,11 @@
           <div class="hud-filter-bar">
             <div class="hud-field">
               <label class="hud-label">TỪ NGÀY</label>
-              <input type="date" [ngModel]="filterStartDateInput()" (ngModelChange)="filterStartDateInput.set($event)" class="hud-input">
+              <app-date-picker [ngModel]="filterStartDateInput()" (ngModelChange)="filterStartDateInput.set($event)"></app-date-picker>
             </div>
             <div class="hud-field">
               <label class="hud-label">ĐẾN NGÀY</label>
-              <input type="date" [ngModel]="filterEndDateInput()" (ngModelChange)="filterEndDateInput.set($event)" class="hud-input">
+              <app-date-picker [ngModel]="filterEndDateInput()" (ngModelChange)="filterEndDateInput.set($event)"></app-date-picker>
             </div>
             <div class="hud-field filter-apply-field">
               <button class="hud-btn-outline" (click)="applyDateFilter()">ÁP DỤNG</button>
@@ -251,7 +251,11 @@
           </div>
           <div class="form-group">
             <label>MẬT KHẨU MỚI (Để trống nếu giữ nguyên)</label>
-            <input type="password" [ngModel]="editPassword()" (ngModelChange)="editPassword.set($event)" class="hud-input">
+            <div class="input-with-actions">
+              <input [type]="showEditPassword() ? 'text' : 'password'" [ngModel]="editPassword()" (ngModelChange)="editPassword.set($event)" class="hud-input" autocomplete="new-password">
+              <button type="button" class="hud-btn-mini" data-tooltip="Hiện/ẩn mật khẩu" (click)="showEditPassword.set(!showEditPassword())">{{ showEditPassword() ? '🙈' : '👁' }}</button>
+              <button type="button" class="hud-btn-mini" data-tooltip="Tạo mật khẩu ngẫu nhiên" (click)="generatePassword()">🎲</button>
+            </div>
             @if (editPassword() && !passwordValid()) {
               <p class="field-hint error">✖ {{ passwordHint }}</p>
             }
@@ -313,7 +317,7 @@
           </div>
           <div class="form-group">
             <label>NGÀY HIỆU LỰC BỔ NHIỆM</label>
-            <input type="date" [ngModel]="newPosStartDate()" (ngModelChange)="newPosStartDate.set($event)" class="hud-input">
+            <app-date-picker [ngModel]="newPosStartDate()" (ngModelChange)="newPosStartDate.set($event)"></app-date-picker>
           </div>
           <p class="warning-alert">ℹ️ Ghi chú: Hệ thống sẽ tự động chuyển chức danh hiện tại của nhân sự này sang trạng thái kết thúc vào ngày bổ nhiệm.</p>
         </div>
@@ -345,7 +349,7 @@
           </div>
           <div class="form-group">
             <label>NGÀY HIỆU LỰC MỚI</label>
-            <input type="date" [ngModel]="newIncEffectiveDate()" (ngModelChange)="newIncEffectiveDate.set($event)" class="hud-input">
+            <app-date-picker [ngModel]="newIncEffectiveDate()" (ngModelChange)="newIncEffectiveDate.set($event)"></app-date-picker>
           </div>
           <div class="form-group">
             <label>LÝ DO ĐIỀU CHỈNH</label>
@@ -467,12 +471,12 @@
                 </div>
                 <div class="form-group">
                   <label>NGÀY BẮT ĐẦU</label>
-                  <input type="date" [ngModel]="newProjStartDate()" (ngModelChange)="newProjStartDate.set($event)" class="hud-input">
+                  <app-date-picker [ngModel]="newProjStartDate()" (ngModelChange)="newProjStartDate.set($event)"></app-date-picker>
                 </div>
               </div>
               <div class="form-group">
                 <label>NGÀY KẾT THÚC (Để trống nếu đang diễn ra)</label>
-                <input type="date" [ngModel]="newProjEndDate()" (ngModelChange)="newProjEndDate.set($event)" class="hud-input">
+                <app-date-picker [ngModel]="newProjEndDate()" (ngModelChange)="newProjEndDate.set($event)"></app-date-picker>
               </div>
               <div class="form-group">
                 <label>MÔ TẢ CHI TIẾT NHIỆM VỤ DỰ ÁN</label>

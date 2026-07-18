@@ -1,0 +1,42 @@
+<div class="date-picker">
+  <button type="button" class="hud-input date-trigger" (click)="toggleOpen()" [class.disabled]="disabled()" [disabled]="disabled()">
+    <span [class.placeholder]="!displayValue()">{{ displayValue() || placeholder() }}</span>
+    <span class="cal-icon">📅</span>
+  </button>
+
+  @if (isOpen()) {
+    <div class="date-panel" [style.top.px]="panelTop()" [style.left.px]="panelLeft()">
+      <div class="date-panel-header">
+        <button type="button" class="nav-btn" (click)="prevMonth()">‹</button>
+        <span class="month-label">{{ monthLabel() }}</span>
+        <button type="button" class="nav-btn" (click)="nextMonth()">›</button>
+      </div>
+      <div class="weekday-row">
+        @for (wd of weekdayLabels; track wd) {
+          <span class="weekday">{{ wd }}</span>
+        }
+      </div>
+      <div class="weeks">
+        @for (week of calendarWeeks(); track $index) {
+          <div class="week-row">
+            @for (cell of week; track cell.iso) {
+              <button type="button" class="day-cell"
+                [class.outside]="!cell.inCurrentMonth"
+                [class.today]="cell.isToday"
+                [class.selected]="cell.isSelected"
+                (click)="selectDay(cell)">
+                {{ cell.day }}
+              </button>
+            }
+          </div>
+        }
+      </div>
+      <div class="date-panel-footer">
+        <button type="button" class="today-btn" (click)="selectToday()">Hôm nay</button>
+        @if (value()) {
+          <button type="button" class="today-btn clear-btn" (click)="clear()">Xóa</button>
+        }
+      </div>
+    </div>
+  }
+</div>

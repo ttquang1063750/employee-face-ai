@@ -40,6 +40,43 @@
             </div>
           </div>
         </div>
+        <div class="profile-actions">
+          <button class="hud-btn-outline" (click)="openAvatarModal()">📷 Đổi ảnh đại diện</button>
+          <button class="hud-btn-outline" (click)="openPasswordModal()">🔒 Đổi mật khẩu</button>
+          <button class="hud-btn-success" (click)="openLeaveModal()">📝 Xin nghỉ phép</button>
+        </div>
+      </div>
+
+      <!-- Leave requests submitted by this employee (full width) -->
+      <div class="lifecycle-card">
+        <div class="section-header-row">
+          <h3 class="section-title">🌴 ĐƠN XIN NGHỈ ĐÃ GỬI</h3>
+        </div>
+        <div class="timeline-container">
+          <div class="timeline">
+            @for (req of leaveRequests(); track req.id) {
+              <div class="timeline-item">
+                <div class="timeline-marker"></div>
+                <div class="timeline-content">
+                  <div class="timeline-header-row">
+                    <h4 class="title text-glow-cyan">{{ req.start_date }} → {{ req.end_date }}</h4>
+                    <span class="leave-status-badge" [class]="req.status">
+                      {{ leaveStatusLabel(req.status) }}
+                    </span>
+                  </div>
+                  <p class="dates">{{ req.reason }}</p>
+                  @if (req.status === 'rejected' && req.rejection_reason) {
+                    <p class="rejection-reason text-glow-red" style="margin-top: var(--space-2); color: var(--color-red); font-size: var(--text-sm);">
+                      <strong>Lý do từ chối:</strong> {{ req.rejection_reason }}
+                    </p>
+                  }
+                </div>
+              </div>
+            } @empty {
+              <p class="no-data">Chưa gửi đơn xin nghỉ nào.</p>
+            }
+          </div>
+        </div>
       </div>
 
       <!-- Attendance summary (left, ~65%) + Lifecycle sections (right, ~35%) -->
@@ -53,11 +90,11 @@
           <div class="hud-filter-bar">
             <div class="hud-field">
               <label class="hud-label">TỪ NGÀY</label>
-              <input type="date" [ngModel]="filterStartDateInput()" (ngModelChange)="filterStartDateInput.set($event)" class="hud-input">
+              <app-date-picker [ngModel]="filterStartDateInput()" (ngModelChange)="filterStartDateInput.set($event)"></app-date-picker>
             </div>
             <div class="hud-field">
               <label class="hud-label">ĐẾN NGÀY</label>
-              <input type="date" [ngModel]="filterEndDateInput()" (ngModelChange)="filterEndDateInput.set($event)" class="hud-input">
+              <app-date-picker [ngModel]="filterEndDateInput()" (ngModelChange)="filterEndDateInput.set($event)"></app-date-picker>
             </div>
             <div class="hud-field filter-apply-field">
               <button class="hud-btn-outline" (click)="applyDateFilter()">ÁP DỤNG</button>
@@ -203,4 +240,133 @@
       </div>
     }
   </div>
+
+  <!-- ================= CHANGE PASSWORD MODAL ================= -->
+  @if (showPasswordModal()) {
+    <div class="modal-backdrop">
+      <div class="modal-card mini">
+        <div class="modal-header">
+          <h3>🔒 Đổi mật khẩu</h3>
+          <button class="close-btn" (click)="closePasswordModal()">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-fields">
+            <div class="form-group">
+              <label>MẬT KHẨU HIỆN TẠI</label>
+              <div class="input-with-actions">
+                <input [type]="showCurrentPassword() ? 'text' : 'password'" [ngModel]="currentPassword()" (ngModelChange)="currentPassword.set($event)" class="hud-input" autocomplete="current-password">
+                <button type="button" class="hud-btn-mini" data-tooltip="Hiện/ẩn mật khẩu" (click)="showCurrentPassword.set(!showCurrentPassword())">{{ showCurrentPassword() ? '🙈' : '👁' }}</button>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>MẬT KHẨU MỚI</label>
+              <div class="input-with-actions">
+                <input [type]="showNewStaffPassword() ? 'text' : 'password'" [ngModel]="newStaffPassword()" (ngModelChange)="newStaffPassword.set($event)" class="hud-input" autocomplete="new-password">
+                <button type="button" class="hud-btn-mini" data-tooltip="Hiện/ẩn mật khẩu" (click)="showNewStaffPassword.set(!showNewStaffPassword())">{{ showNewStaffPassword() ? '🙈' : '👁' }}</button>
+              </div>
+              @if (newStaffPassword() && !passwordValid()) {
+                <p class="field-hint error">✖ {{ passwordHint }}</p>
+              }
+            </div>
+            <div class="form-group">
+              <label>XÁC NHẬN MẬT KHẨU MỚI</label>
+              <input type="password" [ngModel]="confirmStaffPassword()" (ngModelChange)="confirmStaffPassword.set($event)" class="hud-input" autocomplete="new-password">
+              @if (confirmStaffPassword() && !passwordsMatch()) {
+                <p class="field-hint error">✖ Mật khẩu xác nhận không khớp.</p>
+              }
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="hud-btn-success" [disabled]="isSavingPassword()" (click)="savePassword()">
+            @if (isSavingPassword()) { <div class="loader"></div> }
+            <span>LƯU MẬT KHẨU</span>
+          </button>
+          <button class="hud-btn-secondary" (click)="closePasswordModal()">HỦY</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- ================= CHANGE AVATAR MODAL ================= -->
+  @if (showAvatarModal()) {
+    <div class="modal-backdrop">
+      <div class="modal-card mini">
+        <div class="modal-header">
+          <h3>📷 Đổi ảnh đại diện</h3>
+          <button class="close-btn" (click)="closeAvatarModal()">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-camera-zone">
+            <div class="camera-viewport-frame">
+              @if (showWebcam()) {
+                <video #videoElement autoplay playsinline class="modal-video"></video>
+                <button class="camera-cap-btn" (click)="capturePhoto()">📸 CHỤP ẢNH</button>
+              } @else {
+                @if (imgBase64()) {
+                  <img [src]="imgBase64()" class="captured-preview-img">
+                } @else {
+                  <img
+                    [src]="'http://localhost:8000/' + employee()?.image_path"
+                    (error)="onImageError($event)"
+                    class="captured-preview-img"
+                    alt="{{ employee()?.name }}">
+                }
+                <div class="photo-controls">
+                  <button class="hud-btn-outline" (click)="startWebcam()">📸 CAMERA CHỤP TRỰC TIẾP</button>
+                  <input type="file" id="staff-avatar-file-input" (change)="handleFileUpload($event)" style="display:none;" accept="image/*">
+                  <button class="hud-btn-outline" (click)="triggerFileInput()">📁 TẢI LÊN FILE ẢNH</button>
+                </div>
+              }
+            </div>
+            <canvas #canvasElement style="display:none;"></canvas>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="hud-btn-success" [disabled]="isSavingAvatar() || !imgBase64()" (click)="saveAvatar()">
+            @if (isSavingAvatar()) { <div class="loader"></div> }
+            <span>LƯU ẢNH MỚI</span>
+          </button>
+          <button class="hud-btn-secondary" (click)="closeAvatarModal()">HỦY</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- ================= LEAVE REQUEST MODAL ================= -->
+  @if (showLeaveModal()) {
+    <div class="modal-backdrop">
+      <div class="modal-card mini">
+        <div class="modal-header">
+          <h3>📝 Xin nghỉ phép</h3>
+          <button class="close-btn" (click)="closeLeaveModal()">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-fields">
+            <div class="form-row">
+              <div class="form-group">
+                <label>TỪ NGÀY</label>
+                <app-date-picker [ngModel]="leaveStartDate()" (ngModelChange)="leaveStartDate.set($event)"></app-date-picker>
+              </div>
+              <div class="form-group">
+                <label>ĐẾN NGÀY</label>
+                <app-date-picker [ngModel]="leaveEndDate()" (ngModelChange)="leaveEndDate.set($event)"></app-date-picker>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>LÝ DO XIN NGHỈ</label>
+              <input type="text" [ngModel]="leaveReason()" (ngModelChange)="leaveReason.set($event)" placeholder="VD: Việc gia đình, khám sức khoẻ..." class="hud-input">
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="hud-btn-success" [disabled]="isSavingLeave()" (click)="submitLeaveRequest()">
+            @if (isSavingLeave()) { <div class="loader"></div> }
+            <span>GỬI ĐƠN</span>
+          </button>
+          <button class="hud-btn-secondary" (click)="closeLeaveModal()">HỦY</button>
+        </div>
+      </div>
+    </div>
+  }
 </div>

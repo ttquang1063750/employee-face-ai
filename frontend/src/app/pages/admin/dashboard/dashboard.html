@@ -15,11 +15,11 @@
       <div class="hud-filter-bar">
         <div class="hud-field">
           <label class="hud-label">TỪ NGÀY</label>
-          <input type="date" [ngModel]="filterStartDateInput()" (ngModelChange)="filterStartDateInput.set($event)" class="hud-input">
+          <app-date-picker [ngModel]="filterStartDateInput()" (ngModelChange)="filterStartDateInput.set($event)"></app-date-picker>
         </div>
         <div class="hud-field">
           <label class="hud-label">ĐẾN NGÀY</label>
-          <input type="date" [ngModel]="filterEndDateInput()" (ngModelChange)="filterEndDateInput.set($event)" class="hud-input">
+          <app-date-picker [ngModel]="filterEndDateInput()" (ngModelChange)="filterEndDateInput.set($event)"></app-date-picker>
         </div>
         <div class="hud-field filter-apply-field">
           <button class="hud-btn-outline" (click)="applyDateFilter()">ÁP DỤNG</button>

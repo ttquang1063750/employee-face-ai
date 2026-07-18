@@ -1,0 +1,134 @@
+<div class="dashboard-layout">
+  <div class="dashboard-content">
+    <div class="page-title-row">
+      <h2 class="title">🌴 QUẢN LÝ ĐƠN XIN NGHỈ</h2>
+    </div>
+
+    <div class="hud-filter-bar">
+      <div class="hud-field">
+        <label class="hud-label">LỌC TRẠNG THÁI</label>
+        <select class="hud-select" [ngModel]="statusFilter()" (ngModelChange)="setStatusFilter($event)">
+          <option value="pending">Chờ duyệt ({{ pendingCount() }})</option>
+          <option value="approved">Đã duyệt</option>
+          <option value="rejected">Từ chối</option>
+          <option value="all">Tất cả</option>
+        </select>
+      </div>
+      <div class="hud-field">
+        <label class="hud-label">TỪ NGÀY</label>
+        <app-date-picker [ngModel]="filterStartDateInput()" (ngModelChange)="filterStartDateInput.set($event)"></app-date-picker>
+      </div>
+      <div class="hud-field">
+        <label class="hud-label">ĐẾN NGÀY</label>
+        <app-date-picker [ngModel]="filterEndDateInput()" (ngModelChange)="filterEndDateInput.set($event)"></app-date-picker>
+      </div>
+      <div class="hud-field filter-apply-field">
+        <label class="hud-label" style="opacity: 0;">LỌC</label>
+        <div style="display: flex; gap: var(--space-2);">
+          <button class="hud-btn-outline" (click)="applyDateFilter()">ÁP DỤNG</button>
+          @if (filterStartDate() || filterEndDate()) {
+            <button class="hud-btn-outline" style="border-color: var(--color-border-dim); color: var(--color-text-secondary);" (click)="clearDateFilter()">XÓA</button>
+          }
+        </div>
+      </div>
+      <div class="hud-field grow-2">
+        <label class="hud-label">TÌM THEO TÊN / VỊ TRÍ</label>
+        <input
+          type="text"
+          [ngModel]="searchQuery()"
+          (ngModelChange)="searchQuery.set($event); currentPage.set(1)"
+          placeholder="Tìm theo tên hoặc vị trí nhân viên..."
+          class="hud-input">
+      </div>
+    </div>
+
+    @if (isLoading()) {
+      <div class="loading-state">
+        <div class="radial-spinner"></div>
+        <p>Đang tải danh sách đơn xin nghỉ...</p>
+      </div>
+    } @else if (errorMsg()) {
+      <div class="error-state">
+        <p class="err-text">⚠️ {{ errorMsg() }}</p>
+        <button class="retry-btn" (click)="loadRequests()">Thử lại</button>
+      </div>
+    } @else {
+      <div class="logs-card">
+        <div class="logs-header">
+          <h3 class="logs-title">📋 DANH SÁCH ĐƠN XIN NGHỈ</h3>
+        </div>
+
+        <div class="logs-table-wrapper">
+          <table class="logs-table">
+            <thead>
+              <tr>
+                <th>NHÂN VIÊN</th>
+                <th>VỊ TRÍ</th>
+                <th>TỪ NGÀY</th>
+                <th>ĐẾN NGÀY</th>
+                <th>LÝ DO</th>
+                <th>TRẠNG THÁI</th>
+                <th>HÀNH ĐỘNG</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (req of paginatedRequests(); track req.id) {
+                <tr>
+                  <td class="log-name">{{ req.employee_name }}</td>
+                  <td>{{ req.current_position || '—' }}</td>
+                  <td class="log-time">{{ req.start_date }}</td>
+                  <td class="log-time">{{ req.end_date }}</td>
+                  <td>
+                    <div>{{ req.reason }}</div>
+                    @if (req.status === 'rejected' && req.rejection_reason) {
+                      <div class="rejection-reason" style="margin-top: var(--space-2); color: var(--color-red); font-size: var(--text-xs); font-style: italic;">
+                        Lý do từ chối: {{ req.rejection_reason }}
+                      </div>
+                    }
+                  </td>
+                  <td>
+                    <span class="leave-status-badge" [class]="req.status">{{ leaveStatusLabel(req.status) }}</span>
+                  </td>
+                  <td>
+                    @if (req.status === 'pending') {
+                      <div class="review-actions">
+                        <button class="action-btn approve-btn" (click)="approve(req)">✔ Duyệt</button>
+                        <button class="action-btn delete-btn" (click)="reject(req)">✖ Từ chối</button>
+                      </div>
+                    } @else {
+                      <span class="reviewed-dash">—</span>
+                    }
+                  </td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="7" class="no-data">Không có đơn xin nghỉ nào phù hợp.</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        @if (filteredRequests().length > 0) {
+          <div class="hud-pagination">
+            <div class="pag-size">
+              <label for="leave-page-size">Hiển thị</label>
+              <select id="leave-page-size" class="pag-size-select" [ngModel]="pageSize()" (ngModelChange)="pageSize.set(+$event); currentPage.set(1)">
+                <option [value]="8">8</option>
+                <option [value]="16">16</option>
+                <option [value]="24">24</option>
+                <option [value]="50">50</option>
+              </select>
+              <span>/ trang</span>
+            </div>
+            <div class="pag-controls">
+              <button class="pag-btn" [disabled]="currentPage() === 1" (click)="prevPage()">◀ TRƯỚC</button>
+              <span class="pag-info">TRANG {{ currentPage() }} / {{ totalPages() }}</span>
+              <button class="pag-btn" [disabled]="currentPage() === totalPages()" (click)="nextPage()">SAU ▶</button>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </div>
+</div>
