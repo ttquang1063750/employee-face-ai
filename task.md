@@ -28,5 +28,5 @@ Quy trình: làm từng mục một, hỏi xác nhận trước khi chuyển san
 
 - [x] Kiểm tra `RealtimeService` inject trong `dashboard.ts` có thực sự được dùng không, dọn nếu là dead code
 - [x] Style cho `.err-text` / `.retry-btn` trong dashboard error-state (hiện chưa có CSS)
-- [ ] Rà soát test coverage frontend (Vitest) — hiện rất mỏng, dễ regression khi refactor tiếp
+- [x] Rà soát test coverage frontend (Vitest) — hiện rất mỏng, dễ regression khi refactor tiếp
 - [ ] Audit các trang admin khác (employee-list, employee-detail, leave-requests) xem có widget/logic lặp lại giống dashboard trước khi refactor không

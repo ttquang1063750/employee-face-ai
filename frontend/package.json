@@ -7,6 +7,7 @@
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
+    "test:coverage": "ng test --coverage --coverage-include=\"src/app/**/*.ts\" --coverage-exclude=\"src/app/**/*.spec.ts\" --coverage-exclude=\"src/app/**/*.model.ts\"",
     "lint": "ng lint"
   },
   "private": true,
@@ -26,6 +27,7 @@
     "@angular/cli": "^21.2.3",
     "@angular/compiler-cli": "^21.2.0",
     "@eslint/js": "^10.0.1",
+    "@vitest/coverage-v8": "^4.1.10",
     "angular-eslint": "21.4.0",
     "cypress": "^15.18.1",
     "eslint": "^10.3.0",
