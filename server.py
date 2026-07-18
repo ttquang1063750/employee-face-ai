@@ -87,6 +87,42 @@ def reset_login_attempts(key):
 # affecting this shared default.
 DEFAULT_DETECTOR_BACKEND = "retinaface"
 
+# Check-in/check-out audit photos (logs/*.jpg) are never served to the
+# frontend — they're forensic-only evidence — and accumulate one file per
+# scan forever otherwise. Prune anything older than LOG_RETENTION_DAYS once
+# a day; this only removes the on-disk JPEG, never the attendance_logs DB
+# row or its timestamp/mood metadata, so the audit trail's history stays intact.
+LOGS_DIR = "logs"
+LOG_RETENTION_DAYS = 90
+LOG_CLEANUP_INTERVAL_SECONDS = 24 * 60 * 60
+
+
+def cleanup_old_audit_logs():
+    if not os.path.isdir(LOGS_DIR):
+        return
+    cutoff = time.time() - LOG_RETENTION_DAYS * 86400
+    removed = 0
+    for name in os.listdir(LOGS_DIR):
+        path = os.path.join(LOGS_DIR, name)
+        try:
+            if os.path.isfile(path) and os.path.getmtime(path) < cutoff:
+                os.remove(path)
+                removed += 1
+        except OSError as e:
+            print(f"Could not remove old audit log {path}: {e}", flush=True)
+    if removed:
+        print(f"Log retention: removed {removed} audit photo(s) older than {LOG_RETENTION_DAYS} days.", flush=True)
+
+
+def start_log_retention_thread():
+    def loop():
+        while True:
+            cleanup_old_audit_logs()
+            time.sleep(LOG_CLEANUP_INTERVAL_SECONDS)
+
+    threading.Thread(target=loop, daemon=True).start()
+
+
 MOOD_TRANSLATION = {
     "happy": "Vui vẻ 😊",
     "sad": "Buồn bã 😢",
@@ -894,7 +930,7 @@ class EmployeeFaceAIRequestHandler(BaseHTTPRequestHandler):
 
             # Save file to logs
             timestamp_str = datetime.now().strftime("%Y%m%d_%H%M%S")
-            audit_filepath = f"logs/{timestamp_str}_{action}_{employee_id}.jpg"
+            audit_filepath = f"{LOGS_DIR}/{timestamp_str}_{action}_{employee_id}.jpg"
             os.rename(temp_img_path, audit_filepath)
             temp_img_path = None
 
@@ -1172,6 +1208,7 @@ class EmployeeFaceAIRequestHandler(BaseHTTPRequestHandler):
 def run(server_class=ThreadingHTTPServer, handler_class=EmployeeFaceAIRequestHandler, port=8000):
     print("Connecting to PostgreSQL and verifying schemas...", flush=True)
     db.init_db()
+    start_log_retention_thread()
 
     server_address = ("", port)
     httpd = server_class(server_address, handler_class)

@@ -11,6 +11,26 @@ echo -e "${CYAN}===================================================${NC}"
 echo -e "${CYAN}        STARTING EMPLOYEE FACE AI MAINFRAME        ${NC}"
 echo -e "${CYAN}===================================================${NC}"
 
+# --- Log Rotation ---
+# backend.log/frontend.log are plain stdout redirects and grow unbounded
+# otherwise. Rotate (numbered backups, oldest dropped) whenever a log
+# exceeds MAX_LOG_BYTES, before that run's process starts appending to it.
+MAX_LOG_BYTES=$((5 * 1024 * 1024)) # 5 MB
+MAX_LOG_BACKUPS=3
+
+rotate_log_if_large() {
+    local logfile="$1"
+    [ -f "$logfile" ] || return 0
+    local size
+    size=$(wc -c < "$logfile" 2>/dev/null || echo 0)
+    if [ "$size" -gt "$MAX_LOG_BYTES" ]; then
+        for ((i = MAX_LOG_BACKUPS - 1; i >= 1; i--)); do
+            [ -f "${logfile}.$i" ] && mv "${logfile}.$i" "${logfile}.$((i + 1))"
+        done
+        mv "$logfile" "${logfile}.1"
+    fi
+}
+
 # 1. Start Docker Container (PostgreSQL)
 echo -e "\n${YELLOW}[1/3] Starting Database Container...${NC}"
 if ! command -v docker &> /dev/null; then
@@ -32,6 +52,8 @@ if [ ! -f "./venv/bin/python" ]; then
     exit 1
 fi
 
+rotate_log_if_large "backend.log"
+
 # Launch Backend in the background
 ./venv/bin/python -u server.py > backend.log 2>&1 &
 BACKEND_PID=$!
@@ -51,6 +73,8 @@ if [ ! -d "frontend/node_modules" ]; then
     echo -e "${YELLOW}node_modules not found. Installing dependencies...${NC}"
     cd frontend && npm install && cd ..
 fi
+
+rotate_log_if_large "frontend.log"
 
 # Launch Angular Client in the background
 cd frontend
