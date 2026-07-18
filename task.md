@@ -29,4 +29,20 @@ Quy trình: làm từng mục một, hỏi xác nhận trước khi chuyển san
 - [x] Kiểm tra `RealtimeService` inject trong `dashboard.ts` có thực sự được dùng không, dọn nếu là dead code
 - [x] Style cho `.err-text` / `.retry-btn` trong dashboard error-state (hiện chưa có CSS)
 - [x] Rà soát test coverage frontend (Vitest) — hiện rất mỏng, dễ regression khi refactor tiếp
-- [ ] Audit các trang admin khác (employee-list, employee-detail, leave-requests) xem có widget/logic lặp lại giống dashboard trước khi refactor không
+- [x] Audit các trang admin khác (employee-list, employee-detail, leave-requests) xem có widget/logic lặp lại giống dashboard trước khi refactor không
+
+## Từ audit các trang admin (mức cao)
+
+- [ ] `leave-requests.ts`: bỏ vòng polling riêng (setInterval trùng với `RealtimeService` đã tự poll cùng endpoint) — chỉ đọc `realtimeService.pendingLeaveCount()`
+- [ ] `leave-requests.ts`: bỏ import `dashboard.scss`/`employee-list.scss` để "mượn" style bảng/pagination — tách thành style/component dùng chung thay vì khớp nối chéo 3 trang
+- [ ] `employee-detail.ts`: sửa bug `workingHours` — check-in cuối ngày không có check-out bị bỏ qua âm thầm, check-in trùng lặp ghi đè nhau, không có guard chống số giờ âm khi check-out sớm hơn check-in
+- [ ] `employee-list.ts`: import `EmployeeBase` từ `core/models/employee.model.ts` thay vì định nghĩa lại
+- [ ] `employee-list.ts`: dọn `triggerFileInput()` chết/hỏng (gọi sai id) + bỏ `onclick` thô trong template, thống nhất qua Angular binding
+
+## Từ audit các trang admin (mức trung bình)
+
+- [ ] Thống nhất `.hud-pagination`/error-state dùng `_hud-form.scss` ở cả 3 trang (đang tự định nghĩa lại cục bộ, dễ lệch style)
+- [ ] `employee-detail.ts`: các ngày mặc định (thêm chức vụ/lương/dự án, bộ lọc chấm công) chỉ tính 1 lần lúc tải trang — cần tính lại mỗi lần mở modal/áp dụng filter
+- [ ] `employee-detail.ts`: tách bớt full-page spinner khi reload sau khi lưu (hiện y hệt lần tải đầu, giật cục không cần thiết)
+- [ ] `leave-requests.ts`: import `LeaveRequest` từ `core/models/leave-request.model.ts` thay vì định nghĩa lại; thêm xử lý lỗi cho polling nền (hiện im lặng khi fail)
+- [ ] Cân nhắc tách `employee-detail.ts` (2151 dòng) thành các component nhỏ: attendance-summary, positions-timeline, income-history, skills-panel, projects-panel, base-profile-modal
