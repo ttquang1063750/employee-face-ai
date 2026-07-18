@@ -207,6 +207,11 @@ When writing code or modifications, you must strictly follow these rules:
   cd frontend
   npm test
   ```
+- **Run frontend unit tests with coverage**:
+  ```bash
+  cd frontend
+  npm run test:coverage
+  ```
 - **Lint & format backend** (Ruff):
   ```bash
   ruff check --fix . && ruff format .
