@@ -1,18 +1,20 @@
 version: '3.8'
 
+name: employee-face-ai
+
 services:
   db:
     image: postgres:15-alpine
-    container_name: pg-attendance
+    container_name: employee-face-ai-db
     restart: always
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: mysecretpassword
-      POSTGRES_DB: attendance
+      POSTGRES_DB: employee_face_ai
     ports:
       - "5432:5432"
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - employee_face_ai_pgdata:/var/lib/postgresql/data
 
 volumes:
-  pgdata:
+  employee_face_ai_pgdata:

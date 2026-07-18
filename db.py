@@ -9,7 +9,7 @@ DB_CONFIG = {
     "port": 5432,
     "user": "postgres",
     "password": "mysecretpassword",
-    "dbname": "attendance"
+    "dbname": "employee_face_ai"
 }
 
 def get_connection():

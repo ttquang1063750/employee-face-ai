@@ -144,7 +144,7 @@ When writing code or modifications, you must strictly follow these rules:
   ```
 - **Drop Postgres database tables (Clean reset)**:
   ```bash
-  python -c "import psycopg2; conn = psycopg2.connect(host='localhost', port=5432, user='postgres', password='mysecretpassword', dbname='attendance'); cur = conn.cursor(); cur.execute('DROP TABLE IF EXISTS user_sessions, attendance_logs, employee_income_history, employee_projects, employee_positions, employee_skills, employees CASCADE;'); conn.commit(); conn.close(); print('DB Reset Complete.')"
+  python -c "import psycopg2; conn = psycopg2.connect(host='localhost', port=5432, user='postgres', password='mysecretpassword', dbname='employee_face_ai'); cur = conn.cursor(); cur.execute('DROP TABLE IF EXISTS user_sessions, attendance_logs, employee_income_history, employee_projects, employee_positions, employee_skills, employees CASCADE;'); conn.commit(); conn.close(); print('DB Reset Complete.')"
   ```
 - **Launch Python Server**:
   ```bash
