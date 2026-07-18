@@ -20,7 +20,6 @@
     } @else {
       <!-- Employee Profile Header (read-only, no edit button) -->
       <div class="profile-header-card">
-        <div class="card-glow"></div>
         <div class="profile-summary">
           <div class="avatar-frame">
             <img
@@ -89,11 +88,11 @@
           <!-- Date range filter bar -->
           <div class="hud-filter-bar">
             <div class="hud-field">
-              <label class="hud-label">TỪ NGÀY</label>
+              <span class="hud-label">TỪ NGÀY</span>
               <app-date-picker [ngModel]="filterStartDateInput()" (ngModelChange)="filterStartDateInput.set($event)"></app-date-picker>
             </div>
             <div class="hud-field">
-              <label class="hud-label">ĐẾN NGÀY</label>
+              <span class="hud-label">ĐẾN NGÀY</span>
               <app-date-picker [ngModel]="filterEndDateInput()" (ngModelChange)="filterEndDateInput.set($event)"></app-date-picker>
             </div>
             <div class="hud-field filter-apply-field">
@@ -252,16 +251,16 @@
         <div class="modal-body">
           <div class="form-fields">
             <div class="form-group">
-              <label>MẬT KHẨU HIỆN TẠI</label>
+              <label for="staff-current-password">MẬT KHẨU HIỆN TẠI</label>
               <div class="input-with-actions">
-                <input [type]="showCurrentPassword() ? 'text' : 'password'" [ngModel]="currentPassword()" (ngModelChange)="currentPassword.set($event)" class="hud-input" autocomplete="current-password">
+                <input id="staff-current-password" [type]="showCurrentPassword() ? 'text' : 'password'" [ngModel]="currentPassword()" (ngModelChange)="currentPassword.set($event)" class="hud-input" autocomplete="current-password">
                 <button type="button" class="hud-btn-mini" data-tooltip="Hiện/ẩn mật khẩu" (click)="showCurrentPassword.set(!showCurrentPassword())">{{ showCurrentPassword() ? '🙈' : '👁' }}</button>
               </div>
             </div>
             <div class="form-group">
-              <label>MẬT KHẨU MỚI</label>
+              <label for="staff-new-password">MẬT KHẨU MỚI</label>
               <div class="input-with-actions">
-                <input [type]="showNewStaffPassword() ? 'text' : 'password'" [ngModel]="newStaffPassword()" (ngModelChange)="newStaffPassword.set($event)" class="hud-input" autocomplete="new-password">
+                <input id="staff-new-password" [type]="showNewStaffPassword() ? 'text' : 'password'" [ngModel]="newStaffPassword()" (ngModelChange)="newStaffPassword.set($event)" class="hud-input" autocomplete="new-password">
                 <button type="button" class="hud-btn-mini" data-tooltip="Hiện/ẩn mật khẩu" (click)="showNewStaffPassword.set(!showNewStaffPassword())">{{ showNewStaffPassword() ? '🙈' : '👁' }}</button>
               </div>
               @if (newStaffPassword() && !passwordValid()) {
@@ -269,8 +268,8 @@
               }
             </div>
             <div class="form-group">
-              <label>XÁC NHẬN MẬT KHẨU MỚI</label>
-              <input type="password" [ngModel]="confirmStaffPassword()" (ngModelChange)="confirmStaffPassword.set($event)" class="hud-input" autocomplete="new-password">
+              <label for="staff-confirm-password">XÁC NHẬN MẬT KHẨU MỚI</label>
+              <input id="staff-confirm-password" type="password" [ngModel]="confirmStaffPassword()" (ngModelChange)="confirmStaffPassword.set($event)" class="hud-input" autocomplete="new-password">
               @if (confirmStaffPassword() && !passwordsMatch()) {
                 <p class="field-hint error">✖ Mật khẩu xác nhận không khớp.</p>
               }
@@ -304,7 +303,7 @@
                 <button class="camera-cap-btn" (click)="capturePhoto()">📸 CHỤP ẢNH</button>
               } @else {
                 @if (imgBase64()) {
-                  <img [src]="imgBase64()" class="captured-preview-img">
+                  <img [src]="imgBase64()" alt="Ảnh đại diện đã chụp" class="captured-preview-img">
                 } @else {
                   <img
                     [src]="'http://localhost:8000/' + employee()?.image_path"
@@ -345,17 +344,17 @@
           <div class="form-fields">
             <div class="form-row">
               <div class="form-group">
-                <label>TỪ NGÀY</label>
+                <span>TỪ NGÀY</span>
                 <app-date-picker [ngModel]="leaveStartDate()" (ngModelChange)="leaveStartDate.set($event)"></app-date-picker>
               </div>
               <div class="form-group">
-                <label>ĐẾN NGÀY</label>
+                <span>ĐẾN NGÀY</span>
                 <app-date-picker [ngModel]="leaveEndDate()" (ngModelChange)="leaveEndDate.set($event)"></app-date-picker>
               </div>
             </div>
             <div class="form-group">
-              <label>LÝ DO XIN NGHỈ</label>
-              <input type="text" [ngModel]="leaveReason()" (ngModelChange)="leaveReason.set($event)" placeholder="VD: Việc gia đình, khám sức khoẻ..." class="hud-input">
+              <label for="staff-leave-reason">LÝ DO XIN NGHỈ</label>
+              <input id="staff-leave-reason" type="text" [ngModel]="leaveReason()" (ngModelChange)="leaveReason.set($event)" placeholder="VD: Việc gia đình, khám sức khoẻ..." class="hud-input">
             </div>
           </div>
         </div>

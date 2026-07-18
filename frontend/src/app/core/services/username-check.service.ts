@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
@@ -8,18 +8,20 @@ export interface UsernameCheckResponse {
 }
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class UsernameCheckService {
-  private readonly apiUrl = 'http://localhost:8000/api';
+  private http = inject(HttpClient);
 
-  constructor(private http: HttpClient) {}
+  private readonly apiUrl = 'http://localhost:8000/api';
 
   check(username: string, excludeId?: number): Observable<UsernameCheckResponse> {
     const params: Record<string, string> = { username };
     if (excludeId) {
       params['exclude_id'] = String(excludeId);
     }
-    return this.http.get<UsernameCheckResponse>(`${this.apiUrl}/employees/check-username`, { params });
+    return this.http.get<UsernameCheckResponse>(`${this.apiUrl}/employees/check-username`, {
+      params,
+    });
   }
 }

@@ -1,4 +1,4 @@
-import { Injectable, signal, computed } from '@angular/core';
+import { Injectable, signal, computed, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
 
@@ -20,9 +20,11 @@ export interface UserSession {
 }
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class AuthService {
+  private http = inject(HttpClient);
+
   private readonly apiUrl = 'http://localhost:8000/api';
 
   // Reactive state signals
@@ -34,35 +36,33 @@ export class AuthService {
   readonly isAdmin = computed(() => this.currentUser()?.role === 'admin');
   readonly isStaff = computed(() => this.currentUser()?.role === 'staff');
 
-  constructor(private http: HttpClient) {}
-
   login(username: string, password: string): Observable<TokenResponse> {
     return this.http.post<TokenResponse>(`${this.apiUrl}/login`, { username, password }).pipe(
-      tap(res => {
+      tap((res) => {
         if (res.success && res.tokens && res.user) {
           this.saveTokens(res.tokens.access_token, res.tokens.refresh_token);
           this.saveUser(res.user);
         }
-      })
+      }),
     );
   }
 
   refreshTokenCall(): Observable<TokenResponse> {
     const rToken = this.getRefreshToken();
     return this.http.post<TokenResponse>(`${this.apiUrl}/refresh`, { refresh_token: rToken }).pipe(
-      tap(res => {
+      tap((res) => {
         if (res.success && res.tokens) {
           this.saveTokens(res.tokens.access_token, res.tokens.refresh_token);
         }
-      })
+      }),
     );
   }
 
-  logout(): Observable<any> {
+  logout(): Observable<unknown> {
     return this.http.post(`${this.apiUrl}/logout`, {}).pipe(
       tap({
-        finalize: () => this.clearSession()
-      })
+        finalize: () => this.clearSession(),
+      }),
     );
   }
 

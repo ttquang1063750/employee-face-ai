@@ -10,7 +10,7 @@ export function isPasswordValid(password: string): boolean {
 
 // Generates a random password that always satisfies PASSWORD_PATTERN: at least
 // one lowercase, one uppercase, one digit, one special char, min length 12.
-export function generateRandomPassword(length: number = 12): string {
+export function generateRandomPassword(length = 12): string {
   const lower = 'abcdefghijkmnopqrstuvwxyz';
   const upper = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
   const digits = '23456789';

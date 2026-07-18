@@ -1,6 +1,8 @@
 import { Injectable, signal, inject, OnDestroy } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { AuthService } from './auth.service';
+import { ApiResponse } from '../models/api-response.model';
+import { LeaveRequest } from '../models/leave-request.model';
 
 @Injectable({
   providedIn: 'root'
@@ -8,10 +10,10 @@ import { AuthService } from './auth.service';
 export class RealtimeService implements OnDestroy {
   private http = inject(HttpClient);
   private authService = inject(AuthService);
-  
+
   // Realtime signals
   pendingLeaveCount = signal<number>(0);
-  private pollIntervalId: any = null;
+  private pollIntervalId: ReturnType<typeof setInterval> | null = null;
 
   constructor() {
     this.refreshPendingCount();
@@ -38,10 +40,10 @@ export class RealtimeService implements OnDestroy {
       return;
     }
 
-    this.http.get<any>('http://localhost:8000/api/leave-requests').subscribe({
+    this.http.get<ApiResponse<LeaveRequest[]>>('http://localhost:8000/api/leave-requests').subscribe({
       next: (res) => {
-        if (res.success) {
-          const pending = res.data.filter((r: any) => r.status === 'pending').length;
+        if (res.success && res.data) {
+          const pending = res.data.filter((r) => r.status === 'pending').length;
           this.pendingLeaveCount.set(pending);
         }
       },

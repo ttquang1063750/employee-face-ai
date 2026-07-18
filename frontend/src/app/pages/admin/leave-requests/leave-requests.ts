@@ -1,9 +1,18 @@
-import { Component, OnInit, OnDestroy, signal, computed, ChangeDetectionStrategy, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import {
+  Component,
+  OnInit,
+  OnDestroy,
+  signal,
+  computed,
+  ChangeDetectionStrategy,
+  inject,
+} from '@angular/core';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { DialogService } from '../../../core/services/dialog.service';
 import { DatePickerComponent } from '../../../core/components/date-picker/date-picker';
 import { RealtimeService } from '../../../core/services/realtime.service';
+import { ApiResponse } from '../../../core/models/api-response.model';
 
 export interface LeaveRequest {
   id: number;
@@ -25,10 +34,17 @@ type StatusFilter = 'all' | 'pending' | 'approved' | 'rejected';
   standalone: true,
   imports: [FormsModule, DatePickerComponent],
   templateUrl: './leave-requests.html',
-  styleUrls: ['./leave-requests.scss', '../dashboard/dashboard.scss', '../employees/employee-list.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  styleUrls: [
+    './leave-requests.scss',
+    '../dashboard/dashboard.scss',
+    '../employees/employee-list.scss',
+  ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LeaveRequestsComponent implements OnInit, OnDestroy {
+  private http = inject(HttpClient);
+  private dialogService = inject(DialogService);
+
   requests = signal<LeaveRequest[]>([]);
   isLoading = signal<boolean>(true);
   errorMsg = signal<string | null>(null);
@@ -44,7 +60,7 @@ export class LeaveRequestsComponent implements OnInit, OnDestroy {
   currentPage = signal<number>(1);
   pageSize = signal<number>(8);
 
-  pendingCount = computed(() => this.requests().filter(r => r.status === 'pending').length);
+  pendingCount = computed(() => this.requests().filter((r) => r.status === 'pending').length);
 
   filteredRequests = computed(() => {
     const filter = this.statusFilter();
@@ -54,19 +70,20 @@ export class LeaveRequestsComponent implements OnInit, OnDestroy {
     let list = this.requests();
 
     if (filter !== 'all') {
-      list = list.filter(r => r.status === filter);
+      list = list.filter((r) => r.status === filter);
     }
     if (q) {
-      list = list.filter(r =>
-        r.employee_name.toLowerCase().includes(q) ||
-        (r.current_position || '').toLowerCase().includes(q)
+      list = list.filter(
+        (r) =>
+          r.employee_name.toLowerCase().includes(q) ||
+          (r.current_position || '').toLowerCase().includes(q),
       );
     }
     if (start) {
-      list = list.filter(r => r.end_date >= start);
+      list = list.filter((r) => r.end_date >= start);
     }
     if (end) {
-      list = list.filter(r => r.start_date <= end);
+      list = list.filter((r) => r.start_date <= end);
     }
     return list;
   });
@@ -85,9 +102,7 @@ export class LeaveRequestsComponent implements OnInit, OnDestroy {
 
   private readonly apiUrl = 'http://localhost:8000/api';
   private realtimeService = inject(RealtimeService);
-  private pollIntervalId: any = null;
-
-  constructor(private http: HttpClient, private dialogService: DialogService) {}
+  private pollIntervalId: ReturnType<typeof setInterval> | null = null;
 
   ngOnInit(): void {
     this.loadRequests();
@@ -97,14 +112,14 @@ export class LeaveRequestsComponent implements OnInit, OnDestroy {
   startPolling(): void {
     if (this.pollIntervalId) return;
     this.pollIntervalId = setInterval(() => {
-      this.http.get<any>(`${this.apiUrl}/leave-requests`).subscribe({
+      this.http.get<ApiResponse<LeaveRequest[]>>(`${this.apiUrl}/leave-requests`).subscribe({
         next: (res) => {
-          if (res.success) {
+          if (res.success && res.data) {
             this.requests.set(res.data);
-            const pending = res.data.filter((r: any) => r.status === 'pending').length;
+            const pending = res.data.filter((r) => r.status === 'pending').length;
             this.realtimeService.updatePendingCount(pending);
           }
-        }
+        },
       });
     }, 3000);
   }
@@ -124,12 +139,12 @@ export class LeaveRequestsComponent implements OnInit, OnDestroy {
     this.isLoading.set(true);
     this.errorMsg.set(null);
 
-    this.http.get<any>(`${this.apiUrl}/leave-requests`).subscribe({
+    this.http.get<ApiResponse<LeaveRequest[]>>(`${this.apiUrl}/leave-requests`).subscribe({
       next: (res) => {
         this.isLoading.set(false);
-        if (res.success) {
+        if (res.success && res.data) {
           this.requests.set(res.data);
-          const pending = res.data.filter((r: any) => r.status === 'pending').length;
+          const pending = res.data.filter((r) => r.status === 'pending').length;
           this.realtimeService.updatePendingCount(pending);
         } else {
           this.errorMsg.set(res.error || 'Không thể tải danh sách đơn xin nghỉ.');
@@ -138,7 +153,7 @@ export class LeaveRequestsComponent implements OnInit, OnDestroy {
       error: () => {
         this.isLoading.set(false);
         this.errorMsg.set('Lỗi kết nối máy chủ API.');
-      }
+      },
     });
   }
 
@@ -165,7 +180,7 @@ export class LeaveRequestsComponent implements OnInit, OnDestroy {
     const confirmed = await this.dialogService.confirm(
       'DUYỆT ĐƠN NGHỈ',
       `Duyệt đơn xin nghỉ của ${req.employee_name} (${req.start_date} → ${req.end_date})?`,
-      'DUYỆT'
+      'DUYỆT',
     );
     if (confirmed) {
       this.updateStatus(req, 'approved');
@@ -176,45 +191,60 @@ export class LeaveRequestsComponent implements OnInit, OnDestroy {
     const reason = await this.dialogService.prompt(
       'TỪ CHỐI ĐƠN NGHỈ',
       `Nhập lý do từ chối đơn xin nghỉ của ${req.employee_name}:`,
-      'VD: Dự án đang gấp, chưa sắp xếp được nhân sự thay thế...'
+      'VD: Dự án đang gấp, chưa sắp xếp được nhân sự thay thế...',
     );
     if (reason !== null) {
       this.updateStatus(req, 'rejected', reason.trim());
     }
   }
 
-  private updateStatus(req: LeaveRequest, status: 'approved' | 'rejected', rejectionReason?: string): void {
-    this.http.put<any>(`${this.apiUrl}/leave-requests/${req.id}`, { status, rejection_reason: rejectionReason }).subscribe({
-      next: async (res) => {
-        if (res.success) {
-          this.loadRequests();
-        } else {
-          await this.dialogService.alert('LỖI', res.error || 'Không thể cập nhật trạng thái đơn nghỉ.');
-        }
-      },
-      error: async (err) => {
-        await this.dialogService.alert('LỖI', err.error?.error || 'Lỗi kết nối máy chủ.');
-      }
-    });
+  private updateStatus(
+    req: LeaveRequest,
+    status: 'approved' | 'rejected',
+    rejectionReason?: string,
+  ): void {
+    this.http
+      .put<ApiResponse>(`${this.apiUrl}/leave-requests/${req.id}`, {
+        status,
+        rejection_reason: rejectionReason,
+      })
+      .subscribe({
+        next: async (res) => {
+          if (res.success) {
+            this.loadRequests();
+          } else {
+            await this.dialogService.alert(
+              'LỖI',
+              res.error || 'Không thể cập nhật trạng thái đơn nghỉ.',
+            );
+          }
+        },
+        error: async (err: HttpErrorResponse) => {
+          await this.dialogService.alert('LỖI', err.error?.error || 'Lỗi kết nối máy chủ.');
+        },
+      });
   }
 
   leaveStatusLabel(status: string): string {
     switch (status) {
-      case 'approved': return 'Đã duyệt';
-      case 'rejected': return 'Từ chối';
-      default: return 'Chờ duyệt';
+      case 'approved':
+        return 'Đã duyệt';
+      case 'rejected':
+        return 'Từ chối';
+      default:
+        return 'Chờ duyệt';
     }
   }
 
   prevPage(): void {
     if (this.currentPage() > 1) {
-      this.currentPage.update(p => p - 1);
+      this.currentPage.update((p) => p - 1);
     }
   }
 
   nextPage(): void {
     if (this.currentPage() < this.totalPages()) {
-      this.currentPage.update(p => p + 1);
+      this.currentPage.update((p) => p + 1);
     }
   }
 }

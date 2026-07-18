@@ -14,11 +14,11 @@
       <!-- 0. Global filter bar — every widget below reacts to this -->
       <div class="hud-filter-bar">
         <div class="hud-field">
-          <label class="hud-label">TỪ NGÀY</label>
+          <span class="hud-label">TỪ NGÀY</span>
           <app-date-picker [ngModel]="filterStartDateInput()" (ngModelChange)="filterStartDateInput.set($event)"></app-date-picker>
         </div>
         <div class="hud-field">
-          <label class="hud-label">ĐẾN NGÀY</label>
+          <span class="hud-label">ĐẾN NGÀY</span>
           <app-date-picker [ngModel]="filterEndDateInput()" (ngModelChange)="filterEndDateInput.set($event)"></app-date-picker>
         </div>
         <div class="hud-field filter-apply-field">
@@ -27,10 +27,11 @@
 
         <!-- Autocomplete employee name search -->
         <div class="hud-field grow-3">
-          <label class="hud-label">TÊN NHÂN VIÊN</label>
+          <label class="hud-label" for="dashboard-employee-search">TÊN NHÂN VIÊN</label>
           <div class="hud-autocomplete">
             <div class="hud-search-wrapper">
               <input
+                id="dashboard-employee-search"
                 type="text"
                 [ngModel]="filterEmployeeName()"
                 (ngModelChange)="onSearchInput($event)"

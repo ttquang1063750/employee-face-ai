@@ -7,15 +7,6 @@
   background-size: var(--pattern-dot-grid-size);
 }
 
-@media (max-width: 760px) {
-  .shell {
-    grid-template-columns: 1fr;
-  }
-  .sidebar {
-    display: none;
-  }
-}
-
 .sidebar {
   background: rgba(var(--color-heading-rgb), 0.03);
   border-right: 1px solid rgba(var(--color-border-rgb), 0.2);
@@ -103,7 +94,9 @@
   padding: var(--space-3) var(--space-4);
   border-radius: var(--radius-md);
   cursor: pointer;
-  text-align: left;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   transition: var(--transition-fast);
 
   &:hover {
@@ -128,4 +121,15 @@
   margin-left: auto;
   box-shadow: var(--glow-red);
   text-shadow: none;
+}
+
+// Media query overrides must come last so they win the cascade over the
+// unconditional base rules above (equal specificity, later wins).
+@media (max-width: 760px) {
+  .shell {
+    grid-template-columns: 1fr;
+  }
+  .sidebar {
+    display: none;
+  }
 }

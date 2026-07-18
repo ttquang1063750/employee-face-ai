@@ -1,13 +1,26 @@
-import { Component, OnInit, OnDestroy, signal, computed, ElementRef, viewChild, ChangeDetectionStrategy, inject } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  OnDestroy,
+  signal,
+  computed,
+  ElementRef,
+  viewChild,
+  ChangeDetectionStrategy,
+  inject,
+} from '@angular/core';
 import { RealtimeService } from '../../../core/services/realtime.service';
 import { Router } from '@angular/router';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../../core/services/auth.service';
 import { DialogService } from '../../../core/services/dialog.service';
 import { isPasswordValid, PASSWORD_HINT } from '../../../core/services/credentials.util';
 import { DatePickerComponent } from '../../../core/components/date-picker/date-picker';
+import { ApiResponse } from '../../../core/models/api-response.model';
+import { DetailedEmployee, AttendanceLog } from '../../../core/models/employee.model';
+import { LeaveRequest } from '../../../core/models/leave-request.model';
 
 @Component({
   selector: 'app-staff-profile',
@@ -15,13 +28,18 @@ import { DatePickerComponent } from '../../../core/components/date-picker/date-p
   imports: [FormsModule, CommonModule, DatePickerComponent],
   templateUrl: './staff-profile.html',
   styleUrls: ['./staff-profile.scss', '../../admin/employee-detail/employee-detail.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class StaffProfileComponent implements OnInit, OnDestroy {
+  private http = inject(HttpClient);
+  private authService = inject(AuthService);
+  private router = inject(Router);
+  private dialogService = inject(DialogService);
+
   videoElement = viewChild<ElementRef<HTMLVideoElement>>('videoElement');
   canvasElement = viewChild<ElementRef<HTMLCanvasElement>>('canvasElement');
 
-  employee = signal<any | null>(null);
+  employee = signal<DetailedEmployee | null>(null);
   isLoading = signal<boolean>(true);
   errorMsg = signal<string | null>(null);
 
@@ -50,7 +68,7 @@ export class StaffProfileComponent implements OnInit, OnDestroy {
   leaveEndDate = signal<string>('');
   leaveReason = signal<string>('');
   isSavingLeave = signal<boolean>(false);
-  leaveRequests = signal<any[]>([]);
+  leaveRequests = signal<LeaveRequest[]>([]);
 
   // Attendance Filters (applied values used by the computed logs below;
   // the *Input signals are the draft values bound to the date pickers and
@@ -70,7 +88,7 @@ export class StaffProfileComponent implements OnInit, OnDestroy {
     const end = this.filterEndDate();
     const raw = this.employee()?.raw_logs || [];
     if (!start || !end) return raw;
-    return raw.filter((log: any) => {
+    return raw.filter((log: AttendanceLog) => {
       const logDate = log.timestamp.split('T')[0];
       return logDate >= start && logDate <= end;
     });
@@ -96,7 +114,7 @@ export class StaffProfileComponent implements OnInit, OnDestroy {
   workingDays = computed(() => {
     const logs = this.filteredRawLogs();
     const uniqueDates = new Set<string>();
-    logs.forEach((log: any) => {
+    logs.forEach((log: AttendanceLog) => {
       uniqueDates.add(log.timestamp.split('T')[0]);
     });
     return uniqueDates.size;
@@ -105,9 +123,9 @@ export class StaffProfileComponent implements OnInit, OnDestroy {
   // Computed: Aggregate working hours via pairing algorithm
   workingHours = computed(() => {
     const logs = this.filteredRawLogs();
-    const logsByDate: { [key: string]: any[] } = {};
+    const logsByDate: Record<string, AttendanceLog[]> = {};
 
-    logs.forEach((log: any) => {
+    logs.forEach((log: AttendanceLog) => {
       const date = log.timestamp.split('T')[0];
       if (!logsByDate[date]) {
         logsByDate[date] = [];
@@ -118,7 +136,9 @@ export class StaffProfileComponent implements OnInit, OnDestroy {
     let totalHours = 0;
     Object.keys(logsByDate).forEach((date) => {
       // Sort day logs chronologically (oldest first)
-      const dayLogs = logsByDate[date].sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+      const dayLogs = logsByDate[date].sort(
+        (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
+      );
 
       let lastCheckInTime: number | null = null;
       dayLogs.forEach((log) => {
@@ -138,14 +158,7 @@ export class StaffProfileComponent implements OnInit, OnDestroy {
 
   private readonly apiUrl = 'http://localhost:8000/api';
   private realtimeService = inject(RealtimeService);
-  private pollIntervalId: any = null;
-
-  constructor(
-    private http: HttpClient,
-    private authService: AuthService,
-    private router: Router,
-    private dialogService: DialogService
-  ) {}
+  private pollIntervalId: ReturnType<typeof setInterval> | null = null;
 
   ngOnInit(): void {
     this.loadOwnProfile();
@@ -160,22 +173,24 @@ export class StaffProfileComponent implements OnInit, OnDestroy {
       if (!employeeId) return;
 
       // Quiet reload profile details
-      this.http.get<any>(`${this.apiUrl}/employees/${employeeId}`).subscribe({
+      this.http.get<ApiResponse<DetailedEmployee>>(`${this.apiUrl}/employees/${employeeId}`).subscribe({
         next: (res) => {
-          if (res.success) {
+          if (res.success && res.data) {
             this.employee.set(res.data);
           }
-        }
+        },
       });
 
       // Quiet reload leave requests
-      this.http.get<any>(`${this.apiUrl}/employees/${employeeId}/leave-requests`).subscribe({
-        next: (res) => {
-          if (res.success) {
-            this.leaveRequests.set(res.data);
-          }
-        }
-      });
+      this.http
+        .get<ApiResponse<LeaveRequest[]>>(`${this.apiUrl}/employees/${employeeId}/leave-requests`)
+        .subscribe({
+          next: (res) => {
+            if (res.success && res.data) {
+              this.leaveRequests.set(res.data);
+            }
+          },
+        });
     }, 3000);
   }
 
@@ -197,10 +212,10 @@ export class StaffProfileComponent implements OnInit, OnDestroy {
     this.isLoading.set(true);
     this.errorMsg.set(null);
 
-    this.http.get<any>(`${this.apiUrl}/employees/${employeeId}`).subscribe({
+    this.http.get<ApiResponse<DetailedEmployee>>(`${this.apiUrl}/employees/${employeeId}`).subscribe({
       next: (res) => {
         this.isLoading.set(false);
-        if (res.success) {
+        if (res.success && res.data) {
           this.employee.set(res.data);
           this.initializeDateFilters();
         } else {
@@ -210,7 +225,7 @@ export class StaffProfileComponent implements OnInit, OnDestroy {
       error: () => {
         this.isLoading.set(false);
         this.errorMsg.set('Lỗi kết nối máy chủ API.');
-      }
+      },
     });
   }
 
@@ -236,27 +251,28 @@ export class StaffProfileComponent implements OnInit, OnDestroy {
 
   prevPage(): void {
     if (this.currentPage() > 1) {
-      this.currentPage.update(p => p - 1);
+      this.currentPage.update((p) => p - 1);
     }
   }
 
   nextPage(): void {
     if (this.currentPage() < this.totalPages()) {
-      this.currentPage.update(p => p + 1);
+      this.currentPage.update((p) => p + 1);
     }
   }
 
   onImageError(event: Event): void {
     const target = event.target as HTMLImageElement;
     if (target) {
-      target.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%2394a3b8"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg>';
+      target.src =
+        'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%2394a3b8"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg>';
     }
   }
 
   logout(): void {
     this.authService.logout().subscribe({
       next: () => this.router.navigate(['/login']),
-      error: () => this.router.navigate(['/login'])
+      error: () => this.router.navigate(['/login']),
     });
   }
 
@@ -287,29 +303,34 @@ export class StaffProfileComponent implements OnInit, OnDestroy {
       return;
     }
     if (!this.passwordsMatch()) {
-      await this.dialogService.alert('MẬT KHẨU KHÔNG KHỚP', 'Mật khẩu mới và xác nhận mật khẩu không giống nhau.');
+      await this.dialogService.alert(
+        'MẬT KHẨU KHÔNG KHỚP',
+        'Mật khẩu mới và xác nhận mật khẩu không giống nhau.',
+      );
       return;
     }
 
     this.isSavingPassword.set(true);
-    this.http.put<any>(`${this.apiUrl}/employees/${employeeId}/password`, {
-      current_password: this.currentPassword(),
-      new_password: this.newStaffPassword()
-    }).subscribe({
-      next: async (res) => {
-        this.isSavingPassword.set(false);
-        if (res.success) {
-          await this.dialogService.alert('THÀNH CÔNG', 'Đổi mật khẩu thành công.');
-          this.closePasswordModal();
-        } else {
-          await this.dialogService.alert('LỖI', res.error || 'Không thể đổi mật khẩu.');
-        }
-      },
-      error: async (err) => {
-        this.isSavingPassword.set(false);
-        await this.dialogService.alert('LỖI', err.error?.error || 'Lỗi kết nối máy chủ.');
-      }
-    });
+    this.http
+      .put<ApiResponse>(`${this.apiUrl}/employees/${employeeId}/password`, {
+        current_password: this.currentPassword(),
+        new_password: this.newStaffPassword(),
+      })
+      .subscribe({
+        next: async (res) => {
+          this.isSavingPassword.set(false);
+          if (res.success) {
+            await this.dialogService.alert('THÀNH CÔNG', 'Đổi mật khẩu thành công.');
+            this.closePasswordModal();
+          } else {
+            await this.dialogService.alert('LỖI', res.error || 'Không thể đổi mật khẩu.');
+          }
+        },
+        error: async (err: HttpErrorResponse) => {
+          this.isSavingPassword.set(false);
+          await this.dialogService.alert('LỖI', err.error?.error || 'Lỗi kết nối máy chủ.');
+        },
+      });
   }
 
   // ===================== Change Avatar =====================
@@ -328,22 +349,23 @@ export class StaffProfileComponent implements OnInit, OnDestroy {
     this.showWebcam.set(true);
     try {
       this.webcamStream = await navigator.mediaDevices.getUserMedia({
-        video: { width: 400, height: 300, facingMode: 'user' }
+        video: { width: 400, height: 300, facingMode: 'user' },
       });
       setTimeout(() => {
         if (this.videoElement()) {
           this.videoElement()!.nativeElement.srcObject = this.webcamStream;
         }
       }, 100);
-    } catch (err: any) {
-      await this.dialogService.alert('LỖI CAMERA', 'Không thể khởi chạy camera: ' + err.message);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      await this.dialogService.alert('LỖI CAMERA', 'Không thể khởi chạy camera: ' + message);
       this.showWebcam.set(false);
     }
   }
 
   stopWebcam(): void {
     if (this.webcamStream) {
-      this.webcamStream.getTracks().forEach(track => track.stop());
+      this.webcamStream.getTracks().forEach((track) => track.stop());
       this.webcamStream = null;
     }
     this.showWebcam.set(false);
@@ -382,8 +404,8 @@ export class StaffProfileComponent implements OnInit, OnDestroy {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files[0]) {
       const reader = new FileReader();
-      reader.onload = (e: any) => {
-        this.imgBase64.set(e.target.result);
+      reader.onload = (e: ProgressEvent<FileReader>) => {
+        this.imgBase64.set(e.target?.result as string);
       };
       reader.readAsDataURL(input.files[0]);
     }
@@ -394,22 +416,24 @@ export class StaffProfileComponent implements OnInit, OnDestroy {
     if (!employeeId || !this.imgBase64()) return;
 
     this.isSavingAvatar.set(true);
-    this.http.put<any>(`${this.apiUrl}/employees/${employeeId}/avatar`, { img: this.imgBase64() }).subscribe({
-      next: async (res) => {
-        this.isSavingAvatar.set(false);
-        if (res.success) {
-          await this.dialogService.alert('THÀNH CÔNG', 'Cập nhật ảnh đại diện thành công.');
-          this.closeAvatarModal();
-          this.loadOwnProfile();
-        } else {
-          await this.dialogService.alert('LỖI', res.error || 'Không thể cập nhật ảnh đại diện.');
-        }
-      },
-      error: async (err) => {
-        this.isSavingAvatar.set(false);
-        await this.dialogService.alert('LỖI', err.error?.error || 'Lỗi kết nối máy chủ.');
-      }
-    });
+    this.http
+      .put<ApiResponse>(`${this.apiUrl}/employees/${employeeId}/avatar`, { img: this.imgBase64() })
+      .subscribe({
+        next: async (res) => {
+          this.isSavingAvatar.set(false);
+          if (res.success) {
+            await this.dialogService.alert('THÀNH CÔNG', 'Cập nhật ảnh đại diện thành công.');
+            this.closeAvatarModal();
+            this.loadOwnProfile();
+          } else {
+            await this.dialogService.alert('LỖI', res.error || 'Không thể cập nhật ảnh đại diện.');
+          }
+        },
+        error: async (err: HttpErrorResponse) => {
+          this.isSavingAvatar.set(false);
+          await this.dialogService.alert('LỖI', err.error?.error || 'Lỗi kết nối máy chủ.');
+        },
+      });
   }
 
   // ===================== Leave Requests =====================
@@ -428,12 +452,12 @@ export class StaffProfileComponent implements OnInit, OnDestroy {
     const employeeId = this.authService.currentUser()?.id;
     if (!employeeId) return;
 
-    this.http.get<any>(`${this.apiUrl}/employees/${employeeId}/leave-requests`).subscribe({
+    this.http.get<ApiResponse<LeaveRequest[]>>(`${this.apiUrl}/employees/${employeeId}/leave-requests`).subscribe({
       next: (res) => {
-        if (res.success) {
+        if (res.success && res.data) {
           this.leaveRequests.set(res.data);
         }
-      }
+      },
     });
   }
 
@@ -451,33 +475,38 @@ export class StaffProfileComponent implements OnInit, OnDestroy {
     }
 
     this.isSavingLeave.set(true);
-    this.http.post<any>(`${this.apiUrl}/employees/${employeeId}/leave-requests`, {
-      start_date: this.leaveStartDate(),
-      end_date: this.leaveEndDate(),
-      reason: this.leaveReason().trim()
-    }).subscribe({
-      next: async (res) => {
-        this.isSavingLeave.set(false);
-        if (res.success) {
-          await this.dialogService.alert('THÀNH CÔNG', 'Gửi đơn xin nghỉ thành công.');
-          this.closeLeaveModal();
-          this.loadLeaveRequests();
-        } else {
-          await this.dialogService.alert('LỖI', res.error || 'Không thể gửi đơn xin nghỉ.');
-        }
-      },
-      error: async (err) => {
-        this.isSavingLeave.set(false);
-        await this.dialogService.alert('LỖI', err.error?.error || 'Lỗi kết nối máy chủ.');
-      }
-    });
+    this.http
+      .post<ApiResponse>(`${this.apiUrl}/employees/${employeeId}/leave-requests`, {
+        start_date: this.leaveStartDate(),
+        end_date: this.leaveEndDate(),
+        reason: this.leaveReason().trim(),
+      })
+      .subscribe({
+        next: async (res) => {
+          this.isSavingLeave.set(false);
+          if (res.success) {
+            await this.dialogService.alert('THÀNH CÔNG', 'Gửi đơn xin nghỉ thành công.');
+            this.closeLeaveModal();
+            this.loadLeaveRequests();
+          } else {
+            await this.dialogService.alert('LỖI', res.error || 'Không thể gửi đơn xin nghỉ.');
+          }
+        },
+        error: async (err: HttpErrorResponse) => {
+          this.isSavingLeave.set(false);
+          await this.dialogService.alert('LỖI', err.error?.error || 'Lỗi kết nối máy chủ.');
+        },
+      });
   }
 
   leaveStatusLabel(status: string): string {
     switch (status) {
-      case 'approved': return 'Đã duyệt';
-      case 'rejected': return 'Từ chối';
-      default: return 'Chờ duyệt';
+      case 'approved':
+        return 'Đã duyệt';
+      case 'rejected':
+        return 'Từ chối';
+      default:
+        return 'Chờ duyệt';
     }
   }
 }

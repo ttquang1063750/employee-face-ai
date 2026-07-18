@@ -16,7 +16,6 @@
     } @else {
       <!-- 1. Employee Profile Header -->
       <div class="profile-header-card">
-        <div class="card-glow"></div>
         <div class="profile-summary">
           <div class="avatar-frame">
             <img 
@@ -52,11 +51,11 @@
           <!-- Date range filter bar -->
           <div class="hud-filter-bar">
             <div class="hud-field">
-              <label class="hud-label">TỪ NGÀY</label>
+              <span class="hud-label">TỪ NGÀY</span>
               <app-date-picker [ngModel]="filterStartDateInput()" (ngModelChange)="filterStartDateInput.set($event)"></app-date-picker>
             </div>
             <div class="hud-field">
-              <label class="hud-label">ĐẾN NGÀY</label>
+              <span class="hud-label">ĐẾN NGÀY</span>
               <app-date-picker [ngModel]="filterEndDateInput()" (ngModelChange)="filterEndDateInput.set($event)"></app-date-picker>
             </div>
             <div class="hud-field filter-apply-field">
@@ -224,23 +223,23 @@
       <div class="modal-body">
         <div class="form-fields">
           <div class="form-group">
-            <label>HỌ VÀ TÊN</label>
-            <input type="text" [ngModel]="editName()" (ngModelChange)="editName.set($event)" class="hud-input">
+            <label for="edit-emp-name">HỌ VÀ TÊN</label>
+            <input id="edit-emp-name" type="text" [ngModel]="editName()" (ngModelChange)="editName.set($event)" class="hud-input">
           </div>
           <div class="form-group">
-            <label>TUỔI</label>
-            <input type="number" [ngModel]="editAge()" (ngModelChange)="editAge.set($event)" class="hud-input">
+            <label for="edit-emp-age">TUỔI</label>
+            <input id="edit-emp-age" type="number" [ngModel]="editAge()" (ngModelChange)="editAge.set($event)" class="hud-input">
           </div>
           <div class="form-group">
-            <label>PHÂN QUYỀN HỆ THỐNG</label>
-            <select [ngModel]="editRole()" (ngModelChange)="editRole.set($event)" class="hud-select">
+            <label for="edit-emp-role">PHÂN QUYỀN HỆ THỐNG</label>
+            <select id="edit-emp-role" [ngModel]="editRole()" (ngModelChange)="editRole.set($event)" class="hud-select">
               <option value="staff">Nhân sự (Staff)</option>
               <option value="admin">Quản lý (Admin)</option>
             </select>
           </div>
           <div class="form-group">
-            <label>USERNAME *</label>
-            <input type="text" [ngModel]="editUsername()" (ngModelChange)="onUsernameInput($event)" autocomplete="off" class="hud-input">
+            <label for="edit-emp-username">USERNAME *</label>
+            <input id="edit-emp-username" type="text" [ngModel]="editUsername()" (ngModelChange)="onUsernameInput($event)" autocomplete="off" class="hud-input">
             @if (usernameStatus() === 'checking') {
               <p class="field-hint">⏳ Đang kiểm tra username...</p>
             } @else if (usernameStatus() === 'taken') {
@@ -250,9 +249,9 @@
             }
           </div>
           <div class="form-group">
-            <label>MẬT KHẨU MỚI (Để trống nếu giữ nguyên)</label>
+            <label for="edit-emp-password">MẬT KHẨU MỚI (Để trống nếu giữ nguyên)</label>
             <div class="input-with-actions">
-              <input [type]="showEditPassword() ? 'text' : 'password'" [ngModel]="editPassword()" (ngModelChange)="editPassword.set($event)" class="hud-input" autocomplete="new-password">
+              <input id="edit-emp-password" [type]="showEditPassword() ? 'text' : 'password'" [ngModel]="editPassword()" (ngModelChange)="editPassword.set($event)" class="hud-input" autocomplete="new-password">
               <button type="button" class="hud-btn-mini" data-tooltip="Hiện/ẩn mật khẩu" (click)="showEditPassword.set(!showEditPassword())">{{ showEditPassword() ? '🙈' : '👁' }}</button>
               <button type="button" class="hud-btn-mini" data-tooltip="Tạo mật khẩu ngẫu nhiên" (click)="generatePassword()">🎲</button>
             </div>
@@ -263,7 +262,7 @@
 
           <!-- Avatar Update Section -->
           <div class="form-camera-zone">
-            <label class="camera-label">ẢNH CHÂN DUNG ĐỐI CHIẾU (MẪU)</label>
+            <span class="camera-label">ẢNH CHÂN DUNG ĐỐI CHIẾU (MẪU)</span>
 
             <div class="camera-viewport-frame">
               @if (showWebcam()) {
@@ -271,7 +270,7 @@
                 <button class="camera-cap-btn" (click)="capturePhoto()">📸 CHỤP ẢNH MẪU</button>
               } @else {
                 @if (imgBase64()) {
-                  <img [src]="imgBase64()" class="captured-preview-img">
+                  <img [src]="imgBase64()" alt="Ảnh chân dung đã chụp" class="captured-preview-img">
                 } @else {
                   <img
                     [src]="'http://localhost:8000/' + employee()?.image_path"
@@ -312,11 +311,11 @@
       <div class="modal-body">
         <div class="form-fields">
           <div class="form-group">
-            <label>CHỨC DANH MỚI</label>
-            <input type="text" [ngModel]="newPosTitle()" (ngModelChange)="newPosTitle.set($event)" placeholder="Ví dụ: Team Leader, Senior Manager" class="hud-input">
+            <label for="new-pos-title">CHỨC DANH MỚI</label>
+            <input id="new-pos-title" type="text" [ngModel]="newPosTitle()" (ngModelChange)="newPosTitle.set($event)" placeholder="Ví dụ: Team Leader, Senior Manager" class="hud-input">
           </div>
           <div class="form-group">
-            <label>NGÀY HIỆU LỰC BỔ NHIỆM</label>
+            <span>NGÀY HIỆU LỰC BỔ NHIỆM</span>
             <app-date-picker [ngModel]="newPosStartDate()" (ngModelChange)="newPosStartDate.set($event)"></app-date-picker>
           </div>
           <p class="warning-alert">ℹ️ Ghi chú: Hệ thống sẽ tự động chuyển chức danh hiện tại của nhân sự này sang trạng thái kết thúc vào ngày bổ nhiệm.</p>
@@ -344,16 +343,16 @@
       <div class="modal-body">
         <div class="form-fields">
           <div class="form-group">
-            <label>MỨC LƯƠNG MỚI (USD/Tháng)</label>
-            <input type="number" [ngModel]="newIncAmount()" (ngModelChange)="newIncAmount.set($event)" placeholder="Nhập số tiền" class="hud-input">
+            <label for="new-inc-amount">MỨC LƯƠNG MỚI (USD/Tháng)</label>
+            <input id="new-inc-amount" type="number" [ngModel]="newIncAmount()" (ngModelChange)="newIncAmount.set($event)" placeholder="Nhập số tiền" class="hud-input">
           </div>
           <div class="form-group">
-            <label>NGÀY HIỆU LỰC MỚI</label>
+            <span>NGÀY HIỆU LỰC MỚI</span>
             <app-date-picker [ngModel]="newIncEffectiveDate()" (ngModelChange)="newIncEffectiveDate.set($event)"></app-date-picker>
           </div>
           <div class="form-group">
-            <label>LÝ DO ĐIỀU CHỈNH</label>
-            <input type="text" [ngModel]="newIncReason()" (ngModelChange)="newIncReason.set($event)" placeholder="Ví dụ: Annual Review, Promotion Raise" class="hud-input">
+            <label for="new-inc-reason">LÝ DO ĐIỀU CHỈNH</label>
+            <input id="new-inc-reason" type="text" [ngModel]="newIncReason()" (ngModelChange)="newIncReason.set($event)" placeholder="Ví dụ: Annual Review, Promotion Raise" class="hud-input">
           </div>
         </div>
       </div>
@@ -380,7 +379,7 @@
         <div class="skills-editor-wrapper">
           <!-- Skills list preview with delete options -->
           <div class="skills-editor-list">
-            <label class="list-title">KỸ NĂNG HIỆN TẠI</label>
+            <span class="list-title">KỸ NĂNG HIỆN TẠI</span>
             <div class="editor-badges-grid">
               @for (sk of skillsListToEdit(); track sk.skill_name; let idx = $index) {
                 <div class="editor-badge-item">
@@ -398,15 +397,15 @@
 
           <!-- Add new skill form -->
           <div class="skills-editor-form">
-            <label class="form-title">➕ THÊM KỸ NĂNG MỚI</label>
+            <span class="form-title">➕ THÊM KỸ NĂNG MỚI</span>
             <div class="form-fields">
               <div class="form-group">
-                <label>TÊN KỸ NĂNG</label>
-                <input type="text" [ngModel]="newSkillName()" (ngModelChange)="newSkillName.set($event)" placeholder="Ví dụ: Angular, Python, AWS" class="hud-input">
+                <label for="new-skill-name">TÊN KỸ NĂNG</label>
+                <input id="new-skill-name" type="text" [ngModel]="newSkillName()" (ngModelChange)="newSkillName.set($event)" placeholder="Ví dụ: Angular, Python, AWS" class="hud-input">
               </div>
               <div class="form-group">
-                <label>MÔ TẢ KỸ NĂNG / MỨC ĐỘ THÀNH THẠO</label>
-                <textarea [ngModel]="newSkillDesc()" (ngModelChange)="newSkillDesc.set($event)" placeholder="Mô tả chi tiết" rows="2" class="hud-textarea"></textarea>
+                <label for="new-skill-desc">MÔ TẢ KỸ NĂNG / MỨC ĐỘ THÀNH THẠO</label>
+                <textarea id="new-skill-desc" [ngModel]="newSkillDesc()" (ngModelChange)="newSkillDesc.set($event)" placeholder="Mô tả chi tiết" rows="2" class="hud-textarea"></textarea>
               </div>
               <button class="hud-btn-outline" [disabled]="!newSkillName()" (click)="addSkillToList()">THÊM VÀO DANH SÁCH</button>
             </div>
@@ -436,7 +435,7 @@
         <div class="projects-editor-wrapper">
           <!-- Projects list preview with delete options -->
           <div class="projects-editor-list">
-            <label class="list-title">DANH SÁCH DỰ ÁN HIỆN TẠI</label>
+            <span class="list-title">DANH SÁCH DỰ ÁN HIỆN TẠI</span>
             <div class="editor-projects-grid">
               @for (prj of projectsListToEdit(); track prj.project_name; let idx = $index) {
                 <div class="editor-project-card">
@@ -458,29 +457,29 @@
 
           <!-- Add new project form -->
           <div class="projects-editor-form">
-            <label class="form-title">➕ THÊM DỰ ÁN MỚI</label>
+            <span class="form-title">➕ THÊM DỰ ÁN MỚI</span>
             <div class="form-fields">
               <div class="form-group">
-                <label>TÊN DỰ ÁN</label>
-                <input type="text" [ngModel]="newProjName()" (ngModelChange)="newProjName.set($event)" placeholder="Ví dụ: ERP Portal, AI Kiosk" class="hud-input">
+                <label for="new-proj-name">TÊN DỰ ÁN</label>
+                <input id="new-proj-name" type="text" [ngModel]="newProjName()" (ngModelChange)="newProjName.set($event)" placeholder="Ví dụ: ERP Portal, AI Kiosk" class="hud-input">
               </div>
               <div class="form-row">
                 <div class="form-group">
-                  <label>VAI TRÒ</label>
-                  <input type="text" [ngModel]="newProjRole()" (ngModelChange)="newProjRole.set($event)" placeholder="Ví dụ: Tech Lead, FE Dev" class="hud-input">
+                  <label for="new-proj-role">VAI TRÒ</label>
+                  <input id="new-proj-role" type="text" [ngModel]="newProjRole()" (ngModelChange)="newProjRole.set($event)" placeholder="Ví dụ: Tech Lead, FE Dev" class="hud-input">
                 </div>
                 <div class="form-group">
-                  <label>NGÀY BẮT ĐẦU</label>
+                  <span>NGÀY BẮT ĐẦU</span>
                   <app-date-picker [ngModel]="newProjStartDate()" (ngModelChange)="newProjStartDate.set($event)"></app-date-picker>
                 </div>
               </div>
               <div class="form-group">
-                <label>NGÀY KẾT THÚC (Để trống nếu đang diễn ra)</label>
+                <span>NGÀY KẾT THÚC (Để trống nếu đang diễn ra)</span>
                 <app-date-picker [ngModel]="newProjEndDate()" (ngModelChange)="newProjEndDate.set($event)"></app-date-picker>
               </div>
               <div class="form-group">
-                <label>MÔ TẢ CHI TIẾT NHIỆM VỤ DỰ ÁN</label>
-                <textarea [ngModel]="newProjDesc()" (ngModelChange)="newProjDesc.set($event)" placeholder="Nhiệm vụ cụ thể" rows="2" class="hud-textarea"></textarea>
+                <label for="new-proj-desc">MÔ TẢ CHI TIẾT NHIỆM VỤ DỰ ÁN</label>
+                <textarea id="new-proj-desc" [ngModel]="newProjDesc()" (ngModelChange)="newProjDesc.set($event)" placeholder="Nhiệm vụ cụ thể" rows="2" class="hud-textarea"></textarea>
               </div>
               <button class="hud-btn-outline" [disabled]="!newProjName()" (click)="addProjectToList()">THÊM DỰ ÁN VÀO DANH SÁCH</button>
             </div>

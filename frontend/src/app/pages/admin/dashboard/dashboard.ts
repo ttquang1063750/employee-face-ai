@@ -1,8 +1,17 @@
-import { Component, OnInit, OnDestroy, signal, computed, ChangeDetectionStrategy, inject } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  OnDestroy,
+  signal,
+  computed,
+  ChangeDetectionStrategy,
+  inject,
+} from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { DatePickerComponent } from '../../../core/components/date-picker/date-picker';
 import { RealtimeService } from '../../../core/services/realtime.service';
+import { ApiResponse } from '../../../core/models/api-response.model';
 
 export interface EmployeeBase {
   id: number;
@@ -29,9 +38,11 @@ export interface AttendanceLog {
   imports: [FormsModule, DatePickerComponent],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DashboardComponent implements OnInit, OnDestroy {
+  private http = inject(HttpClient);
+
   employees = signal<EmployeeBase[]>([]);
   logs = signal<AttendanceLog[]>([]);
   isLoading = signal<boolean>(true);
@@ -57,7 +68,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   totalEmployees = computed(() => this.employees().length);
   totalLogsToday = computed(() => {
     const todayStr = new Date().toISOString().split('T')[0];
-    return this.logs().filter(log => log.timestamp.startsWith(todayStr)).length;
+    return this.logs().filter((log) => log.timestamp.startsWith(todayStr)).length;
   });
 
   // Computed: Filtered attendance logs in selected time range / employee search scope
@@ -67,10 +78,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
     const nameQuery = this.filterEmployeeName().toLowerCase().trim();
     const raw = this.logs() || [];
 
-    return raw.filter((log: any) => {
+    return raw.filter((log) => {
       // timestamp format: "YYYY-MM-DD HH:mm:ss"
       const logDate = log.timestamp.split(' ')[0];
-      const dateInRange = (!start || !end) ? true : (logDate >= start && logDate <= end);
+      const dateInRange = !start || !end ? true : logDate >= start && logDate <= end;
       const nameMatches = !nameQuery ? true : log.employee_name.toLowerCase().includes(nameQuery);
       return dateInRange && nameMatches;
     });
@@ -79,9 +90,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
   // Computed: Unique employee name suggestions filtered by current input
   employeeSuggestions = computed(() => {
     const q = this.filterEmployeeName().toLowerCase().trim();
-    const allNames = Array.from(new Set(this.logs().map((l: any) => l.employee_name as string))).sort();
+    const allNames = Array.from(
+      new Set(this.logs().map((l) => l.employee_name)),
+    ).sort();
     if (!q) return allNames.slice(0, 8);
-    return allNames.filter(n => n.toLowerCase().includes(q)).slice(0, 8);
+    return allNames.filter((n) => n.toLowerCase().includes(q)).slice(0, 8);
   });
 
   // Computed: Pagination variables
@@ -106,13 +119,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
       happy: 0,
       neutral: 0,
       sad: 0,
-      stressed: 0
+      stressed: 0,
     };
-    
+
     const logsList = this.filteredLogs();
     if (logsList.length === 0) return { happy: 0, neutral: 0, sad: 0, stressed: 0 };
 
-    logsList.forEach(log => {
+    logsList.forEach((log) => {
       const m = log.mood.toLowerCase();
       if (m.includes('happy') || m.includes('vui')) stats['happy']++;
       else if (m.includes('neutral') || m.includes('bình')) stats['neutral']++;
@@ -125,7 +138,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       happy: Math.round((stats['happy'] / total) * 100),
       neutral: Math.round((stats['neutral'] / total) * 100),
       sad: Math.round((stats['sad'] / total) * 100),
-      stressed: Math.round((stats['stressed'] / total) * 100)
+      stressed: Math.round((stats['stressed'] / total) * 100),
     };
   });
 
@@ -140,9 +153,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   happinessStatusLabel = computed(() => {
     switch (this.happinessLevel()) {
-      case 'success': return 'Đạt mục tiêu';
-      case 'warning': return 'Thấp';
-      default: return 'Rất thấp';
+      case 'success':
+        return 'Đạt mục tiêu';
+      case 'warning':
+        return 'Thấp';
+      default:
+        return 'Rất thấp';
     }
   });
 
@@ -159,10 +175,15 @@ export class DashboardComponent implements OnInit, OnDestroy {
       { key: 'happy', label: 'Vui vẻ 😊', value: m.happy, color: 'var(--color-cyan)' },
       { key: 'neutral', label: 'Bình thường 😐', value: m.neutral, color: 'var(--color-info)' },
       { key: 'sad', label: 'Buồn bã 😢', value: m.sad, color: 'var(--color-red)' },
-      { key: 'stressed', label: 'Căng thẳng / Lo lắng 😰', value: m.stressed, color: 'var(--color-orange)' }
+      {
+        key: 'stressed',
+        label: 'Căng thẳng / Lo lắng 😰',
+        value: m.stressed,
+        color: 'var(--color-orange)',
+      },
     ];
     let acc = 0;
-    return segments.map(seg => {
+    return segments.map((seg) => {
       const offset = -acc;
       acc += seg.value;
       return { ...seg, offset };
@@ -174,7 +195,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     const hours = [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18];
     const counts = hours.map(() => 0);
 
-    this.filteredLogs().forEach(log => {
+    this.filteredLogs().forEach((log) => {
       try {
         const timePart = log.timestamp.split(' ')[1];
         if (timePart) {
@@ -184,7 +205,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
             counts[idx]++;
           }
         }
-      } catch (e) {
+      } catch {
         // Ignore
       }
     });
@@ -210,24 +231,22 @@ export class DashboardComponent implements OnInit, OnDestroy {
     return {
       points,
       dPath: d,
-      hours: hours.map(h => `${h}h`)
+      hours: hours.map((h) => `${h}h`),
     };
   });
 
-  hasHourlyData = computed(() => this.hourlyTimeline().points.some(pt => pt.count > 0));
+  hasHourlyData = computed(() => this.hourlyTimeline().points.some((pt) => pt.count > 0));
 
   private readonly apiUrl = 'http://localhost:8000/api';
   private realtimeService = inject(RealtimeService);
-  private pollIntervalId: any = null;
-
-  constructor(private http: HttpClient) {}
+  private pollIntervalId: ReturnType<typeof setInterval> | null = null;
 
   ngOnInit(): void {
     // Set default dates
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const pad = (n: number) => n.toString().padStart(2, '0');
-    
+
     const startStr = `${startOfMonth.getFullYear()}-${pad(startOfMonth.getMonth() + 1)}-01`;
     const endStr = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
     this.filterStartDate.set(startStr);
@@ -243,19 +262,19 @@ export class DashboardComponent implements OnInit, OnDestroy {
     if (this.pollIntervalId) return;
     this.pollIntervalId = setInterval(() => {
       // Quiet reload: we load dashboard data directly
-      this.http.get<any>(`${this.apiUrl}/employees`).subscribe({
+      this.http.get<ApiResponse<EmployeeBase[]>>(`${this.apiUrl}/employees`).subscribe({
         next: (res) => {
-          if (res.success) {
+          if (res.success && res.data) {
             this.employees.set(res.data);
           }
-        }
+        },
       });
-      this.http.get<any>(`${this.apiUrl}/logs`).subscribe({
+      this.http.get<ApiResponse<AttendanceLog[]>>(`${this.apiUrl}/logs`).subscribe({
         next: (res) => {
-          if (res.success) {
+          if (res.success && res.data) {
             this.logs.set(res.data);
           }
-        }
+        },
       });
     }, 3000);
   }
@@ -276,29 +295,29 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.errorMsg.set(null);
 
     // Call APIs in parallel
-    this.http.get<any>(`${this.apiUrl}/employees`).subscribe({
+    this.http.get<ApiResponse<EmployeeBase[]>>(`${this.apiUrl}/employees`).subscribe({
       next: (empRes) => {
-        if (empRes.success) {
+        if (empRes.success && empRes.data) {
           this.employees.set(empRes.data);
-          
-          this.http.get<any>(`${this.apiUrl}/logs`).subscribe({
+
+          this.http.get<ApiResponse<AttendanceLog[]>>(`${this.apiUrl}/logs`).subscribe({
             next: (logRes) => {
               this.isLoading.set(false);
-              if (logRes.success) {
+              if (logRes.success && logRes.data) {
                 this.logs.set(logRes.data);
               }
             },
-            error: (err) => {
+            error: () => {
               this.isLoading.set(false);
               this.errorMsg.set('Không thể tải nhật ký chấm công.');
-            }
+            },
           });
         }
       },
-      error: (err) => {
+      error: () => {
         this.isLoading.set(false);
         this.errorMsg.set('Không thể kết nối đến máy chủ API.');
-      }
+      },
     });
   }
 
@@ -310,13 +329,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   prevPage(): void {
     if (this.currentPage() > 1) {
-      this.currentPage.update(p => p - 1);
+      this.currentPage.update((p) => p - 1);
     }
   }
 
   nextPage(): void {
     if (this.currentPage() < this.totalPages()) {
-      this.currentPage.update(p => p + 1);
+      this.currentPage.update((p) => p + 1);
     }
   }
 
@@ -342,21 +361,29 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     // CSV headers matching HUD grid layout
     const headers = ['Thời gian chấm công', 'Nhân viên (ID)', 'Trạng thái', 'Cảm xúc (Mood)'];
-    const rows = data.map(log => [
+    const rows = data.map((log) => [
       log.timestamp,
       `${log.employee_name} (#${log.employee_id})`,
       log.action === 'CHECK_IN' ? 'CHECK-IN' : 'CHECK-OUT',
-      this.translateMood(log.mood)
+      this.translateMood(log.mood),
     ]);
 
     // CSV UTF-8 BOM so Excel decodes Vietnamese characters correctly
-    const csvContent = "\uFEFF" + [headers.join(','), ...rows.map(e => e.map(val => `"${val.replace(/"/g, '""')}"`).join(','))].join('\n');
-    
+    const csvContent =
+      '\uFEFF' +
+      [
+        headers.join(','),
+        ...rows.map((e) => e.map((val) => `"${val.replace(/"/g, '""')}"`).join(',')),
+      ].join('\n');
+
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
     link.setAttribute('href', url);
-    link.setAttribute('download', `bao_cao_tong_hop_${this.filterStartDate()}_to_${this.filterEndDate()}.csv`);
+    link.setAttribute(
+      'download',
+      `bao_cao_tong_hop_${this.filterStartDate()}_to_${this.filterEndDate()}.csv`,
+    );
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
@@ -365,13 +392,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   translateMood(mood: string): string {
     const map: Record<string, string> = {
-      "happy": "Vui vẻ 😊",
-      "sad": "Buồn bã 😢",
-      "angry": "Tức giận 😠",
-      "surprise": "Ngạc nhiên 😲",
-      "fear": "Lo sợ 😨",
-      "disgust": "Khó chịu 😣",
-      "neutral": "Bình thường 😐"
+      happy: 'Vui vẻ 😊',
+      sad: 'Buồn bã 😢',
+      angry: 'Tức giận 😠',
+      surprise: 'Ngạc nhiên 😲',
+      fear: 'Lo sợ 😨',
+      disgust: 'Khó chịu 😣',
+      neutral: 'Bình thường 😐',
     };
     return map[mood.toLowerCase()] || mood;
   }

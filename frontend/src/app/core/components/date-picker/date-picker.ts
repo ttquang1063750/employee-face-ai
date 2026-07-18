@@ -78,7 +78,9 @@ export class DatePickerComponent implements ControlValueAccessor, OnDestroy {
     return weeks;
   });
 
+  // eslint-disable-next-line @typescript-eslint/no-empty-function -- overwritten by registerOnChange/registerOnTouched
   private onChange: (value: string) => void = () => {};
+  // eslint-disable-next-line @typescript-eslint/no-empty-function -- overwritten by registerOnChange/registerOnTouched
   private onTouched: () => void = () => {};
 
   writeValue(value: string): void {

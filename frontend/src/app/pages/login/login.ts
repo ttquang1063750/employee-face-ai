@@ -1,4 +1,4 @@
-import { Component, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, signal, ChangeDetectionStrategy, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../core/services/auth.service';
@@ -9,15 +9,18 @@ import { AuthService } from '../../core/services/auth.service';
   imports: [FormsModule],
   templateUrl: './login.html',
   styleUrl: './login.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LoginComponent {
+  private authService = inject(AuthService);
+  private router = inject(Router);
+
   username = signal<string>('');
   password = signal<string>('');
   errorMsg = signal<string | null>(null);
   isLoading = signal<boolean>(false);
 
-  constructor(private authService: AuthService, private router: Router) {
+  constructor() {
     if (this.authService.isAuthenticated()) {
       this.router.navigate([this.authService.isAdmin() ? '/admin/dashboard' : '/staff']);
     }
@@ -44,7 +47,7 @@ export class LoginComponent {
         } else {
           this.errorMsg.set('Lỗi kết nối máy chủ. Vui lòng kiểm tra lại thông tin.');
         }
-      }
+      },
     });
   }
 }

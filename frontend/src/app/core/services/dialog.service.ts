@@ -1,4 +1,5 @@
 import { Injectable, signal } from '@angular/core';
+import { DialogState } from '../models/dialog-state.model';
 
 export interface DialogOptions {
   title: string;
@@ -12,9 +13,9 @@ export interface DialogOptions {
   providedIn: 'root'
 })
 export class DialogService {
-  dialogState = signal<any | null>(null);
+  dialogState = signal<DialogState | null>(null);
 
-  alert(title: string, message: string, confirmText: string = 'OK'): Promise<void> {
+  alert(title: string, message: string, confirmText = 'OK'): Promise<void> {
     return new Promise<void>((resolve) => {
       this.dialogState.set({
         title,
@@ -29,7 +30,7 @@ export class DialogService {
     });
   }
 
-  confirm(title: string, message: string, confirmText: string = 'XÁC NHẬN', cancelText: string = 'HỦY'): Promise<boolean> {
+  confirm(title: string, message: string, confirmText = 'XÁC NHẬN', cancelText = 'HỦY'): Promise<boolean> {
     return new Promise<boolean>((resolve) => {
       this.dialogState.set({
         title,
@@ -45,7 +46,7 @@ export class DialogService {
     });
   }
 
-  prompt(title: string, message: string, placeholder: string = '', confirmText: string = 'XÁC NHẬN', cancelText: string = 'HỦY'): Promise<string | null> {
+  prompt(title: string, message: string, placeholder = '', confirmText = 'XÁC NHẬN', cancelText = 'HỦY'): Promise<string | null> {
     return new Promise<string | null>((resolve) => {
       this.dialogState.set({
         title,

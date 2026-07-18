@@ -6,8 +6,8 @@
 
     <div class="hud-filter-bar">
       <div class="hud-field">
-        <label class="hud-label">LỌC TRẠNG THÁI</label>
-        <select class="hud-select" [ngModel]="statusFilter()" (ngModelChange)="setStatusFilter($event)">
+        <label class="hud-label" for="leave-status-filter">LỌC TRẠNG THÁI</label>
+        <select id="leave-status-filter" class="hud-select" [ngModel]="statusFilter()" (ngModelChange)="setStatusFilter($event)">
           <option value="pending">Chờ duyệt ({{ pendingCount() }})</option>
           <option value="approved">Đã duyệt</option>
           <option value="rejected">Từ chối</option>
@@ -15,15 +15,15 @@
         </select>
       </div>
       <div class="hud-field">
-        <label class="hud-label">TỪ NGÀY</label>
+        <span class="hud-label">TỪ NGÀY</span>
         <app-date-picker [ngModel]="filterStartDateInput()" (ngModelChange)="filterStartDateInput.set($event)"></app-date-picker>
       </div>
       <div class="hud-field">
-        <label class="hud-label">ĐẾN NGÀY</label>
+        <span class="hud-label">ĐẾN NGÀY</span>
         <app-date-picker [ngModel]="filterEndDateInput()" (ngModelChange)="filterEndDateInput.set($event)"></app-date-picker>
       </div>
       <div class="hud-field filter-apply-field">
-        <label class="hud-label" style="opacity: 0;">LỌC</label>
+        <span class="hud-label" style="opacity: 0;">LỌC</span>
         <div style="display: flex; gap: var(--space-2);">
           <button class="hud-btn-outline" (click)="applyDateFilter()">ÁP DỤNG</button>
           @if (filterStartDate() || filterEndDate()) {
@@ -32,8 +32,9 @@
         </div>
       </div>
       <div class="hud-field grow-2">
-        <label class="hud-label">TÌM THEO TÊN / VỊ TRÍ</label>
+        <label class="hud-label" for="leave-search-input">TÌM THEO TÊN / VỊ TRÍ</label>
         <input
+          id="leave-search-input"
           type="text"
           [ngModel]="searchQuery()"
           (ngModelChange)="searchQuery.set($event); currentPage.set(1)"

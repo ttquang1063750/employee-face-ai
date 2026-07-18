@@ -159,6 +159,13 @@ When writing code or modifications, you must strictly follow these rules:
 16. **Short Polling for Realtime Updates**: Instead of persistent streaming mechanisms (SSE, WebSockets) which block connection threads in Python's standard `http.server` library, implement a debounced background polling interval (e.g. 3 seconds via `setInterval`) inside components for quiet updates to data signals.
 17. **Global Service Guarding**: Global Angular services (like `RealtimeService`) that poll or fetch data on initialization must check authorization levels (e.g., `authService.isAdmin()`) before querying admin-only endpoints. This prevents infinite 401 token refresh loops when a standard staff user logs in.
 18. **Prevent Circle Distortion in Flexbox**: Elements styled as circular via `border-radius: 50%` (such as `.avatar-frame` and `.profile-pic-frame`) placed inside a flexbox container must explicitly set `flex: none;` (or `flex-shrink: 0`) to prevent the browser from squishing them into ovals/ellipses.
+19. **Clean Code Tooling — Zero-Warning Policy**: Both stacks are linted and must stay at **zero errors**.
+    - **Backend**: **Ruff** (config in `pyproject.toml`) replaces Black/Flake8/isort — run `ruff check --fix . && ruff format .` before committing backend changes. Rule set: `E`, `W`, `F`, `I`, `B`, `UP` (line length `E501` is ignored; the formatter handles wrapping, not a hard rule).
+    - **Frontend**: **Angular ESLint** (flat config in `frontend/eslint.config.js`) covers both `.ts` (typescript-eslint + angular-eslint rules) and `.html` (angular-eslint template rules, including a11y: `label-has-associated-control`, `alt-text`) — run `cd frontend && npm run lint` before committing frontend changes. In particular:
+      - **No `any`**: type HTTP responses with the generic `ApiResponse<T>` wrapper (`src/app/core/models/api-response.model.ts`) and the shared domain models in `src/app/core/models/` (`employee.model.ts`, `leave-request.model.ts`, `dialog-state.model.ts`). Type `HttpClient` error callbacks as `HttpErrorResponse` (`@angular/common/http`), `catch` blocks as `unknown` with an `instanceof Error` narrow, `FileReader.onload` events as `ProgressEvent<FileReader>`, and timer handles as `ReturnType<typeof setTimeout>`/`ReturnType<typeof setInterval>` — never `any`.
+      - **Labels need a real control**: every `<label>` must have `for`/`id` pointing at the native `<input>`/`<select>`/`<textarea>` it describes. A label sitting next to a custom component (e.g. `<app-date-picker>`) or with no control at all (a section heading used for visual spacing) must be a `<span>`, not a `<label>`.
+      - Every `<img>` needs a meaningful `alt`.
+    - Run both linters (and `npx tsc --noEmit -p tsconfig.app.json` for the frontend) after any multi-file change, not just the files you touched directly — fixing one file's types can surface a pre-existing but previously-masked error elsewhere (e.g. tightening `dialogState`'s type once surfaced a real `TS2774` always-true check in `hud-dialog.ts`).
 
 ---
 
@@ -194,6 +201,15 @@ When writing code or modifications, you must strictly follow these rules:
   ```bash
   cd frontend
   npm test
+  ```
+- **Lint & format backend** (Ruff):
+  ```bash
+  ruff check --fix . && ruff format .
+  ```
+- **Lint frontend** (Angular ESLint):
+  ```bash
+  cd frontend
+  npm run lint
   ```
 
 > Looking for the public-facing project intro instead of agent/dev internals? See [README.md](README.md).

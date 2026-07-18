@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, signal } from '@angular/core';
+import { Component, ChangeDetectionStrategy, signal, inject } from '@angular/core';
 import { DialogService } from '../../services/dialog.service';
 import { FormsModule } from '@angular/forms';
 
@@ -8,16 +8,16 @@ import { FormsModule } from '@angular/forms';
   imports: [FormsModule],
   templateUrl: './hud-dialog.html',
   styleUrl: './hud-dialog.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class HudDialogComponent {
-  promptValue = signal<string>('');
+  dialogService = inject(DialogService);
 
-  constructor(public dialogService: DialogService) {}
+  promptValue = signal<string>('');
 
   onConfirm(): void {
     const state = this.dialogService.dialogState();
-    if (state && state.resolve) {
+    if (state) {
       if (state.type === 'confirm') {
         state.resolve(true);
       } else if (state.type === 'prompt') {
@@ -31,7 +31,7 @@ export class HudDialogComponent {
 
   onCancel(): void {
     const state = this.dialogService.dialogState();
-    if (state && state.resolve) {
+    if (state) {
       if (state.type === 'confirm') {
         state.resolve(false);
       } else if (state.type === 'prompt') {
