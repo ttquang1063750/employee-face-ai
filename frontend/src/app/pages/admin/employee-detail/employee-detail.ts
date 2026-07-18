@@ -23,6 +23,7 @@ import { DatePickerComponent } from '../../../core/components/date-picker/date-p
 import { ApiResponse } from '../../../core/models/api-response.model';
 import { DetailedEmployee, AttendanceLog, Skill, Project } from '../../../core/models/employee.model';
 import { WebcamCaptureService, readFileAsBase64 } from '../../../core/services/webcam-capture.service';
+import { todayLocalDateString, startOfMonthLocalDateString } from '../../../core/utils/date.util';
 
 @Component({
   selector: 'app-employee-detail',
@@ -258,7 +259,7 @@ export class EmployeeDetailComponent implements OnInit {
     this.editPassword.set('');
 
     // Pre-populate today's date for adjustments
-    const today = new Date().toISOString().split('T')[0];
+    const today = todayLocalDateString();
     this.newPosStartDate.set(today);
     this.newIncEffectiveDate.set(today);
     this.newProjStartDate.set(today);
@@ -266,18 +267,12 @@ export class EmployeeDetailComponent implements OnInit {
     // Initialize attendance date range filters:
     // filterStartDate: first day of current month
     // filterEndDate: today
-    const now = new Date();
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-
-    // Format YYYY-MM-DD manually keeping local timezone offset safe
-    const pad = (num: number) => num.toString().padStart(2, '0');
-    const startStr = `${startOfMonth.getFullYear()}-${pad(startOfMonth.getMonth() + 1)}-01`;
-    const endStr = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+    const startStr = startOfMonthLocalDateString();
 
     this.filterStartDate.set(startStr);
-    this.filterEndDate.set(endStr);
+    this.filterEndDate.set(today);
     this.filterStartDateInput.set(startStr);
-    this.filterEndDateInput.set(endStr);
+    this.filterEndDateInput.set(today);
 
     // Populate skills array copy
     this.skillsListToEdit.set(data.skills ? JSON.parse(JSON.stringify(data.skills)) : []);
@@ -414,6 +409,7 @@ export class EmployeeDetailComponent implements OnInit {
   // --- 2. Add Position Promotion ---
   openPositionModal(): void {
     this.newPosTitle.set('');
+    this.newPosStartDate.set(todayLocalDateString());
     this.showPositionModal.set(true);
   }
 
@@ -455,6 +451,7 @@ export class EmployeeDetailComponent implements OnInit {
   openIncomeModal(): void {
     this.newIncAmount.set(0);
     this.newIncReason.set('');
+    this.newIncEffectiveDate.set(todayLocalDateString());
     this.showIncomeModal.set(true);
   }
 
@@ -559,6 +556,7 @@ export class EmployeeDetailComponent implements OnInit {
     this.newProjName.set('');
     this.newProjRole.set('');
     this.newProjDesc.set('');
+    this.newProjStartDate.set(todayLocalDateString());
     this.newProjEndDate.set('');
     this.showProjectsModal.set(true);
   }

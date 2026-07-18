@@ -21,6 +21,7 @@ import { ApiResponse } from '../../../core/models/api-response.model';
 import { DetailedEmployee, AttendanceLog } from '../../../core/models/employee.model';
 import { LeaveRequest } from '../../../core/models/leave-request.model';
 import { WebcamCaptureService, readFileAsBase64 } from '../../../core/services/webcam-capture.service';
+import { todayLocalDateString, startOfMonthLocalDateString } from '../../../core/utils/date.util';
 
 @Component({
   selector: 'app-staff-profile',
@@ -231,11 +232,8 @@ export class StaffProfileComponent implements OnInit, OnDestroy {
 
   private initializeDateFilters(): void {
     // Default attendance date range: first day of current month -> today
-    const now = new Date();
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const pad = (num: number) => num.toString().padStart(2, '0');
-    const startStr = `${startOfMonth.getFullYear()}-${pad(startOfMonth.getMonth() + 1)}-01`;
-    const endStr = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+    const startStr = startOfMonthLocalDateString();
+    const endStr = todayLocalDateString();
 
     this.filterStartDate.set(startStr);
     this.filterEndDate.set(endStr);

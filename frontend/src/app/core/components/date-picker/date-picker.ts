@@ -1,5 +1,6 @@
 import { Component, ElementRef, HostListener, input, OnDestroy, ChangeDetectionStrategy, forwardRef, signal, computed, inject } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
+import { toLocalDateString } from '../../utils/date.util';
 
 interface CalendarCell {
   day: number;
@@ -158,7 +159,7 @@ export class DatePickerComponent implements ControlValueAccessor, OnDestroy {
 
   selectToday(): void {
     const today = new Date();
-    const iso = this.toIso(today);
+    const iso = toLocalDateString(today);
     this.viewYear.set(today.getFullYear());
     this.viewMonth.set(today.getMonth());
     this.value.set(iso);
@@ -176,19 +177,12 @@ export class DatePickerComponent implements ControlValueAccessor, OnDestroy {
 
   private buildCell(year: number, month: number, day: number, inCurrentMonth: boolean): CalendarCell {
     const date = new Date(year, month, day);
-    const iso = this.toIso(date);
+    const iso = toLocalDateString(date);
     const today = new Date();
     const isToday = date.getFullYear() === today.getFullYear()
       && date.getMonth() === today.getMonth()
       && date.getDate() === today.getDate();
     return { day: date.getDate(), iso, inCurrentMonth, isToday, isSelected: iso === this.value() };
-  }
-
-  private toIso(date: Date): string {
-    const y = date.getFullYear();
-    const m = (date.getMonth() + 1).toString().padStart(2, '0');
-    const d = date.getDate().toString().padStart(2, '0');
-    return `${y}-${m}-${d}`;
   }
 
   @HostListener('document:click', ['$event'])

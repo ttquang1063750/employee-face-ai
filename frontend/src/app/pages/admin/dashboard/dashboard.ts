@@ -14,6 +14,7 @@ import { ApiResponse } from '../../../core/models/api-response.model';
 import { EmployeeBase } from '../../../core/models/employee.model';
 import { AttendanceLogEntry } from '../../../core/models/attendance-log.model';
 import { translateMood } from '../../../core/utils/mood.util';
+import { todayLocalDateString, startOfMonthLocalDateString } from '../../../core/utils/date.util';
 import { StatWidgetComponent } from './components/stat-widget/stat-widget';
 import { HourlyChartComponent } from './components/hourly-chart/hourly-chart';
 import { MoodDonutComponent } from './components/mood-donut/mood-donut';
@@ -230,12 +231,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     // Set default dates
-    const now = new Date();
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const pad = (n: number) => n.toString().padStart(2, '0');
-
-    const startStr = `${startOfMonth.getFullYear()}-${pad(startOfMonth.getMonth() + 1)}-01`;
-    const endStr = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+    const startStr = startOfMonthLocalDateString();
+    const endStr = todayLocalDateString();
     this.filterStartDate.set(startStr);
     this.filterEndDate.set(endStr);
     this.filterStartDateInput.set(startStr);
