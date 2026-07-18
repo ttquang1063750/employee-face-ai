@@ -4,6 +4,8 @@ import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { DialogService } from '../../../core/services/dialog.service';
 import { CommonModule } from '@angular/common';
+import { UsernameCheckService } from '../../../core/services/username-check.service';
+import { isPasswordValid, PASSWORD_HINT } from '../../../core/services/credentials.util';
 
 @Component({
   selector: 'app-employee-detail',
@@ -34,7 +36,11 @@ export class EmployeeDetailComponent implements OnInit {
   editName = signal<string>('');
   editAge = signal<number>(30);
   editRole = signal<'staff' | 'admin'>('staff');
+  editUsername = signal<string>('');
+  usernameStatus = signal<'idle' | 'checking' | 'available' | 'taken'>('idle');
+  private usernameCheckTimer: any;
   editPassword = signal<string>('');
+  readonly passwordHint = PASSWORD_HINT;
 
   // 1a. Avatar update fields (webcam capture / file upload)
   imgBase64 = signal<string>('');
@@ -147,13 +153,24 @@ export class EmployeeDetailComponent implements OnInit {
     return parseFloat(totalHours.toFixed(1));
   });
 
+  // Computed: Password strength check for the edit form (blank = keep existing password)
+  passwordValid = computed(() => !this.editPassword() || isPasswordValid(this.editPassword()));
+
+  // Computed: Whether the base profile form can be saved
+  canSaveBaseProfile = computed(() =>
+    !!this.editUsername().trim() &&
+    this.usernameStatus() === 'available' &&
+    this.passwordValid()
+  );
+
   private employeeId: number | null = null;
   private readonly apiUrl = 'http://localhost:8000/api';
 
   constructor(
     private route: ActivatedRoute,
     private http: HttpClient,
-    private dialogService: DialogService
+    private dialogService: DialogService,
+    private usernameCheckService: UsernameCheckService
   ) {}
 
   ngOnInit(): void {
@@ -192,6 +209,8 @@ export class EmployeeDetailComponent implements OnInit {
     this.editName.set(data.name);
     this.editAge.set(data.age);
     this.editRole.set(data.role);
+    this.editUsername.set(data.username || '');
+    this.usernameStatus.set(data.username ? 'available' : 'idle');
     this.editPassword.set('');
 
     // Pre-populate today's date for adjustments
@@ -232,6 +251,7 @@ export class EmployeeDetailComponent implements OnInit {
 
   closeBaseModal(): void {
     this.stopWebcam();
+    clearTimeout(this.usernameCheckTimer);
     this.showBaseModal.set(false);
   }
 
@@ -300,6 +320,23 @@ export class EmployeeDetailComponent implements OnInit {
     }
   }
 
+  onUsernameInput(value: string): void {
+    this.editUsername.set(value);
+    this.usernameStatus.set('idle');
+    clearTimeout(this.usernameCheckTimer);
+
+    const username = value.trim();
+    if (!username || !this.employeeId) return;
+
+    this.usernameCheckTimer = setTimeout(() => {
+      this.usernameStatus.set('checking');
+      this.usernameCheckService.check(username, this.employeeId!).subscribe({
+        next: (res) => this.usernameStatus.set(res.exists ? 'taken' : 'available'),
+        error: () => this.usernameStatus.set('idle')
+      });
+    }, 450);
+  }
+
   saveBaseProfile(): void {
     if (!this.employeeId) return;
     this.isSaving.set(true);
@@ -308,7 +345,12 @@ export class EmployeeDetailComponent implements OnInit {
       name: this.editName(),
       age: this.editAge(),
       role: this.editRole(),
-      password: this.editRole() === 'admin' && this.editPassword() ? this.editPassword() : null
+      username: this.editUsername().trim(),
+      password: this.editPassword() || null,
+      // The backend fully replaces skills/projects with whatever is sent here,
+      // so the current lists must always be included to avoid wiping them.
+      skills: this.employee()?.skills || [],
+      projects: this.employee()?.projects || []
     };
     if (this.imgBase64()) {
       payload.img = this.imgBase64();

@@ -10,6 +10,7 @@ export interface TokenResponse {
     access_expires_at: string;
     refresh_expires_at: string;
   };
+  user: UserSession;
 }
 
 export interface UserSession {
@@ -31,21 +32,16 @@ export class AuthService {
 
   readonly isAuthenticated = computed(() => this.accessToken() !== null);
   readonly isAdmin = computed(() => this.currentUser()?.role === 'admin');
+  readonly isStaff = computed(() => this.currentUser()?.role === 'staff');
 
   constructor(private http: HttpClient) {}
 
-  login(id: number, password: string): Observable<TokenResponse> {
-    return this.http.post<TokenResponse>(`${this.apiUrl}/login`, { id, password }).pipe(
+  login(username: string, password: string): Observable<TokenResponse> {
+    return this.http.post<TokenResponse>(`${this.apiUrl}/login`, { username, password }).pipe(
       tap(res => {
-        if (res.success && res.tokens) {
+        if (res.success && res.tokens && res.user) {
           this.saveTokens(res.tokens.access_token, res.tokens.refresh_token);
-          // Seed active user details (normally encoded in JWT, here we query or decode, let's keep it simple)
-          const mockUser: UserSession = {
-            id,
-            name: id === 1 ? 'HR Admin' : 'Staff Member',
-            role: id === 1 ? 'admin' : 'staff'
-          };
-          this.saveUser(mockUser);
+          this.saveUser(res.user);
         }
       })
     );

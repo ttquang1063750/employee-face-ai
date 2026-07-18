@@ -1,0 +1,206 @@
+<div class="detail-layout">
+  <div class="detail-content">
+    <div class="staff-header-bar">
+      <div class="staff-header-title">
+        <span class="staff-header-eyebrow">EMPLOYEE FACE AI</span>
+        <h1>Cổng Thông Tin Nhân Sự</h1>
+      </div>
+      <button class="hud-btn-outline" (click)="logout()">⏻ ĐĂNG XUẤT</button>
+    </div>
+
+    @if (isLoading()) {
+      <div class="loading-state">
+        <div class="radial-spinner"></div>
+        <p>Đang truy xuất hồ sơ Mainframe...</p>
+      </div>
+    } @else if (errorMsg()) {
+      <div class="error-state">
+        <p>⚠️ {{ errorMsg() }}</p>
+      </div>
+    } @else {
+      <!-- Employee Profile Header (read-only, no edit button) -->
+      <div class="profile-header-card">
+        <div class="card-glow"></div>
+        <div class="profile-summary">
+          <div class="avatar-frame">
+            <img
+              [src]="'http://localhost:8000/' + employee()?.image_path"
+              (error)="onImageError($event)"
+              alt="{{ employee()?.name }}">
+          </div>
+          <div class="info-block">
+            <h2 class="name">{{ employee()?.name }}</h2>
+            <p class="title-label text-cyan">{{ employee()?.current_position }}</p>
+            <div class="meta-row">
+              <span class="id">ID: #{{ employee()?.id }}</span>
+              <span class="age">{{ employee()?.age }} tuổi</span>
+              <span class="role-tag" [class.admin]="employee()?.role === 'admin'">
+                {{ employee()?.role === 'admin' ? 'Hệ thống Admin' : 'Nhân sự Staff' }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Attendance summary (left, ~65%) + Lifecycle sections (right, ~35%) -->
+      <div class="lifecycle-layout">
+
+        <!-- Attendance logs and time metrics aggregation -->
+        <div class="lifecycle-card">
+          <h3 class="section-title">📅 THỐNG KÊ CHẤM CÔNG VÀ GIỜ CÔNG</h3>
+
+          <!-- Date range filter bar -->
+          <div class="hud-filter-bar">
+            <div class="hud-field">
+              <label class="hud-label">TỪ NGÀY</label>
+              <input type="date" [ngModel]="filterStartDateInput()" (ngModelChange)="filterStartDateInput.set($event)" class="hud-input">
+            </div>
+            <div class="hud-field">
+              <label class="hud-label">ĐẾN NGÀY</label>
+              <input type="date" [ngModel]="filterEndDateInput()" (ngModelChange)="filterEndDateInput.set($event)" class="hud-input">
+            </div>
+            <div class="hud-field filter-apply-field">
+              <button class="hud-btn-outline" (click)="applyDateFilter()">ÁP DỤNG</button>
+            </div>
+          </div>
+
+          <!-- KPI analytics widgets -->
+          <div class="attendance-stats-cards">
+            <div class="stats-card">
+              <span class="stats-label">SỐ NGÀY LÀM VIỆC THỰC TẾ</span>
+              <span class="stats-value text-glow-green">{{ workingDays() }} ngày</span>
+            </div>
+            <div class="stats-card">
+              <span class="stats-label">SỐ GIỜ CÔNG TỔNG CỘNG</span>
+              <span class="stats-value text-glow-cyan">{{ workingHours() }} giờ</span>
+            </div>
+          </div>
+
+          <!-- Raw logs timeline table in selected scope -->
+          <div class="monthly-summary-table-wrapper">
+            <table class="monthly-table">
+              <thead>
+                <tr>
+                  <th>Thời gian</th>
+                  <th>Hành động</th>
+                  <th>Cảm xúc</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (log of paginatedRawLogs(); track log.timestamp) {
+                  <tr>
+                    <td class="text-cyan">{{ log.timestamp | date:'HH:mm:ss - dd/MM/yyyy' }}</td>
+                    <td>
+                      <span class="action-tag" [class.check-in]="log.action === 'CHECK_IN'" [class.check-out]="log.action === 'CHECK_OUT'">
+                        {{ log.action === 'CHECK_IN' ? 'VÀO CA' : 'RA CA' }}
+                      </span>
+                    </td>
+                    <td>
+                      <span class="mood-badge">{{ log.mood }}</span>
+                    </td>
+                  </tr>
+                } @empty {
+                  <tr>
+                    <td colspan="3" class="no-data">Không có lịch sử chấm công trong khoảng thời gian đã chọn.</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Pagination Controls -->
+          @if (filteredRawLogs().length > 0) {
+            <div class="hud-pagination">
+              <button class="pag-btn" [disabled]="currentPage() === 1" (click)="prevPage()">◀ TRƯỚC</button>
+              <span class="pag-info">TRANG {{ currentPage() }} / {{ totalPages() }}</span>
+              <button class="pag-btn" [disabled]="currentPage() === totalPages()" (click)="nextPage()">SAU ▶</button>
+            </div>
+          }
+        </div>
+
+        <!-- Lifecycle side column: Positions, Compensation, Skills, Projects (read-only) -->
+        <div class="lifecycle-side-col">
+
+          <!-- Career positions history -->
+          <div class="lifecycle-card">
+            <div class="section-header-row">
+              <h3 class="section-title">📈 LỊCH SỬ THĂNG TIẾN (POSITIONS)</h3>
+            </div>
+            <div class="timeline">
+              @for (pos of employee()?.positions; track pos.id) {
+                <div class="timeline-item">
+                  <div class="timeline-marker"></div>
+                  <div class="timeline-content">
+                    <div class="timeline-header-row">
+                      <h4 class="title text-glow-cyan">{{ pos.title }}</h4>
+                    </div>
+                    <p class="dates">📅 Từ: {{ pos.start_date }} @if (pos.end_date) { - Đến: {{ pos.end_date }} } @else { - Hiện tại }</p>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+
+          <!-- Compensation raises history -->
+          <div class="lifecycle-card">
+            <div class="section-header-row">
+              <h3 class="section-title">💵 LỊCH SỬ THU NHẬP (COMPENSATION)</h3>
+            </div>
+            <div class="comp-list">
+              @for (inc of employee()?.income_history; track inc.id) {
+                <div class="comp-item">
+                  <div class="comp-amount text-glow-green">
+                    <span>${{ inc.amount }} / month</span>
+                  </div>
+                  <div class="comp-details">
+                    <span class="reason">{{ inc.change_reason }}</span>
+                    <span class="date">📅 {{ inc.effective_date }}</span>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+
+          <!-- Skills Registry with descriptions -->
+          <div class="lifecycle-card">
+            <div class="section-header-row">
+              <h3 class="section-title">🧠 HỒ SƠ KỸ NĂNG (SKILLS SET)</h3>
+            </div>
+            <div class="skills-grid">
+              @for (sk of employee()?.skills; track sk.skill_name) {
+                <div class="skill-hud-box">
+                  <div class="skill-name-badge">{{ sk.skill_name }}</div>
+                  <p class="skill-desc">{{ sk.description }}</p>
+                </div>
+              } @empty {
+                <p class="no-data">Chưa cấu hình kỹ năng cho nhân sự này.</p>
+              }
+            </div>
+          </div>
+
+          <!-- Projects Assignment History with description -->
+          <div class="lifecycle-card">
+            <div class="section-header-row">
+              <h3 class="section-title">📂 LỊCH SỬ DỰ ÁN (PROJECTS LOG)</h3>
+            </div>
+            <div class="projects-timeline">
+              @for (prj of employee()?.projects; track prj.project_name) {
+                <div class="project-item">
+                  <div class="project-header">
+                    <h4 class="name">{{ prj.project_name }}</h4>
+                    <span class="role text-cyan">{{ prj.role }}</span>
+                  </div>
+                  <p class="desc">{{ prj.description }}</p>
+                  <p class="dates">📅 {{ prj.start_date }} @if (prj.end_date) { đến {{ prj.end_date }} } @else { (Đang tham gia) }</p>
+                </div>
+              } @empty {
+                <p class="no-data">Chưa tham gia dự án nào.</p>
+              }
+            </div>
+          </div>
+
+        </div>
+      </div>
+    }
+  </div>
+</div>

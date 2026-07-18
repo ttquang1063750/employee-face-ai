@@ -5,13 +5,18 @@ os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 
 import json
 import base64
+import re
 import tempfile
 import csv
 import io
 from datetime import datetime
+from urllib.parse import urlparse, parse_qs
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from deepface import DeepFace
 import db
+
+# Min 8 chars, at least one lowercase, one uppercase, one digit, one special character
+PASSWORD_PATTERN = re.compile(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$')
 
 MOOD_TRANSLATION = {
     "happy": "Vui vẻ 😊",
@@ -63,6 +68,8 @@ class EmployeeFaceAIRequestHandler(BaseHTTPRequestHandler):
             self.handle_get_logs()
         elif self.path == '/api/employees':
             self.handle_get_employees()
+        elif self.path.startswith('/api/employees/check-username'):
+            self.handle_check_username()
         elif self.path.startswith('/api/employees/'):
             self.handle_get_employee_detail()
         elif self.path.startswith('/database/'):
@@ -155,14 +162,16 @@ class EmployeeFaceAIRequestHandler(BaseHTTPRequestHandler):
             post_data = self.rfile.read(content_length)
             data = json.loads(post_data.decode('utf-8'))
 
-            admin_id = int(data.get('id'))
+            username = data.get('username')
             password = data.get('password')
 
-            if db.verify_admin_credentials(admin_id, password):
-                tokens = db.create_session(admin_id)
-                self.send_json_response(200, {"success": True, "tokens": tokens})
+            employee_id = db.verify_login_credentials(username, password)
+            if employee_id:
+                tokens = db.create_session(employee_id)
+                user = db.get_employee_basic(employee_id)
+                self.send_json_response(200, {"success": True, "tokens": tokens, "user": user})
             else:
-                self.send_json_response(401, {"success": False, "error": "ID nhân viên hoặc mật khẩu quản trị không đúng."})
+                self.send_json_response(401, {"success": False, "error": "Username hoặc mật khẩu không đúng."})
         except Exception as e:
             self.send_json_response(400, {"success": False, "error": f"Lỗi yêu cầu: {str(e)}"})
 
@@ -206,17 +215,44 @@ class EmployeeFaceAIRequestHandler(BaseHTTPRequestHandler):
 
     def handle_get_employee_detail(self):
         user = self.get_authenticated_user()
-        if not user or user["role"] != "admin":
+        if not user:
             self.send_json_response(401, {"success": False, "error": "Unauthorized access"})
             return
 
         try:
             employee_id = int(self.path.split("/")[-1])
+
+            # Admins can view any employee; staff may only view their own record
+            if user["role"] != "admin" and user["employee_id"] != employee_id:
+                self.send_json_response(401, {"success": False, "error": "Unauthorized access"})
+                return
+
             employee = db.get_detailed_employee(employee_id)
             if employee:
                 self.send_json_response(200, {"success": True, "data": employee})
             else:
                 self.send_json_response(404, {"success": False, "error": "Nhân viên không tồn tại."})
+        except Exception as e:
+            self.send_json_response(500, {"success": False, "error": str(e)})
+
+    def handle_check_username(self):
+        user = self.get_authenticated_user()
+        if not user or user["role"] != "admin":
+            self.send_json_response(401, {"success": False, "error": "Unauthorized access"})
+            return
+
+        try:
+            query = parse_qs(urlparse(self.path).query)
+            username = (query.get('username', [''])[0] or '').strip()
+            exclude_id = query.get('exclude_id', [None])[0]
+            exclude_id = int(exclude_id) if exclude_id else None
+
+            if not username:
+                self.send_json_response(400, {"success": False, "error": "Thiếu username cần kiểm tra."})
+                return
+
+            exists = db.username_exists(username, exclude_id)
+            self.send_json_response(200, {"success": True, "exists": exists})
         except Exception as e:
             self.send_json_response(500, {"success": False, "error": str(e)})
 
@@ -234,6 +270,7 @@ class EmployeeFaceAIRequestHandler(BaseHTTPRequestHandler):
             name = data.get('name')
             age = int(data.get('age', 30))
             role = data.get('role', 'staff')
+            username = (data.get('username') or '').strip()
             password = data.get('password')
             img_base64 = data.get('img')
 
@@ -247,9 +284,21 @@ class EmployeeFaceAIRequestHandler(BaseHTTPRequestHandler):
                 self.send_json_response(400, {"success": False, "error": "Vui lòng nhập tên và chụp ảnh mẫu."})
                 return
 
+            if not username:
+                self.send_json_response(400, {"success": False, "error": "Vui lòng nhập username."})
+                return
+
+            if db.username_exists(username):
+                self.send_json_response(400, {"success": False, "error": "Username đã tồn tại."})
+                return
+
+            if not password or not PASSWORD_PATTERN.match(password):
+                self.send_json_response(400, {"success": False, "error": "Mật khẩu phải tối thiểu 8 ký tự, bao gồm chữ hoa, chữ thường, số và ký tự đặc biệt."})
+                return
+
             # Register base profile
             temp_path = "database/temp.jpg"
-            employee_id = db.register_employee(name, age, temp_path, role, password)
+            employee_id = db.register_employee(name, age, temp_path, role, password, username)
 
             # Final filepath
             final_filepath = f"database/{employee_id}.jpg"
@@ -299,6 +348,7 @@ class EmployeeFaceAIRequestHandler(BaseHTTPRequestHandler):
             name = data.get('name')
             age = int(data.get('age', 30))
             role = data.get('role', 'staff')
+            username = (data.get('username') or '').strip()
             password = data.get('password')
             img_base64 = data.get('img')
 
@@ -307,8 +357,20 @@ class EmployeeFaceAIRequestHandler(BaseHTTPRequestHandler):
             new_projects = data.get('projects', [])   # list of {project_name, role, description}
             new_income = data.get('income')
 
+            if not username:
+                self.send_json_response(400, {"success": False, "error": "Vui lòng nhập username."})
+                return
+
+            if db.username_exists(username, exclude_id=employee_id):
+                self.send_json_response(400, {"success": False, "error": "Username đã tồn tại."})
+                return
+
+            if password and not PASSWORD_PATTERN.match(password):
+                self.send_json_response(400, {"success": False, "error": "Mật khẩu phải tối thiểu 8 ký tự, bao gồm chữ hoa, chữ thường, số và ký tự đặc biệt."})
+                return
+
             # 1. Update Base Details
-            db.update_employee_profile(employee_id, name, age, role, password)
+            db.update_employee_profile(employee_id, name, age, role, username, password)
             current_detail = db.get_detailed_employee(employee_id)
             today_str = datetime.now().date().isoformat()
 

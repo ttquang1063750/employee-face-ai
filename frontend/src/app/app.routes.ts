@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
+import { staffGuard } from './core/guards/staff.guard';
 
 export const routes: Routes = [
   {
@@ -38,6 +39,11 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/admin/employee-detail/employee-detail').then(m => m.EmployeeDetailComponent)
       }
     ]
+  },
+  {
+    path: 'staff',
+    canActivate: [staffGuard],
+    loadComponent: () => import('./pages/staff/staff-profile/staff-profile').then(m => m.StaffProfileComponent)
   },
   {
     path: 'not-found',

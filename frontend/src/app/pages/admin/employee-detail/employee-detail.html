@@ -238,12 +238,24 @@
               <option value="admin">Quản lý (Admin)</option>
             </select>
           </div>
-          @if (editRole() === 'admin') {
-            <div class="form-group animate-in">
-              <label>MẬT KHẨU MỚI (Để trống nếu giữ nguyên)</label>
-              <input type="password" [ngModel]="editPassword()" (ngModelChange)="editPassword.set($event)" class="hud-input">
-            </div>
-          }
+          <div class="form-group">
+            <label>USERNAME *</label>
+            <input type="text" [ngModel]="editUsername()" (ngModelChange)="onUsernameInput($event)" autocomplete="off" class="hud-input">
+            @if (usernameStatus() === 'checking') {
+              <p class="field-hint">⏳ Đang kiểm tra username...</p>
+            } @else if (usernameStatus() === 'taken') {
+              <p class="field-hint error">✖ Username đã tồn tại.</p>
+            } @else if (usernameStatus() === 'available') {
+              <p class="field-hint success">✔ Username hợp lệ.</p>
+            }
+          </div>
+          <div class="form-group">
+            <label>MẬT KHẨU MỚI (Để trống nếu giữ nguyên)</label>
+            <input type="password" [ngModel]="editPassword()" (ngModelChange)="editPassword.set($event)" class="hud-input">
+            @if (editPassword() && !passwordValid()) {
+              <p class="field-hint error">✖ {{ passwordHint }}</p>
+            }
+          </div>
 
           <!-- Avatar Update Section -->
           <div class="form-camera-zone">
@@ -275,7 +287,7 @@
         </div>
       </div>
       <div class="modal-footer">
-        <button class="hud-btn-success" [disabled]="isSaving()" (click)="saveBaseProfile()">
+        <button class="hud-btn-success" [disabled]="isSaving() || !canSaveBaseProfile()" (click)="saveBaseProfile()">
           @if (isSaving()) { <div class="loader"></div> }
           <span>LƯU THAY ĐỔI</span>
         </button>

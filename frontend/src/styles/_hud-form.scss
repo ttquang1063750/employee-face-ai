@@ -481,3 +481,15 @@
   }
 }
 
+// ─── Inline Field Hint ────────────────────────────────────────
+// Usage: async/live validation feedback under an input, e.g.
+// <p class="field-hint error">✖ Username đã tồn tại.</p>
+.field-hint {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  margin-top: 0.3rem;
+
+  &.error { color: var(--color-red); }
+  &.success { color: var(--color-green); }
+}
+

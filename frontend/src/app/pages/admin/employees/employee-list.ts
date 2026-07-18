@@ -3,6 +3,8 @@ import { RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { DialogService } from '../../../core/services/dialog.service';
+import { UsernameCheckService } from '../../../core/services/username-check.service';
+import { isPasswordValid, PASSWORD_HINT } from '../../../core/services/credentials.util';
 
 export interface EmployeeBase {
   id: number;
@@ -38,7 +40,11 @@ export class EmployeeListComponent implements OnInit {
   newName = signal<string>('');
   newAge = signal<number>(28);
   newRole = signal<'staff' | 'admin'>('staff');
+  newUsername = signal<string>('');
+  usernameStatus = signal<'idle' | 'checking' | 'available' | 'taken'>('idle');
+  private usernameCheckTimer: any;
   newPassword = signal<string>('');
+  readonly passwordHint = PASSWORD_HINT;
   newPosition = signal<string>('');
   newIncome = signal<number>(3000);
   newSkills = signal<string>(''); // formatted as "Skill: Desc, Skill2: Desc"
@@ -80,11 +86,24 @@ export class EmployeeListComponent implements OnInit {
     return this.filteredEmployees().slice(start, start + this.pageSize());
   });
 
+  // Computed: Password strength check for the create form
+  passwordValid = computed(() => isPasswordValid(this.newPassword()));
+
+  // Computed: Whether the registration form can be submitted
+  canSubmit = computed(() =>
+    !!this.newName() &&
+    !!this.imgBase64() &&
+    !!this.newUsername().trim() &&
+    this.usernameStatus() === 'available' &&
+    this.passwordValid()
+  );
+
   private readonly apiUrl = 'http://localhost:8000/api';
 
   constructor(
     private http: HttpClient,
-    private dialogService: DialogService
+    private dialogService: DialogService,
+    private usernameCheckService: UsernameCheckService
   ) {}
 
   ngOnInit(): void {
@@ -135,6 +154,9 @@ export class EmployeeListComponent implements OnInit {
     this.newName.set('');
     this.newAge.set(28);
     this.newRole.set('staff');
+    this.newUsername.set('');
+    this.usernameStatus.set('idle');
+    clearTimeout(this.usernameCheckTimer);
     this.newPassword.set('');
     this.newPosition.set('');
     this.newIncome.set(3000);
@@ -142,6 +164,23 @@ export class EmployeeListComponent implements OnInit {
     this.newProjects.set('');
     this.imgBase64.set('');
     this.showWebcam.set(false);
+  }
+
+  onUsernameInput(value: string): void {
+    this.newUsername.set(value);
+    this.usernameStatus.set('idle');
+    clearTimeout(this.usernameCheckTimer);
+
+    const username = value.trim();
+    if (!username) return;
+
+    this.usernameCheckTimer = setTimeout(() => {
+      this.usernameStatus.set('checking');
+      this.usernameCheckService.check(username).subscribe({
+        next: (res) => this.usernameStatus.set(res.exists ? 'taken' : 'available'),
+        error: () => this.usernameStatus.set('idle')
+      });
+    }, 450);
   }
 
   async startWebcam(): Promise<void> {
@@ -215,6 +254,16 @@ export class EmployeeListComponent implements OnInit {
       return;
     }
 
+    if (!this.newUsername().trim() || this.usernameStatus() !== 'available') {
+      await this.dialogService.alert('USERNAME KHÔNG HỢP LỆ', 'Vui lòng nhập một username hợp lệ và chưa được sử dụng.');
+      return;
+    }
+
+    if (!this.passwordValid()) {
+      await this.dialogService.alert('MẬT KHẨU KHÔNG HỢP LỆ', this.passwordHint);
+      return;
+    }
+
     this.isSubmitting.set(true);
 
     // Parse skills: e.g. "Angular: Expert state management, ROS: Robotics control"
@@ -248,7 +297,8 @@ export class EmployeeListComponent implements OnInit {
       name: this.newName(),
       age: this.newAge(),
       role: this.newRole(),
-      password: this.newRole() === 'admin' ? this.newPassword() : null,
+      username: this.newUsername().trim(),
+      password: this.newPassword() || null,
       img: this.imgBase64(),
       position: this.newPosition() || 'Developer',
       income: this.newIncome(),

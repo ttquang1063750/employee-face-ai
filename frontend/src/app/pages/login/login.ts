@@ -12,30 +12,30 @@ import { AuthService } from '../../core/services/auth.service';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class LoginComponent {
-  id = signal<number | null>(null);
+  username = signal<string>('');
   password = signal<string>('');
   errorMsg = signal<string | null>(null);
   isLoading = signal<boolean>(false);
 
   constructor(private authService: AuthService, private router: Router) {
-    if (this.authService.isAuthenticated() && this.authService.isAdmin()) {
-      this.router.navigate(['/admin/dashboard']);
+    if (this.authService.isAuthenticated()) {
+      this.router.navigate([this.authService.isAdmin() ? '/admin/dashboard' : '/staff']);
     }
   }
 
   onSubmit(): void {
-    if (!this.id() || !this.password()) {
-      this.errorMsg.set('Vui lòng nhập đầy đủ Mã nhân viên và Mật khẩu.');
+    if (!this.username().trim() || !this.password()) {
+      this.errorMsg.set('Vui lòng nhập đầy đủ Username và Mật khẩu.');
       return;
     }
 
     this.isLoading.set(true);
     this.errorMsg.set(null);
 
-    this.authService.login(this.id()!, this.password()).subscribe({
+    this.authService.login(this.username().trim(), this.password()).subscribe({
       next: (res) => {
         this.isLoading.set(false);
-        this.router.navigate(['/admin/dashboard']);
+        this.router.navigate([res.user.role === 'admin' ? '/admin/dashboard' : '/staff']);
       },
       error: (err) => {
         this.isLoading.set(false);

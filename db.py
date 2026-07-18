@@ -36,9 +36,13 @@ def init_db():
                 age INTEGER NOT NULL,
                 image_path VARCHAR(255) NOT NULL,
                 role VARCHAR(20) DEFAULT 'staff',
-                password VARCHAR(100) DEFAULT NULL
+                password VARCHAR(100) DEFAULT NULL,
+                username VARCHAR(50) UNIQUE DEFAULT NULL
             );
         """)
+        # 1b. Migration for databases created before the username column existed
+        cur.execute("ALTER TABLE employees ADD COLUMN IF NOT EXISTS username VARCHAR(50) UNIQUE;")
+        conn.commit()
         # 2. employee_skills
         cur.execute("""
             CREATE TABLE IF NOT EXISTS employee_skills (
@@ -106,6 +110,12 @@ def init_db():
 
         # Seed data if database is empty
         seed_mock_data(conn)
+
+        # Backfill a login username for the admin account so the system stays
+        # bootstrappable now that login requires a username (not just ID + password).
+        # Runs after seeding so it also covers databases seeded before this column existed.
+        cur.execute("UPDATE employees SET username = 'admin' WHERE role = 'admin' AND username IS NULL;")
+        conn.commit()
 
     except Exception as e:
         conn.rollback()
@@ -347,25 +357,48 @@ def revoke_session(session_token):
         cur.close()
         conn.close()
 
-def verify_admin_credentials(admin_id, password):
+def verify_login_credentials(username, password):
     conn = get_connection()
     cur = conn.cursor()
     try:
-        cur.execute("SELECT id FROM employees WHERE id = %s AND password = %s AND role = 'admin';", (admin_id, password))
+        cur.execute("SELECT id FROM employees WHERE username = %s AND password = %s;", (username, password))
         row = cur.fetchone()
-        return row is not None
+        return row[0] if row else None
     finally:
         cur.close()
         conn.close()
 
-def register_employee(name, age, image_path, role='staff', password=None):
+def username_exists(username, exclude_id=None):
+    conn = get_connection()
+    cur = conn.cursor()
+    try:
+        if exclude_id:
+            cur.execute("SELECT id FROM employees WHERE username = %s AND id != %s;", (username, exclude_id))
+        else:
+            cur.execute("SELECT id FROM employees WHERE username = %s;", (username,))
+        return cur.fetchone() is not None
+    finally:
+        cur.close()
+        conn.close()
+
+def get_employee_basic(employee_id):
+    conn = get_connection()
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    try:
+        cur.execute("SELECT id, name, role FROM employees WHERE id = %s;", (employee_id,))
+        return cur.fetchone()
+    finally:
+        cur.close()
+        conn.close()
+
+def register_employee(name, age, image_path, role='staff', password=None, username=None):
     conn = get_connection()
     cur = conn.cursor()
     try:
         cur.execute("""
-            INSERT INTO employees (name, age, image_path, role, password)
-            VALUES (%s, %s, %s, %s, %s) RETURNING id;
-        """, (name, age, image_path, role, password))
+            INSERT INTO employees (name, age, image_path, role, password, username)
+            VALUES (%s, %s, %s, %s, %s, %s) RETURNING id;
+        """, (name, age, image_path, role, password, username))
         emp_id = cur.fetchone()[0]
         conn.commit()
         return emp_id
@@ -440,22 +473,22 @@ def add_employee_income(employee_id, amount, effective_date, change_reason):
         cur.close()
         conn.close()
 
-def update_employee_profile(employee_id, name, age, role, password=None):
+def update_employee_profile(employee_id, name, age, role, username, password=None):
     conn = get_connection()
     cur = conn.cursor()
     try:
         if password:
             cur.execute("""
-                UPDATE employees 
-                SET name = %s, age = %s, role = %s, password = %s
+                UPDATE employees
+                SET name = %s, age = %s, role = %s, username = %s, password = %s
                 WHERE id = %s;
-            """, (name, age, role, password, employee_id))
+            """, (name, age, role, username, password, employee_id))
         else:
             cur.execute("""
-                UPDATE employees 
-                SET name = %s, age = %s, role = %s
+                UPDATE employees
+                SET name = %s, age = %s, role = %s, username = %s
                 WHERE id = %s;
-            """, (name, age, role, employee_id))
+            """, (name, age, role, username, employee_id))
         conn.commit()
     except Exception as e:
         conn.rollback()
@@ -506,7 +539,7 @@ def get_detailed_employee(employee_id):
         # Base details
         cur = conn.cursor(cursor_factory=RealDictCursor)
         cur.execute("""
-            SELECT id, name, age, image_path, role
+            SELECT id, name, age, image_path, role, username
             FROM employees WHERE id = %s;
         """, (employee_id,))
         emp = cur.fetchone()

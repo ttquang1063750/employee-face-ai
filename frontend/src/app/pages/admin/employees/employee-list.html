@@ -148,12 +148,25 @@
                 </div>
               </div>
 
-              @if (newRole() === 'admin') {
-                <div class="form-group animate-in">
-                  <label>MẬT KHẨU QUẢN TRỊ</label>
-                  <input type="password" [ngModel]="newPassword()" (ngModelChange)="newPassword.set($event)" placeholder="Nhập mật khẩu login admin" class="hud-input">
-                </div>
-              }
+              <div class="form-group">
+                <label>USERNAME *</label>
+                <input type="text" [ngModel]="newUsername()" (ngModelChange)="onUsernameInput($event)" placeholder="vd: nguyen.van.a" autocomplete="off" class="hud-input">
+                @if (usernameStatus() === 'checking') {
+                  <p class="field-hint">⏳ Đang kiểm tra username...</p>
+                } @else if (usernameStatus() === 'taken') {
+                  <p class="field-hint error">✖ Username đã tồn tại.</p>
+                } @else if (usernameStatus() === 'available') {
+                  <p class="field-hint success">✔ Username hợp lệ.</p>
+                }
+              </div>
+
+              <div class="form-group">
+                <label>MẬT KHẨU ĐĂNG NHẬP *</label>
+                <input type="password" [ngModel]="newPassword()" (ngModelChange)="newPassword.set($event)" placeholder="Nhập mật khẩu đăng nhập" class="hud-input">
+                @if (newPassword() && !passwordValid()) {
+                  <p class="field-hint error">✖ {{ passwordHint }}</p>
+                }
+              </div>
 
               <!-- Skills & Projects Initial Seeding -->
               <div class="form-group">
@@ -197,7 +210,7 @@
 
         <div class="modal-footer">
           <button class="hud-btn-secondary" (click)="closeAddModal()">HỦY BỎ</button>
-          <button class="hud-btn-success" [disabled]="isSubmitting()" (click)="submitEmployee()">
+          <button class="hud-btn-success" [disabled]="isSubmitting() || !canSubmit()" (click)="submitEmployee()">
             @if (isSubmitting()) {
               <div class="loader"></div>
               <span>ĐANG XỬ LÝ...</span>

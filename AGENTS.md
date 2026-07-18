@@ -30,6 +30,8 @@ graph TD
 - **State Management**: Reactive Angular **Signals** instead of complex stores.
 - **Async & HTTP**: **RxJS** pipelines with a custom functional `HttpInterceptorFn` for silent token refresh.
 - **Testing**: **Vitest** for unit tests, **Cypress** for end-to-end (E2E) verification.
+- **Layout**: All `/admin/*` routes are lazily loaded as children of `AdminShellComponent` (`src/app/core/components/admin-shell/`), which renders the persistent sidebar/nav and hosts the routed page via `<router-outlet>`.
+- **Shared styles**: `src/styles/_hud-form.scss` is forwarded globally from `styles.scss` and holds every reusable HUD form/UI pattern (`.hud-filter-bar`, `.hud-field`, `.hud-input`, `.hud-btn-outline`, `.hud-btn-mini`, `[data-tooltip]` hover tooltips, `.form-camera-zone` webcam/upload capture, `.filter-apply-field`). Add new cross-page UI primitives here instead of redefining them per component — component-scoped styles win over the shared file automatically (Angular's emulated encapsulation adds a scoping attribute that out-specifies plain global selectors), so a page can still override a shared style locally when it genuinely needs to look different.
 
 ---
 
@@ -96,16 +98,18 @@ sequenceDiagram
 
 ## 🎨 UI & Design Principles: Robotics / Cyberpunk HUD
 
-To maintain the requested visual excellence:
+Theme: **"Dark Glass on Light Canvas"** — defined in `frontend/src/styles/_design-tokens.scss` (forwarded globally via `styles.scss`). Always read/reuse the CSS custom properties there rather than hardcoding hex values.
 - **Primary Color Palette**:
-  - Main Background: Deep Space Black (`#050811`)
-  - Accent / Primary lines: Glowing Neon Cyan (`#00f0ff`)
-  - Success Badges: Neon Green (`#00ff66`)
-  - Warnings / Delete buttons: Neon Pink/Red (`#ff0055`)
+  - Page background: neutral near-black (`--color-bg-deep`, `#12181a`)
+  - Card / header / panel surface: dark slate glass (`--color-bg-card`, `#1e2724`)
+  - Accent / Primary lines: Neon Green (`--color-cyan`, `#39d353` — the variable is still named `--color-cyan` for historical reasons, but it now drives the primary green accent, not cyan)
+  - Secondary success accent: Lime (`--color-green`, `#a3e635`)
+  - Warnings / Delete buttons: Rose Red (`--color-red`, `#f43f5e`)
+  - Caution: Orange (`--color-orange`, `#fb923c`) · Informational/neutral: Sky Blue (`--color-info`, `#38bdf8`)
 - **Key Visuals**:
   - Live webcam preview is mirrored (`transform: scaleX(-1)`) so check-ins feel natural.
   - Video features a sliding laser-line scan overlay (`scanner-laser` SCSS) and background grids simulating visual mesh recognition.
-  - Cards feature glassmorphic translucent layers (`backdrop-filter: blur(12px)`) and subtle border cyan glows.
+  - Cards feature glassmorphic translucent layers (`backdrop-filter: blur(12px)`) and subtle border glows.
   - **No external chart libraries**: Peak hours are plotted using **native inline SVG `<path>` and `<circle>` tags** generated dynamically in TypeScript from Signal datasets. This keeps the workspace free of heavy node modules and layout bugs.
 
 ---
@@ -129,6 +133,9 @@ When writing code or modifications, you must strictly follow these rules:
 7. **No Native Popups (Alert/Confirm)**: Do not use native browser `alert()` or `confirm()` dialogs. Inject the `DialogService` from `src/app/core/services/dialog.service` and invoke it asynchronously using Promises or async/await to guarantee a unified Cyberpunk HUD overlay experience.
 8. **OnPush Change Detection**: Every Angular component must explicitly configure `changeDetection: ChangeDetectionStrategy.OnPush` inside its `@Component` decorator to disable unnecessary dirty checking cycles and align with reactive Angular Signals workflows.
 9. **Table Pagination & Filtering**: Any table displaying lists of data (e.g. employee directories, audit logs) must implement reactive filters (start date, end date, text search) and pagination controls (currentPage, pageSize, totalPages) using Angular Signals. This guarantees visual stability and stops tables from expanding infinitely.
+10. **Date-Range Filters Require an Apply Action**: Date-range pickers must NOT refilter data on every `(ngModelChange)`. Bind the inputs to draft signals (e.g. `filterStartDateInput`/`filterEndDateInput`) and only copy them into the applied signals (`filterStartDate`/`filterEndDate`, consumed by the `computed()` that does the filtering) inside an `applyDateFilter()` method wired to an explicit "ÁP DỤNG" button (`.hud-field.filter-apply-field` + `.hud-btn-outline`, both defined in `_hud-form.scss`). Free-text/autocomplete search fields (e.g. employee name search) are exempt and may stay live-filtering, since selecting a suggestion is itself the "apply" action.
+11. **Serving Reference Photos**: Employee avatars are fetched by the frontend as `http://localhost:8000/{image_path}` (e.g. `database/3.jpg`). `server.py`'s `do_GET` routes `/database/*` requests to `serve_database_image()`, which resolves the path against the `database/` root and rejects anything that escapes it (checked via `os.path.commonpath`) — never bypass this guard or serve arbitrary filesystem paths. An employee's avatar can be replaced from the employee-detail edit modal (webcam capture or file upload, same UI/flow as new-employee registration) via `PUT /api/employees/:id` with an optional base64 `img` field.
+12. **Full-Replace Update Endpoints**: `PUT /api/employees/:id` (and the skills/projects sub-resources) fully replace the skills/projects lists based on whatever arrays are present in the request body — omitting `skills`/`projects` from a manual/partial request wipes them. Always send the complete current list back when updating any part of an employee's profile.
 
 ---
 
