@@ -27,11 +27,12 @@ graph TD
 
 ### 2. Frontend Application (`/frontend` Workspace)
 - **Technology**: **Angular v21+** configured with standalone component architectures, SCSS stylesheets, strict compiler configurations, and Vitest test runner.
-- **State Management**: Reactive Angular **Signals** instead of complex stores.
+- **State Management**: Reactive Angular **Signals** instead of complex stores. This project does **not** use `ReactiveFormsModule`/`FormGroup`/`FormControl` anywhere — every form is template-driven (`[ngModel]`/`(ngModelChange)`) backed by signals. Follow this pattern for new forms; don't introduce Reactive Forms.
 - **Async & HTTP**: **RxJS** pipelines with a custom functional `HttpInterceptorFn` for silent token refresh.
-- **Testing**: **Vitest** for unit tests, **Cypress** for end-to-end (E2E) verification.
-- **Layout**: All `/admin/*` routes are lazily loaded as children of `AdminShellComponent` (`src/app/core/components/admin-shell/`), which renders the persistent sidebar/nav and hosts the routed page via `<router-outlet>`.
-- **Shared styles**: `src/styles/_hud-form.scss` is forwarded globally from `styles.scss` and holds every reusable HUD form/UI pattern (`.hud-filter-bar`, `.hud-field`, `.hud-input`, `.hud-btn-outline`, `.hud-btn-mini`, `[data-tooltip]` hover tooltips, `.form-camera-zone` webcam/upload capture, `.filter-apply-field`). Add new cross-page UI primitives here instead of redefining them per component — component-scoped styles win over the shared file automatically (Angular's emulated encapsulation adds a scoping attribute that out-specifies plain global selectors), so a page can still override a shared style locally when it genuinely needs to look different.
+- **Testing**: **Vitest** for unit tests, **Cypress** for end-to-end (E2E) verification. Run `cd frontend && npm test` before committing frontend changes — the README's test badge reflects the real pass count, so keep the suite green rather than deleting/skipping failing specs.
+- **Layout**: All `/admin/*` routes are lazily loaded as children of `AdminShellComponent` (`src/app/core/components/admin-shell/`), which renders the persistent sidebar/nav and hosts the routed page via `<router-outlet>`. The `/staff` route is separate and unrelated: it loads `StaffProfileComponent` (`src/app/pages/staff/staff-profile/`) directly (no shell), a read-only self-service view for the logged-in employee's own profile.
+- **Shared styles**: `src/styles/_hud-form.scss` is forwarded globally from `styles.scss` and holds every reusable HUD form/UI pattern (`.hud-filter-bar`, `.hud-field`, `.hud-input`, `.hud-btn-outline`, `.hud-btn-mini`, `[data-tooltip]` hover tooltips, `.form-camera-zone` webcam/upload capture, `.filter-apply-field`, `.field-hint`). Add new cross-page UI primitives here instead of redefining them per component — component-scoped styles win over the shared file automatically (Angular's emulated encapsulation adds a scoping attribute that out-specifies plain global selectors), so a page can still override a shared style locally when it genuinely needs to look different.
+- **Shared services**: `src/app/core/services/credentials.util.ts` (password regex + hint text) and `username-check.service.ts` (calls the username-availability endpoint) are consumed by both the employee create and edit forms — reuse them rather than re-implementing validation logic per form.
 
 ---
 
@@ -46,7 +47,8 @@ To track the employee lifecycle comprehensively, the schema is normalized across
   | id (PK)          |    | (1:N Cascaded Delete)
   | name, age        |    |
   | image_path       |    +-----+--------------------+--------------------+--------------------+
-  | role, password   |          |                    |                    |                    |
+  | role, username,  |          |                    |                    |                    |
+  | password         |          |                    |                    |                    |
   +------------------+   +------+------+      +------+------+      +------+------+      +------+------+
                          |  positions  |      |   skills     |      |  projects   |      |   income    |
                          +-------------+      +-------------+      +-------------+      +-------------+
@@ -58,13 +60,28 @@ To track the employee lifecycle comprehensively, the schema is normalized across
                                                                    +-------------+
 ```
 
-1. **`employees`**: Base identity profile.
+1. **`employees`**: Base identity profile. `username` is `UNIQUE` and nullable (existing rows without one simply can't log in until an admin assigns one via the edit form) — every login (admin or staff) is username + password, not the numeric `id`. `password` is plaintext in this dev/demo build; there is no hashing yet.
 2. **`employee_skills`**: Skills registry containing `skill_name` and custom competency `description`.
 3. **`employee_positions`**: Title progressions over time. `end_date = NULL` represents the current active title.
 4. **`employee_projects`**: Historic project assignments containing `project_name`, `role`, and `description` of duties.
 5. **`employee_income_history`**: Compensation adjustment log containing `amount`, `effective_date`, and `change_reason`.
 6. **`user_sessions`**: Session registry for token authorization (Access and Refresh Token).
 7. **`attendance_logs`**: Check-in logs recording `timestamp`, `action` (CHECK_IN/OUT), identified employee ID, `mood` (dominant emotion), and audit photo path.
+
+---
+
+## ⚙️ Login & Role-Based Routing
+
+`POST /api/login` takes `{ username, password }` (not the numeric employee `id`) and, on success, returns `{ tokens, user: { id, name, role } }`. The frontend never guesses the role — `AuthService.saveUser()` stores exactly what the backend returned. Post-login redirect and route protection both branch on `user.role`:
+
+| Role | Redirect after login | Route guard | Area |
+|---|---|---|---|
+| `admin` | `/admin/dashboard` | `authGuard` (`role === 'admin'`) | Full HR console under `AdminShellComponent` |
+| `staff` | `/staff` | `staffGuard` (`role === 'staff'`) | Read-only self-service profile |
+
+Both guards clear the session and redirect to `/login` on failure — there is a single shared `/login` page for both roles, not separate login screens.
+
+`GET /api/employees/:id` is the one endpoint both roles can call: admins can fetch any employee, staff can only fetch their own record (`user["employee_id"] == :id`, checked server-side in `handle_get_employee_detail`). Every other employee-data endpoint (`GET /api/employees`, `/api/logs`, all mutating routes) stays admin-only.
 
 ---
 
@@ -136,6 +153,8 @@ When writing code or modifications, you must strictly follow these rules:
 10. **Date-Range Filters Require an Apply Action**: Date-range pickers must NOT refilter data on every `(ngModelChange)`. Bind the inputs to draft signals (e.g. `filterStartDateInput`/`filterEndDateInput`) and only copy them into the applied signals (`filterStartDate`/`filterEndDate`, consumed by the `computed()` that does the filtering) inside an `applyDateFilter()` method wired to an explicit "ÁP DỤNG" button (`.hud-field.filter-apply-field` + `.hud-btn-outline`, both defined in `_hud-form.scss`). Free-text/autocomplete search fields (e.g. employee name search) are exempt and may stay live-filtering, since selecting a suggestion is itself the "apply" action.
 11. **Serving Reference Photos**: Employee avatars are fetched by the frontend as `http://localhost:8000/{image_path}` (e.g. `database/3.jpg`). `server.py`'s `do_GET` routes `/database/*` requests to `serve_database_image()`, which resolves the path against the `database/` root and rejects anything that escapes it (checked via `os.path.commonpath`) — never bypass this guard or serve arbitrary filesystem paths. An employee's avatar can be replaced from the employee-detail edit modal (webcam capture or file upload, same UI/flow as new-employee registration) via `PUT /api/employees/:id` with an optional base64 `img` field.
 12. **Full-Replace Update Endpoints**: `PUT /api/employees/:id` (and the skills/projects sub-resources) fully replace the skills/projects lists based on whatever arrays are present in the request body — omitting `skills`/`projects` from a manual/partial request wipes them. Always send the complete current list back when updating any part of an employee's profile.
+13. **Username & Password Rules**: Every employee account requires a unique `username` and a password meeting `PASSWORD_PATTERN` (min 8 chars, upper + lower + digit + special char). This pattern exists in **two places that must stay in sync**: `PASSWORD_PATTERN` in `server.py` (Python `re`) and `PASSWORD_PATTERN` in `frontend/src/app/core/services/credentials.util.ts` (JS regex) — there's no shared source across the two languages, so update both together. On the employee **edit** form, an empty password field means "keep the existing password" (only validate complexity when non-empty); on the **create** form, both username and password are always required.
+14. **Async Username Availability Check**: Don't use Angular's `AsyncValidatorFn`/Reactive Forms for this (see rule above about template-driven forms). Follow the existing manual-debounce pattern in `employee-list.ts`/`employee-detail.ts`: a `setTimeout`/`clearTimeout` timer (~450ms) on `(ngModelChange)` calls `UsernameCheckService.check(username, excludeId?)` against `GET /api/employees/check-username`, and a `'idle' | 'checking' | 'available' | 'taken'` signal drives both the inline `.field-hint` message and the submit button's `[disabled]` state. Always pass `excludeId` (the employee's own id) on edit forms so an unchanged username doesn't falsely flag as taken.
 
 ---
 
@@ -167,3 +186,10 @@ When writing code or modifications, you must strictly follow these rules:
   cd frontend
   npm run build
   ```
+- **Run frontend unit tests** (Vitest):
+  ```bash
+  cd frontend
+  npm test
+  ```
+
+> Looking for the public-facing project intro instead of agent/dev internals? See [README.md](README.md).
