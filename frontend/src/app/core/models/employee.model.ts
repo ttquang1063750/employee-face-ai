@@ -40,6 +40,7 @@ export interface AttendanceLog {
   timestamp: string;
   action: 'CHECK_IN' | 'CHECK_OUT';
   mood: string;
+  captured_image_path?: string;
 }
 
 export interface MonthlyLogSummary {

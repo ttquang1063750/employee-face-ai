@@ -975,7 +975,7 @@ def get_detailed_employee(employee_id):
         cur = conn.cursor(cursor_factory=RealDictCursor)
         cur.execute(
             """
-            SELECT timestamp, action, mood
+            SELECT timestamp, action, mood, captured_image_path
             FROM attendance_logs
             WHERE employee_id = %s
             ORDER BY timestamp DESC;

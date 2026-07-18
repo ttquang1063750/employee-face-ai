@@ -643,3 +643,17 @@
   width: 100%;
 }
 
+// ─── Audit Photo Viewer (app-audit-photo-button) ──────────────
+.audit-photo-error {
+  margin-left: var(--space-2);
+  cursor: help;
+}
+
+.audit-photo-full {
+  display: block;
+  width: 100%;
+  max-height: 70vh;
+  object-fit: contain;
+  border-radius: var(--radius-sm);
+}
+

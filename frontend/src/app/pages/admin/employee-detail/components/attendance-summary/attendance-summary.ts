@@ -3,11 +3,12 @@ import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DatePickerComponent } from '../../../../../core/components/date-picker/date-picker';
 import { AttendanceLog } from '../../../../../core/models/employee.model';
+import { AuditPhotoButtonComponent } from '../../../../../core/components/audit-photo-button/audit-photo-button';
 
 @Component({
   selector: 'app-attendance-summary',
   standalone: true,
-  imports: [FormsModule, DatePickerComponent, DatePipe],
+  imports: [FormsModule, DatePickerComponent, DatePipe, AuditPhotoButtonComponent],
   templateUrl: './attendance-summary.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

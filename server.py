@@ -87,11 +87,12 @@ def reset_login_attempts(key):
 # affecting this shared default.
 DEFAULT_DETECTOR_BACKEND = "retinaface"
 
-# Check-in/check-out audit photos (logs/*.jpg) are never served to the
-# frontend — they're forensic-only evidence — and accumulate one file per
-# scan forever otherwise. Prune anything older than LOG_RETENTION_DAYS once
-# a day; this only removes the on-disk JPEG, never the attendance_logs DB
-# row or its timestamp/mood metadata, so the audit trail's history stays intact.
+# Check-in/check-out audit photos (logs/*.jpg) are served to admins only
+# (see serve_audit_image) — they're forensic evidence, not a public asset
+# like a reference photo — and accumulate one file per scan forever
+# otherwise. Prune anything older than LOG_RETENTION_DAYS once a day; this
+# only removes the on-disk JPEG, never the attendance_logs DB row or its
+# timestamp/mood metadata, so the audit trail's history stays intact.
 LOGS_DIR = "logs"
 LOG_RETENTION_DAYS = 90
 LOG_CLEANUP_INTERVAL_SECONDS = 24 * 60 * 60
@@ -204,6 +205,8 @@ class EmployeeFaceAIRequestHandler(BaseHTTPRequestHandler):
             self.handle_get_employee_detail()
         elif self.path.startswith("/database/"):
             self.serve_database_image()
+        elif self.path.startswith("/logs/"):
+            self.serve_audit_image()
         # Serve the single page index.html for static hosting fallback
         elif self.path == "/" or self.path == "/index.html":
             self.serve_static_index()
@@ -268,12 +271,12 @@ class EmployeeFaceAIRequestHandler(BaseHTTPRequestHandler):
         except FileNotFoundError:
             self.send_error(404, "File Not Found: index.html")
 
-    def serve_database_image(self):
-        database_root = os.path.realpath("database")
-        requested_path = os.path.realpath(os.path.join(database_root, self.path[len("/database/") :]))
+    def _serve_local_image(self, root_dir, relative_path):
+        root = os.path.realpath(root_dir)
+        requested_path = os.path.realpath(os.path.join(root, relative_path))
 
-        # Guard against path traversal outside the database directory
-        if os.path.commonpath([database_root, requested_path]) != database_root:
+        # Guard against path traversal outside the given root directory
+        if os.path.commonpath([root, requested_path]) != root:
             self.send_error(403, "Forbidden")
             return
 
@@ -293,6 +296,18 @@ class EmployeeFaceAIRequestHandler(BaseHTTPRequestHandler):
             self.wfile.write(content)
         except FileNotFoundError:
             self.send_error(404, "File Not Found")
+
+    def serve_database_image(self):
+        self._serve_local_image("database", self.path[len("/database/") :])
+
+    def serve_audit_image(self):
+        # Audit photos are forensic evidence of a specific person's face at a
+        # specific time — unlike reference avatars, only admins may view them.
+        user = self.get_authenticated_user()
+        if not user or user["role"] != "admin":
+            self.send_error(401, "Unauthorized")
+            return
+        self._serve_local_image(LOGS_DIR, self.path[len("/logs/") :])
 
     def handle_login(self):
         try:

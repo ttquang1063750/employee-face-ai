@@ -1,0 +1,32 @@
+<button
+  type="button"
+  class="hud-btn-mini"
+  data-tooltip="Xem ảnh chấm công"
+  [disabled]="!imagePath() || isLoading()"
+  (click)="view()">
+  @if (isLoading()) {
+    <div class="loader"></div>
+  } @else {
+    🖼️
+  }
+</button>
+
+@if (loadFailed()) {
+  <span
+    class="audit-photo-error"
+    title="Không thể tải ảnh — có thể đã bị xóa theo chính sách lưu trữ 90 ngày.">⚠️</span>
+}
+
+@if (photoUrl(); as url) {
+  <div class="modal-backdrop">
+    <div class="modal-card mini">
+      <div class="modal-header">
+        <h3>📸 ẢNH CHẤM CÔNG</h3>
+        <button class="close-btn" (click)="close()">✖</button>
+      </div>
+      <div class="modal-body">
+        <img [src]="url" alt="Ảnh chấm công" class="audit-photo-full">
+      </div>
+    </div>
+  </div>
+}

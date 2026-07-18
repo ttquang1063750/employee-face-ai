@@ -41,6 +41,7 @@
           <th>Thời gian</th>
           <th>Hành động</th>
           <th>Cảm xúc</th>
+          <th>Ảnh</th>
         </tr>
       </thead>
       <tbody>
@@ -55,10 +56,13 @@
             <td>
               <span class="mood-badge">{{ log.mood }}</span>
             </td>
+            <td>
+              <app-audit-photo-button [imagePath]="log.captured_image_path" />
+            </td>
           </tr>
         } @empty {
           <tr>
-            <td colspan="3" class="no-data">Không có lịch sử chấm công trong khoảng thời gian đã chọn.</td>
+            <td colspan="4" class="no-data">Không có lịch sử chấm công trong khoảng thời gian đã chọn.</td>
           </tr>
         }
       </tbody>
