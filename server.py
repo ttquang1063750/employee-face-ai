@@ -88,10 +88,29 @@ MOOD_TRANSLATION = {
 }
 
 
+# Caps how large any single uploaded/captured reference or check-in photo can
+# be, so a deliberately huge image can't be used to blow up disk usage or
+# stall a DeepFace call (detection/embedding time scales with image size).
+MAX_IMAGE_BYTES = 8 * 1024 * 1024  # 8 MB
+
+
+def image_within_size_limit(base64_str):
+    """Cheap check against the base64 string length (no decoding) so an
+    oversized payload is rejected before we spend time decoding/writing it."""
+    if not base64_str:
+        return False
+    encoded = base64_str.split(",", 1)[-1]
+    estimated_bytes = (len(encoded) * 3) // 4
+    return estimated_bytes <= MAX_IMAGE_BYTES
+
+
 def save_base64_image(base64_str, output_path):
     try:
         header, encoded = base64_str.split(",", 1)
         data = base64.b64decode(encoded)
+        if len(data) > MAX_IMAGE_BYTES:
+            print(f"Rejected image write: {len(data)} bytes exceeds the {MAX_IMAGE_BYTES}-byte limit", flush=True)
+            return False
         with open(output_path, "wb") as f:
             f.write(data)
         return True
@@ -446,6 +465,12 @@ class EmployeeFaceAIRequestHandler(BaseHTTPRequestHandler):
                 self.send_json_response(400, {"success": False, "error": "Vui lòng nhập tên và chụp ảnh mẫu."})
                 return
 
+            if not image_within_size_limit(img_base64):
+                self.send_json_response(
+                    400, {"success": False, "error": "Ảnh vượt quá dung lượng cho phép (tối đa 8MB)."}
+                )
+                return
+
             if not self.has_detectable_face(img_base64):
                 self.send_json_response(
                     400,
@@ -568,6 +593,12 @@ class EmployeeFaceAIRequestHandler(BaseHTTPRequestHandler):
                 return
 
             if img_base64:
+                if not image_within_size_limit(img_base64):
+                    self.send_json_response(
+                        400, {"success": False, "error": "Ảnh vượt quá dung lượng cho phép (tối đa 8MB)."}
+                    )
+                    return
+
                 if not self.has_detectable_face(img_base64):
                     self.send_json_response(
                         400,
@@ -723,6 +754,12 @@ class EmployeeFaceAIRequestHandler(BaseHTTPRequestHandler):
                 self.send_json_response(400, {"success": False, "error": "Vui lòng chụp hoặc tải lên ảnh mới."})
                 return
 
+            if not image_within_size_limit(img_base64):
+                self.send_json_response(
+                    400, {"success": False, "error": "Ảnh vượt quá dung lượng cho phép (tối đa 8MB)."}
+                )
+                return
+
             final_filepath = f"database/{employee_id}.jpg"
             if save_base64_image(img_base64, final_filepath):
                 db.update_employee_avatar(employee_id, final_filepath)
@@ -764,6 +801,12 @@ class EmployeeFaceAIRequestHandler(BaseHTTPRequestHandler):
             if not img_base64 or not action:
                 self.send_json_response(
                     400, {"success": False, "error": "Thiếu dữ liệu chụp ảnh hoặc trạng thái chấm công."}
+                )
+                return
+
+            if not image_within_size_limit(img_base64):
+                self.send_json_response(
+                    400, {"success": False, "error": "Ảnh vượt quá dung lượng cho phép (tối đa 8MB)."}
                 )
                 return
 
