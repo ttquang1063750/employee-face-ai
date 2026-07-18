@@ -10,8 +10,9 @@ import io
 import json
 import re
 import tempfile
+import threading
 from datetime import datetime
-from http.server import BaseHTTPRequestHandler, HTTPServer
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlparse
 
 from deepface import DeepFace
@@ -20,6 +21,12 @@ import db
 
 # Min 8 chars, at least one lowercase, one uppercase, one digit, one special character
 PASSWORD_PATTERN = re.compile(r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$")
+
+# DeepFace.find()/analyze() read and rewrite a shared embeddings cache (.pkl)
+# under database/ — with ThreadingHTTPServer handling requests concurrently,
+# two overlapping DeepFace calls could race on that same cache file. Serialize
+# just the DeepFace calls (not the rest of each request) with this lock.
+DEEPFACE_LOCK = threading.Lock()
 
 MOOD_TRANSLATION = {
     "happy": "Vui vẻ 😊",
@@ -290,7 +297,8 @@ class EmployeeFaceAIRequestHandler(BaseHTTPRequestHandler):
             if not save_base64_image(img_base64, temp_img_path):
                 return False
 
-            faces = DeepFace.extract_faces(img_path=temp_img_path, enforce_detection=True)
+            with DEEPFACE_LOCK:
+                faces = DeepFace.extract_faces(img_path=temp_img_path, enforce_detection=True)
             return len(faces) > 0
         except Exception as e:
             print(f"Face detection failed: {e}", flush=True)
@@ -316,7 +324,8 @@ class EmployeeFaceAIRequestHandler(BaseHTTPRequestHandler):
             if not save_base64_image(img_base64, temp_img_path):
                 return None
 
-            dfs = DeepFace.find(img_path=temp_img_path, db_path="database", enforce_detection=False, silent=True)
+            with DEEPFACE_LOCK:
+                dfs = DeepFace.find(img_path=temp_img_path, db_path="database", enforce_detection=False, silent=True)
 
             if not dfs or len(dfs) == 0 or len(dfs[0]) == 0:
                 return None
@@ -709,9 +718,13 @@ class EmployeeFaceAIRequestHandler(BaseHTTPRequestHandler):
             save_base64_image(img_base64, temp_img_path)
 
             print(f"Finding match using detector: {detector_backend}...", flush=True)
-            dfs = DeepFace.find(
-                img_path=temp_img_path, db_path="database", detector_backend=detector_backend, enforce_detection=True
-            )
+            with DEEPFACE_LOCK:
+                dfs = DeepFace.find(
+                    img_path=temp_img_path,
+                    db_path="database",
+                    detector_backend=detector_backend,
+                    enforce_detection=True,
+                )
 
             if not dfs or len(dfs) == 0 or len(dfs[0]) == 0:
                 self.send_json_response(
@@ -741,9 +754,13 @@ class EmployeeFaceAIRequestHandler(BaseHTTPRequestHandler):
 
             # Analyze emotion
             print("Analyzing emotion...", flush=True)
-            analysis = DeepFace.analyze(
-                img_path=temp_img_path, actions=["emotion"], detector_backend=detector_backend, enforce_detection=True
-            )
+            with DEEPFACE_LOCK:
+                analysis = DeepFace.analyze(
+                    img_path=temp_img_path,
+                    actions=["emotion"],
+                    detector_backend=detector_backend,
+                    enforce_detection=True,
+                )
 
             dominant_emotion = "neutral"
             if isinstance(analysis, list) and len(analysis) > 0:
@@ -1028,7 +1045,7 @@ class EmployeeFaceAIRequestHandler(BaseHTTPRequestHandler):
         self.wfile.write(response_bytes)
 
 
-def run(server_class=HTTPServer, handler_class=EmployeeFaceAIRequestHandler, port=8000):
+def run(server_class=ThreadingHTTPServer, handler_class=EmployeeFaceAIRequestHandler, port=8000):
     print("Connecting to PostgreSQL and verifying schemas...", flush=True)
     db.init_db()
 
