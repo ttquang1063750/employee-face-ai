@@ -1,20 +1,4 @@
 <div class="employees-layout">
-  <!-- Navbar HUD -->
-  <header class="admin-header">
-    <div class="header-logo">
-      <span class="logo-icon">💻</span>
-      <div class="logo-text">
-        <h1>HR CONTROL PANEL</h1>
-        <p>Mainframe Security Console</p>
-      </div>
-    </div>
-    <nav class="admin-nav">
-      <a class="nav-link" routerLink="/admin/dashboard">📊 Bảng thống kê</a>
-      <a class="nav-link active" routerLink="/admin/employees">👥 Quản lý Nhân viên</a>
-      <button class="logout-btn" (click)="logout()">🚪 Đăng xuất</button>
-    </nav>
-  </header>
-
   <div class="employees-content">
     <div class="page-title-row">
       <h2 class="title">👥 DANH SÁCH NHÂN SỰ Mainframe</h2>
@@ -45,47 +29,77 @@
         <button class="retry-btn" (click)="loadEmployees()">Tải lại</button>
       </div>
     } @else {
-      <!-- Employees Card Grid -->
-      <div class="employees-grid">
-        @for (emp of paginatedEmployees(); track emp.id) {
-          <div class="employee-card">
-            <div class="card-glow"></div>
-            <div class="profile-pic-frame">
-              <img 
-                [src]="'http://localhost:8000/' + emp.image_path" 
-                (error)="onImageError($event)"
-                alt="{{ emp.name }}" 
-                class="profile-pic">
-            </div>
-
-            <div class="emp-info">
-              <h3 class="emp-name">{{ emp.name }}</h3>
-              <p class="emp-pos">{{ emp.current_position || 'Developer' }}</p>
-              <div class="emp-meta">
-                <span class="id">ID: #{{ emp.id }}</span>
-                <span class="age">{{ emp.age }} tuổi</span>
-              </div>
-              <div class="role-badge" [class.admin]="emp.role === 'admin'">
-                {{ emp.role === 'admin' ? 'Admin' : 'Staff' }}
-              </div>
-            </div>
-
-            <div class="emp-actions">
-              <button class="action-btn detail-btn" [routerLink]="['/admin/employees', emp.id]">🔍 Xem hồ sơ</button>
-              <button class="action-btn delete-btn" (click)="deleteEmployee(emp.id, emp.name)">🗑️ Xóa</button>
-            </div>
-          </div>
-        } @empty {
-          <div class="no-results">Không tìm thấy kết quả nào phù hợp với từ khóa tìm kiếm.</div>
-        }
+      <!-- Employees Table -->
+      <div class="employees-table-wrapper">
+        <table class="employees-table">
+          <thead>
+            <tr>
+              <th></th>
+              <th>NHÂN VIÊN</th>
+              <th>VỊ TRÍ</th>
+              <th>ID</th>
+              <th>TUỔI</th>
+              <th>VAI TRÒ</th>
+              <th>HÀNH ĐỘNG</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (emp of paginatedEmployees(); track emp.id) {
+              <tr>
+                <td>
+                  <div class="profile-pic-frame">
+                    <img
+                      [src]="'http://localhost:8000/' + emp.image_path"
+                      (error)="onImageError($event)"
+                      alt="{{ emp.name }}"
+                      class="profile-pic">
+                  </div>
+                </td>
+                <td class="emp-name">{{ emp.name }}</td>
+                <td class="emp-pos">{{ emp.current_position || 'Developer' }}</td>
+                <td class="emp-id">#{{ emp.id }}</td>
+                <td>{{ emp.age }} tuổi</td>
+                <td>
+                  <span class="role-badge" [class.admin]="emp.role === 'admin'">
+                    {{ emp.role === 'admin' ? 'Admin' : 'Staff' }}
+                  </span>
+                </td>
+                <td>
+                  <div class="emp-actions">
+                    <button class="action-btn detail-btn" [routerLink]="['/admin/employees', emp.id]">🔍 Xem hồ sơ</button>
+                    @if (emp.role !== 'admin') {
+                      <button class="action-btn delete-btn" (click)="deleteEmployee(emp.id, emp.name)">🗑️ Xóa</button>
+                    }
+                  </div>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="7" class="no-results">Không tìm thấy kết quả nào phù hợp với từ khóa tìm kiếm.</td>
+              </tr>
+            }
+          </tbody>
+        </table>
       </div>
 
       <!-- Pagination Controls -->
       @if (employees().length > 0) {
         <div class="hud-pagination">
-          <button class="pag-btn" [disabled]="currentPage() === 1" (click)="prevPage()">◀ TRƯỚC</button>
-          <span class="pag-info">TRANG {{ currentPage() }} / {{ totalPages() }}</span>
-          <button class="pag-btn" [disabled]="currentPage() === totalPages()" (click)="nextPage()">SAU ▶</button>
+          <div class="pag-size">
+            <label for="emp-page-size">Hiển thị</label>
+            <select id="emp-page-size" class="pag-size-select" [ngModel]="pageSize()" (ngModelChange)="pageSize.set(+$event); currentPage.set(1)">
+              <option [value]="8">8</option>
+              <option [value]="16">16</option>
+              <option [value]="24">24</option>
+              <option [value]="50">50</option>
+            </select>
+            <span>/ trang</span>
+          </div>
+          <div class="pag-controls">
+            <button class="pag-btn" [disabled]="currentPage() === 1" (click)="prevPage()">◀ TRƯỚC</button>
+            <span class="pag-info">TRANG {{ currentPage() }} / {{ totalPages() }}</span>
+            <button class="pag-btn" [disabled]="currentPage() === totalPages()" (click)="nextPage()">SAU ▶</button>
+          </div>
         </div>
       }
     }

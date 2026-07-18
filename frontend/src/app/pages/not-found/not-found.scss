@@ -3,16 +3,18 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #050811;
+  background-color: var(--color-bg-deep);
+  background-image: var(--pattern-dot-grid);
+  background-size: var(--pattern-dot-grid-size);
   font-family: 'Orbitron', sans-serif;
-  color: #00f0ff;
-  padding: 1rem;
+  color: var(--color-cyan);
+  padding: var(--space-4);
 }
 
 .hud-box {
-  background: rgba(9, 13, 22, 0.6);
-  border: 1px solid #ff0055;
-  box-shadow: 0 0 20px rgba(255, 0, 85, 0.2);
+  background: rgba(var(--color-bg-card-rgb), 1);
+  border: 1px solid var(--color-red);
+  box-shadow: 0 0 20px rgba(var(--color-red-rgb), 0.2);
   padding: 2.5rem;
   border-radius: 8px;
   text-align: center;
@@ -23,20 +25,20 @@
 
 .glitch-text {
   font-size: 2.5rem;
-  color: #ff0055;
-  text-shadow: 0 0 10px rgba(255, 0, 85, 0.5);
-  margin-bottom: 1rem;
+  color: var(--color-red);
+  text-shadow: 0 0 10px rgba(var(--color-red-rgb), 0.5);
+  margin-bottom: var(--space-4);
   letter-spacing: 2px;
 }
 
 .divider {
   height: 2px;
-  background: linear-gradient(90deg, transparent, #ff0055, transparent);
-  margin: 1.5rem 0;
+  background: linear-gradient(90deg, transparent, var(--color-red), transparent);
+  margin: var(--space-6) 0;
 }
 
 .description {
-  color: #94a3b8;
+  color: var(--color-text-secondary);
   font-size: 0.95rem;
   line-height: 1.6;
   font-family: 'Inter', sans-serif;
@@ -44,21 +46,21 @@
 
 .hud-btn {
   background: transparent;
-  border: 1px solid #00f0ff;
-  color: #00f0ff;
-  padding: 0.75rem 1.5rem;
+  border: 1px solid var(--color-cyan);
+  color: var(--color-cyan);
+  padding: var(--space-3) var(--space-6);
   font-family: 'Orbitron', sans-serif;
-  font-size: 0.9rem;
+  font-size: var(--text-base);
   font-weight: 600;
   cursor: pointer;
-  border-radius: 4px;
-  box-shadow: 0 0 10px rgba(0, 240, 255, 0.2);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 0 10px rgba(var(--color-cyan-rgb), 0.2);
   transition: all 0.2s ease;
   width: 100%;
 
   &:hover {
-    background: rgba(0, 240, 255, 0.1);
-    box-shadow: 0 0 15px rgba(0, 240, 255, 0.4);
+    background: rgba(var(--color-cyan-rgb), 0.1);
+    box-shadow: 0 0 15px rgba(var(--color-cyan-rgb), 0.4);
     transform: scale(1.02);
   }
 }

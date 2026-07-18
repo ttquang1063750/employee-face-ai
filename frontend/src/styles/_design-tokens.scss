@@ -1,29 +1,56 @@
 // ============================================================
 //  _design-tokens.scss
 //  Global CSS Design Tokens — Employee Face AI HUD Design System
-//  Import this file in styles.scss to apply tokens globally.
+//  Theme: Dark Glass on Light Canvas — light dot-grid page, cards/
+//  header/panels are dark green glass with bright neon accents & white text
 // ============================================================
 
 :root {
   // ─── Color Palette ─────────────────────────────────────
-  --color-bg-deep:        #050811;     // Page background
-  --color-bg-card:        rgba(9, 13, 24, 0.75);
-  --color-bg-input:       rgba(4, 8, 20, 0.8);
-  --color-bg-input-focus: rgba(0, 240, 255, 0.04);
-  --color-bg-filter:      rgba(4, 8, 16, 0.6);
+  // Page canvas is a neutral near-black; surfaces (cards/header/inputs) are a
+  // neutral dark slate, a shade lighter — matches the "Slate Sidebar" direction
+  --color-bg-deep:        #12181a;               // Page background
+  --color-bg-card:        #1e2724;               // Card / header / panel surface
+  --color-bg-input:       rgba(15, 20, 19, 0.5);  // Inset field within a card
+  --color-bg-input-focus: rgba(57, 211, 83, 0.12);
+  --color-bg-filter:      #171f1d;
+  --color-bg-hover:       rgba(57, 211, 83, 0.1);
 
-  --color-border-subtle:  rgba(51, 65, 85, 0.5);
-  --color-border-dim:     rgba(51, 65, 85, 0.25);
-  --color-border-cyan:    rgba(0, 240, 255, 0.5);
-  --color-border-cyan-glow: rgba(0, 240, 255, 0.25);
+  // Dot-grid page pattern
+  --pattern-dot-grid:      radial-gradient(rgba(var(--color-cyan-rgb), 0.14) 1px, transparent 1.4px);
+  --pattern-dot-grid-size: 20px 20px;
 
-  --color-cyan:           #00f0ff;
-  --color-green:          #00ff66;
-  --color-red:            #ff0055;
-  --color-white:          #ffffff;
-  --color-text-primary:   #f8fafc;
-  --color-text-secondary: #94a3b8;
-  --color-text-muted:     #64748b;
+  // Borders — light sage lines, visible against the dark card surfaces
+  --color-border-subtle:    rgba(57, 211, 83, 0.3);
+  --color-border-dim:       rgba(var(--color-border-rgb), 0.45);
+  --color-border-cyan:      rgba(57, 211, 83, 0.55);   // "cyan" = primary green
+  --color-border-cyan-glow: rgba(57, 211, 83, 0.3);
+
+  // Accent palette — bright neon again, tuned for contrast on dark cards
+  --color-cyan:           #39d353;    // Primary neon green (replaces cyan) — brand / success
+  --color-green:          #a3e635;    // Lime — secondary success accent (confirmations, money)
+  --color-red:            #f43f5e;    // Danger / delete / negative
+  --color-orange:         #fb923c;    // Warning / caution
+  --color-info:           #38bdf8;    // Neutral / informational (no good-or-bad judgment)
+  --color-heading:        #ffffff;    // White — logos, headings, high-emphasis text
+  --color-text-primary:   #f6fdf7;    // Main body text
+  --color-text-secondary: #dcefe4;    // Secondary labels
+  --color-text-muted:     #b0c9ba;    // Muted/disabled
+
+  // RGB channel triplets — for rgba(var(--x-rgb), alpha) where a custom
+  // alpha is needed. Keeps every alpha variant derived from one source value.
+  --color-cyan-rgb:            57, 211, 83;
+  --color-green-rgb:           163, 230, 53;
+  --color-red-rgb:             244, 63, 94;
+  --color-orange-rgb:          251, 146, 60;
+  --color-info-rgb:            56, 189, 248;
+  --color-heading-rgb:         255, 255, 255;
+  --color-text-secondary-rgb:  220, 239, 228;
+  --color-bg-deep-rgb:         18, 24, 26;
+  --color-bg-card-rgb:         30, 39, 36;
+  --color-bg-input-rgb:        15, 20, 19;
+  --color-bg-filter-rgb:       23, 31, 29;
+  --color-border-rgb:          180, 205, 190;    // light sage-gray, reads on dark cards
 
   // ─── Typography ────────────────────────────────────────
   --font-body:    'Inter', sans-serif;
@@ -58,10 +85,12 @@
   --radius-lg:   10px;
 
   // ─── Shadows / Glows ───────────────────────────────────
-  --glow-cyan:    0 0 14px rgba(0, 240, 255, 0.3);
-  --glow-cyan-lg: 0 0 24px rgba(0, 240, 255, 0.5);
-  --glow-green:   0 0 14px rgba(0, 255, 102, 0.3);
-  --glow-red:     0 0 14px rgba(255, 0, 85, 0.3);
+  --glow-cyan:    0 0 14px rgba(var(--color-cyan-rgb), 0.35);
+  --glow-cyan-lg: 0 0 26px rgba(var(--color-cyan-rgb), 0.5);
+  --glow-green:   0 0 14px rgba(var(--color-green-rgb), 0.4);
+  --glow-red:     0 0 14px rgba(var(--color-red-rgb), 0.4);
+  --glow-orange:  0 0 14px rgba(var(--color-orange-rgb), 0.4);
+  --glow-info:    0 0 14px rgba(var(--color-info-rgb), 0.4);
 
   // ─── Transitions ───────────────────────────────────────
   --transition-fast: all 0.18s ease;

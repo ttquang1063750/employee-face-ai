@@ -13,6 +13,8 @@
 body {
   margin: 0;
   background-color: var(--color-bg-deep);
+  background-image: var(--pattern-dot-grid);
+  background-size: var(--pattern-dot-grid-size);
   font-family: var(--font-body);
   color: var(--color-text-primary);
   overflow-x: hidden;

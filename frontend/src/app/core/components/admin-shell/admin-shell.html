@@ -1,0 +1,22 @@
+<div class="shell">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark">💻</div>
+      <div class="brand-text">
+        <b>HR Control Panel</b>
+        <span>Mainframe Security Console</span>
+      </div>
+    </div>
+
+    <nav class="side-nav">
+      <a routerLink="/admin/dashboard" routerLinkActive="active">📊 Bảng thống kê</a>
+      <a routerLink="/admin/employees" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: false }">👥 Quản lý Nhân viên</a>
+    </nav>
+
+    <button class="logout" (click)="logout()">⏻ Đăng xuất</button>
+  </aside>
+
+  <main class="content">
+    <router-outlet></router-outlet>
+  </main>
+</div>

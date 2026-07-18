@@ -1,8 +1,7 @@
 import { Component, OnInit, signal, computed, ElementRef, viewChild, ChangeDetectionStrategy } from '@angular/core';
-import { Router, RouterLink } from '@angular/router';
+import { RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
-import { AuthService } from '../../../core/services/auth.service';
 import { DialogService } from '../../../core/services/dialog.service';
 
 export interface EmployeeBase {
@@ -85,8 +84,6 @@ export class EmployeeListComponent implements OnInit {
 
   constructor(
     private http: HttpClient,
-    private authService: AuthService,
-    private router: Router,
     private dialogService: DialogService
   ) {}
 
@@ -302,9 +299,4 @@ export class EmployeeListComponent implements OnInit {
     }
   }
 
-  logout(): void {
-    this.authService.logout().subscribe(() => {
-      this.router.navigate(['/login']);
-    });
-  }
 }

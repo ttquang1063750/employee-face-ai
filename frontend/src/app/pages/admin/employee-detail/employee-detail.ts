@@ -2,7 +2,6 @@ import { Component, OnInit, signal, computed, ChangeDetectionStrategy } from '@a
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
-import { AuthService } from '../../../core/services/auth.service';
 import { DialogService } from '../../../core/services/dialog.service';
 import { CommonModule } from '@angular/common';
 
@@ -142,7 +141,6 @@ export class EmployeeDetailComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private http: HttpClient,
-    private authService: AuthService,
     private dialogService: DialogService
   ) {}
 

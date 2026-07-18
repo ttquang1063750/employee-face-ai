@@ -1,20 +1,4 @@
 <div class="dashboard-layout">
-  <!-- Mainframe Sidebar/Navbar -->
-  <header class="admin-header">
-    <div class="header-logo">
-      <span class="logo-icon">💻</span>
-      <div class="logo-text">
-        <h1>HR CONTROL PANEL</h1>
-        <p>Mainframe Security Console</p>
-      </div>
-    </div>
-    <nav class="admin-nav">
-      <a class="nav-link active" routerLink="/admin/dashboard">📊 Bảng thống kê</a>
-      <a class="nav-link" routerLink="/admin/employees">👥 Quản lý Nhân viên</a>
-      <button class="logout-btn" (click)="logout()">🚪 Đăng xuất</button>
-    </nav>
-  </header>
-
   <div class="dashboard-content">
     @if (isLoading()) {
       <div class="loading-state">
@@ -27,127 +11,150 @@
         <button class="retry-btn" (click)="loadDashboardData()">Thử lại</button>
       </div>
     } @else {
+      <!-- 0. Global filter bar — every widget below reacts to this -->
+      <div class="hud-filter-bar">
+        <div class="hud-field">
+          <label class="hud-label">TỪ NGÀY</label>
+          <input type="date" [ngModel]="filterStartDate()" (ngModelChange)="filterStartDate.set($event); currentPage.set(1)" class="hud-input">
+        </div>
+        <div class="hud-field">
+          <label class="hud-label">ĐẾN NGÀY</label>
+          <input type="date" [ngModel]="filterEndDate()" (ngModelChange)="filterEndDate.set($event); currentPage.set(1)" class="hud-input">
+        </div>
+
+        <!-- Autocomplete employee name search -->
+        <div class="hud-field grow-3">
+          <label class="hud-label">TÊN NHÂN VIÊN</label>
+          <div class="hud-autocomplete">
+            <div class="hud-search-wrapper">
+              <input
+                type="text"
+                [ngModel]="filterEmployeeName()"
+                (ngModelChange)="onSearchInput($event)"
+                (focus)="showSuggestions.set(true)"
+                (blur)="closeSuggestions()"
+                placeholder="Tìm kiếm tên nhân viên..."
+                class="hud-search-input"
+                autocomplete="off">
+            </div>
+            @if (showSuggestions() && employeeSuggestions().length > 0) {
+              <ul class="hud-autocomplete-list">
+                @for (name of employeeSuggestions(); track name) {
+                  <li class="hud-autocomplete-item" (mousedown)="selectSuggestion(name)">
+                    <span class="ac-icon">👤</span>
+                    <span class="ac-name">{{ name }}</span>
+                  </li>
+                }
+              </ul>
+            }
+          </div>
+        </div>
+      </div>
+
       <!-- 1. Stats Widgets Grid -->
       <div class="stats-grid">
-        <div class="widget-card">
+        <div class="widget-card kind-info">
+          <div class="widget-top-row">
+            <div class="widget-chip">Σ</div>
+            <span class="widget-status">info</span>
+          </div>
           <div class="widget-label">TỔNG NHÂN SỰ</div>
-          <div class="widget-value text-glow-cyan">{{ totalEmployees() }}</div>
+          <div class="widget-value">{{ totalEmployees() }}</div>
           <div class="widget-footer">Active Accounts</div>
         </div>
-        <div class="widget-card">
+        <div class="widget-card kind-info">
+          <div class="widget-top-row">
+            <div class="widget-chip">✓</div>
+            <span class="widget-status">info</span>
+          </div>
           <div class="widget-label">CHẤM CÔNG HÔM NAY</div>
-          <div class="widget-value text-glow-green">{{ totalLogsToday() }}</div>
+          <div class="widget-value">{{ totalLogsToday() }}</div>
           <div class="widget-footer">Lượt quét hôm nay</div>
         </div>
-        <div class="widget-card">
+        <div class="widget-card" [class.kind-success]="happinessLevel() === 'success'"
+             [class.kind-warning]="happinessLevel() === 'warning'"
+             [class.kind-danger]="happinessLevel() === 'danger'">
+          <div class="widget-top-row">
+            <div class="widget-chip">☺</div>
+            <span class="widget-status">{{ happinessStatusLabel() }}</span>
+          </div>
           <div class="widget-label">CHỈ SỐ HẠNH PHÚC</div>
-          <div class="widget-value text-glow-pink">{{ moodStats().happy }}%</div>
-          <div class="widget-footer">Cảm xúc tích cực</div>
-        </div>
-        <div class="widget-card">
-          <div class="widget-label">ĐỊNH VỊ SERVER</div>
-          <div class="widget-value text-glow-yellow">Postgres</div>
-          <div class="widget-footer">Docker Container: 5432</div>
+          <div class="widget-value">{{ moodStats().happy }}%</div>
+          <div class="widget-footer">Cảm xúc tích cực · mục tiêu ≥ 60%</div>
         </div>
       </div>
 
       <!-- 2. Charts Section -->
       <div class="charts-row">
-        <!-- SVG Line Chart for Hour Peaks -->
+        <!-- SVG Bar Chart for Hour Peaks -->
         <div class="chart-card">
           <h3 class="chart-title">📈 GIỜ CAO ĐIỂM CHẤM CÔNG (TẦN SUẤT / GIỜ)</h3>
           <div class="svg-chart-container">
             <svg viewBox="0 0 500 180" class="svg-graph">
-              <!-- Grid vertical lines -->
+              <!-- Baseline -->
+              <line x1="30" y1="140" x2="470" y2="140" class="chart-grid-line" />
+
               @for (pt of hourlyTimeline().points; track pt.hour) {
-                <line 
-                  [attr.x1]="pt.x" 
-                  y1="30" 
-                  [attr.x2]="pt.x" 
-                  y2="140" 
-                  stroke="rgba(0, 240, 255, 0.05)" 
-                  stroke-dasharray="3,3" />
-                <text 
-                  [attr.x]="pt.x" 
-                  y="160" 
-                  class="svg-axis-text" 
+                @if (pt.count > 0) {
+                  <rect
+                    [attr.x]="pt.x - 12"
+                    [attr.y]="pt.y"
+                    width="24"
+                    [attr.height]="140 - pt.y"
+                    rx="4"
+                    class="chart-bar" />
+                  <text
+                    [attr.x]="pt.x"
+                    [attr.y]="pt.y - 8"
+                    class="svg-value-text"
+                    text-anchor="middle">{{ pt.count }}</text>
+                }
+                <text
+                  [attr.x]="pt.x"
+                  y="160"
+                  class="svg-axis-text"
                   text-anchor="middle">{{ pt.hour }}</text>
               }
 
-              <!-- The actual glowing path -->
-              @if (hourlyTimeline().dPath) {
-                <path 
-                  [attr.d]="hourlyTimeline().dPath" 
-                  fill="none" 
-                  stroke="#00f0ff" 
-                  stroke-width="3" 
-                  class="glowing-line" />
-              }
-
-              <!-- Coordinate Points -->
-              @for (pt of hourlyTimeline().points; track pt.hour) {
-                <circle 
-                  [attr.cx]="pt.x" 
-                  [attr.cy]="pt.y" 
-                  r="5" 
-                  fill="#00ff66" 
-                  class="graph-dot" />
-                @if (pt.count > 0) {
-                  <text 
-                    [attr.x]="pt.x" 
-                    [attr.y]="pt.y - 10" 
-                    class="svg-value-text" 
-                    text-anchor="middle">{{ pt.count }}</text>
-                }
+              @if (!hasHourlyData()) {
+                <text x="250" y="90" class="svg-empty-text" text-anchor="middle">Chưa có dữ liệu chấm công trong khoảng thời gian này</text>
               }
             </svg>
           </div>
         </div>
 
-        <!-- Mood Stats breakdown -->
+        <!-- Mood Stats breakdown (donut) -->
         <div class="chart-card mood-card">
           <h3 class="chart-title">🧠 ĐÁNH GIÁ CHỈ SỐ CẢM XÚC</h3>
-          <div class="mood-breakdown">
-            <div class="mood-item">
-              <div class="mood-lbl-row">
-                <span>Vui vẻ 😊</span>
-                <span class="text-green">{{ moodStats().happy }}%</span>
-              </div>
-              <div class="progress-bar-container">
-                <div class="bar progress-green" [style.width.%]="moodStats().happy"></div>
-              </div>
+          @if (hasMoodData()) {
+            <div class="donut-wrap">
+              <svg viewBox="0 0 42 42" class="donut-chart">
+                @for (seg of moodDonut(); track seg.key) {
+                  <circle cx="21" cy="21" r="15.9" fill="transparent"
+                    [style.stroke]="seg.color"
+                    stroke-width="6"
+                    [attr.stroke-dasharray]="seg.value + ' ' + (100 - seg.value)"
+                    [attr.stroke-dashoffset]="seg.offset" />
+                }
+              </svg>
+              <ul class="donut-legend">
+                @for (seg of moodDonut(); track seg.key) {
+                  <li>
+                    <span class="swatch" [style.background]="seg.color"></span>
+                    <span class="legend-label">{{ seg.label }}</span>
+                    <span class="legend-pct" [style.color]="seg.color">{{ seg.value }}%</span>
+                  </li>
+                }
+              </ul>
             </div>
-
-            <div class="mood-item">
-              <div class="mood-lbl-row">
-                <span>Bình thường 😐</span>
-                <span class="text-cyan">{{ moodStats().neutral }}%</span>
-              </div>
-              <div class="progress-bar-container">
-                <div class="bar progress-cyan" [style.width.%]="moodStats().neutral"></div>
-              </div>
+          } @else {
+            <div class="donut-empty">
+              <svg viewBox="0 0 42 42" class="donut-chart">
+                <circle cx="21" cy="21" r="15.9" fill="transparent" stroke="rgba(var(--color-border-rgb), 0.25)" stroke-width="6" />
+              </svg>
+              <p>Chưa có dữ liệu chấm công trong khoảng thời gian này</p>
             </div>
-
-            <div class="mood-item">
-              <div class="mood-lbl-row">
-                <span>Buồn bã 😢</span>
-                <span class="text-pink">{{ moodStats().sad }}%</span>
-              </div>
-              <div class="progress-bar-container">
-                <div class="bar progress-pink" [style.width.%]="moodStats().sad"></div>
-              </div>
-            </div>
-
-            <div class="mood-item">
-              <div class="mood-lbl-row">
-                <span>Căng thẳng / Lo lắng 😠😨</span>
-                <span class="text-yellow">{{ moodStats().stressed }}%</span>
-              </div>
-              <div class="progress-bar-container">
-                <div class="bar progress-yellow" [style.width.%]="moodStats().stressed"></div>
-              </div>
-            </div>
-          </div>
+          }
         </div>
       </div>
 
@@ -156,46 +163,6 @@
         <div class="logs-header">
           <h3 class="logs-title">📋 DANH SÁCH LƯỢT CHẤM CÔNG VÀ LỌC</h3>
           <button class="csv-export-btn" (click)="exportCSV()" [disabled]="filteredLogs().length === 0">📥 XUẤT BÁO CÁO CSV</button>
-        </div>
-
-        <!-- Filter bar -->
-        <div class="hud-filter-bar">
-          <div class="hud-field">
-            <label class="hud-label">TỪ NGÀY</label>
-            <input type="date" [ngModel]="filterStartDate()" (ngModelChange)="filterStartDate.set($event); currentPage.set(1)" class="hud-input">
-          </div>
-          <div class="hud-field">
-            <label class="hud-label">ĐẾN NGÀY</label>
-            <input type="date" [ngModel]="filterEndDate()" (ngModelChange)="filterEndDate.set($event); currentPage.set(1)" class="hud-input">
-          </div>
-
-          <!-- Autocomplete employee name search -->
-          <div class="hud-field grow-3">
-            <label class="hud-label">TÊN NHÂN VIÊN</label>
-            <div class="hud-autocomplete">
-              <div class="hud-search-wrapper">
-                <input
-                  type="text"
-                  [ngModel]="filterEmployeeName()"
-                  (ngModelChange)="onSearchInput($event)"
-                  (focus)="showSuggestions.set(true)"
-                  (blur)="closeSuggestions()"
-                  placeholder="Tìm kiếm tên nhân viên..."
-                  class="hud-search-input"
-                  autocomplete="off">
-              </div>
-              @if (showSuggestions() && employeeSuggestions().length > 0) {
-                <ul class="hud-autocomplete-list">
-                  @for (name of employeeSuggestions(); track name) {
-                    <li class="hud-autocomplete-item" (mousedown)="selectSuggestion(name)">
-                      <span class="ac-icon">👤</span>
-                      <span class="ac-name">{{ name }}</span>
-                    </li>
-                  }
-                </ul>
-              }
-            </div>
-          </div>
         </div>
 
         <div class="logs-table-wrapper">
@@ -236,9 +203,21 @@
         <!-- Pagination Controls -->
         @if (filteredLogs().length > 0) {
           <div class="hud-pagination">
-            <button class="pag-btn" [disabled]="currentPage() === 1" (click)="prevPage()">◀ TRƯỚC</button>
-            <span class="pag-info">TRANG {{ currentPage() }} / {{ totalPages() }}</span>
-            <button class="pag-btn" [disabled]="currentPage() === totalPages()" (click)="nextPage()">SAU ▶</button>
+            <div class="pag-size">
+              <label for="logs-page-size">Hiển thị</label>
+              <select id="logs-page-size" class="pag-size-select" [ngModel]="pageSize()" (ngModelChange)="pageSize.set(+$event); currentPage.set(1)">
+                <option [value]="8">8</option>
+                <option [value]="16">16</option>
+                <option [value]="24">24</option>
+                <option [value]="50">50</option>
+              </select>
+              <span>/ trang</span>
+            </div>
+            <div class="pag-controls">
+              <button class="pag-btn" [disabled]="currentPage() === 1" (click)="prevPage()">◀ TRƯỚC</button>
+              <span class="pag-info">TRANG {{ currentPage() }} / {{ totalPages() }}</span>
+              <button class="pag-btn" [disabled]="currentPage() === totalPages()" (click)="nextPage()">SAU ▶</button>
+            </div>
           </div>
         }
       </div>

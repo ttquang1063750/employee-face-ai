@@ -1,8 +1,6 @@
 import { Component, OnInit, signal, computed, ChangeDetectionStrategy } from '@angular/core';
-import { Router, RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
-import { AuthService } from '../../../core/services/auth.service';
 
 export interface EmployeeBase {
   id: number;
@@ -26,7 +24,7 @@ export interface AttendanceLog {
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [RouterLink, FormsModule],
+  imports: [FormsModule],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -106,7 +104,7 @@ export class DashboardComponent implements OnInit {
     };
     
     const logsList = this.filteredLogs();
-    if (logsList.length === 0) return { happy: 25, neutral: 25, sad: 25, stressed: 25 };
+    if (logsList.length === 0) return { happy: 0, neutral: 0, sad: 0, stressed: 0 };
 
     logsList.forEach(log => {
       const m = log.mood.toLowerCase();
@@ -123,6 +121,46 @@ export class DashboardComponent implements OnInit {
       sad: Math.round((stats['sad'] / total) * 100),
       stressed: Math.round((stats['stressed'] / total) * 100)
     };
+  });
+
+  // Happiness widget tone: reflects the actual value against a target,
+  // rather than a fixed color regardless of how good or bad the number is.
+  happinessLevel = computed<'success' | 'warning' | 'danger'>(() => {
+    const happy = this.moodStats().happy;
+    if (happy >= 60) return 'success';
+    if (happy >= 20) return 'warning';
+    return 'danger';
+  });
+
+  happinessStatusLabel = computed(() => {
+    switch (this.happinessLevel()) {
+      case 'success': return 'Đạt mục tiêu';
+      case 'warning': return 'Thấp';
+      default: return 'Rất thấp';
+    }
+  });
+
+  // Donut chart segments for the mood breakdown (cumulative offsets around
+  // a circle whose circumference is normalized to 100 units).
+  hasMoodData = computed(() => {
+    const m = this.moodStats();
+    return m.happy + m.neutral + m.sad + m.stressed > 0;
+  });
+
+  moodDonut = computed(() => {
+    const m = this.moodStats();
+    const segments = [
+      { key: 'happy', label: 'Vui vẻ 😊', value: m.happy, color: 'var(--color-cyan)' },
+      { key: 'neutral', label: 'Bình thường 😐', value: m.neutral, color: 'var(--color-info)' },
+      { key: 'sad', label: 'Buồn bã 😢', value: m.sad, color: 'var(--color-red)' },
+      { key: 'stressed', label: 'Căng thẳng / Lo lắng 😰', value: m.stressed, color: 'var(--color-orange)' }
+    ];
+    let acc = 0;
+    return segments.map(seg => {
+      const offset = -acc;
+      acc += seg.value;
+      return { ...seg, offset };
+    });
   });
 
   // Dynamic SVG Chart Coordinates for Hourly Peaks (08:00 - 18:00) using filtered logs
@@ -170,9 +208,11 @@ export class DashboardComponent implements OnInit {
     };
   });
 
+  hasHourlyData = computed(() => this.hourlyTimeline().points.some(pt => pt.count > 0));
+
   private readonly apiUrl = 'http://localhost:8000/api';
 
-  constructor(private http: HttpClient, private authService: AuthService, private router: Router) {}
+  constructor(private http: HttpClient) {}
 
   ngOnInit(): void {
     // Set default dates
@@ -270,12 +310,6 @@ export class DashboardComponent implements OnInit {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-  }
-
-  logout(): void {
-    this.authService.logout().subscribe(() => {
-      this.router.navigate(['/login']);
-    });
   }
 
   translateMood(mood: string): string {
