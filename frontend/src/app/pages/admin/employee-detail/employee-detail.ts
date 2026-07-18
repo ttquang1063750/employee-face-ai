@@ -143,8 +143,10 @@ export class EmployeeDetailComponent implements OnInit {
     return uniqueDates.size;
   });
 
-  // Computed: Aggregate working hours via pairing algorithm
-  workingHours = computed(() => {
+  // Computed: Aggregate working hours via a CHECK_IN/CHECK_OUT pairing
+  // algorithm, single-pass so workingHours and hasIncompleteAttendance never
+  // disagree about which days had an open (unpaired) session.
+  private dailyAttendanceSummary = computed(() => {
     const logs = this.filteredRawLogs();
     const logsByDate: Record<string, AttendanceLog[]> = {};
 
@@ -157,6 +159,8 @@ export class EmployeeDetailComponent implements OnInit {
     });
 
     let totalHours = 0;
+    let hasIncomplete = false;
+
     Object.keys(logsByDate).forEach((date) => {
       // Sort day logs chronologically (oldest first)
       const dayLogs = logsByDate[date].sort(
@@ -166,18 +170,40 @@ export class EmployeeDetailComponent implements OnInit {
       let lastCheckInTime: number | null = null;
       dayLogs.forEach((log) => {
         if (log.action === 'CHECK_IN') {
-          lastCheckInTime = new Date(log.timestamp).getTime();
+          // A duplicate CHECK_IN before any CHECK_OUT (e.g. a camera retry)
+          // keeps the *first* check-in time rather than overwriting it, so
+          // the retry doesn't silently discard the session already open.
+          if (lastCheckInTime === null) {
+            lastCheckInTime = new Date(log.timestamp).getTime();
+          }
         } else if (log.action === 'CHECK_OUT' && lastCheckInTime !== null) {
           const checkOutTime = new Date(log.timestamp).getTime();
-          const diffMs = checkOutTime - lastCheckInTime;
-          const diffHrs = diffMs / (1000 * 60 * 60);
-          totalHours += diffHrs;
+          const diffHrs = (checkOutTime - lastCheckInTime) / (1000 * 60 * 60);
+          // Guard against clock-skew/bad data producing a negative interval.
+          if (diffHrs > 0) {
+            totalHours += diffHrs;
+          }
           lastCheckInTime = null; // Reset pairing
         }
       });
+
+      // A CHECK_IN with no matching CHECK_OUT by end of day (still clocked
+      // in, or forgot to check out) is left uncredited rather than guessed
+      // at — but flagged so the UI can tell the admin the total is a
+      // lower bound, not a confirmed complete figure.
+      if (lastCheckInTime !== null) {
+        hasIncomplete = true;
+      }
     });
-    return parseFloat(totalHours.toFixed(1));
+
+    return { totalHours: parseFloat(totalHours.toFixed(1)), hasIncomplete };
   });
+
+  workingHours = computed(() => this.dailyAttendanceSummary().totalHours);
+
+  // True when at least one day in the filtered range has an unpaired
+  // CHECK_IN, meaning workingHours() under-counts that day.
+  hasIncompleteAttendance = computed(() => this.dailyAttendanceSummary().hasIncomplete);
 
   // Computed: Password strength check for the edit form (blank = keep existing password)
   passwordValid = computed(() => !this.editPassword() || isPasswordValid(this.editPassword()));

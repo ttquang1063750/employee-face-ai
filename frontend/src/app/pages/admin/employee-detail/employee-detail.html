@@ -72,6 +72,11 @@
             <div class="stats-card">
               <span class="stats-label">SỐ GIỜ CÔNG TỔNG CỘNG</span>
               <span class="stats-value text-glow-cyan">{{ workingHours() }} giờ</span>
+              @if (hasIncompleteAttendance()) {
+                <span class="stats-note" data-tooltip="Có ngày chấm công vào (CHECK-IN) nhưng chưa có chấm công ra (CHECK-OUT) — số giờ trên chưa tính đủ cho (các) ngày đó.">
+                  ⚠️ Chưa tính đủ
+                </span>
+              }
             </div>
           </div>
 

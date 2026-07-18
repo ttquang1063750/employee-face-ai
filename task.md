@@ -35,7 +35,7 @@ Quy trình: làm từng mục một, hỏi xác nhận trước khi chuyển san
 
 - [x] `leave-requests.ts`: bỏ vòng polling riêng (setInterval trùng với `RealtimeService` đã tự poll cùng endpoint) — `RealtimeService` giờ là nguồn dữ liệu duy nhất (`leaveRequests` signal + `pendingLeaveCount` computed từ đó), trang chỉ còn 1 lần gọi API riêng cho initial load/error UX. Đồng thời import `LeaveRequest` từ `core/models/leave-request.model.ts` thay vì định nghĩa lại (gộp luôn mục ở dưới vì cùng chỗ sửa)
 - [x] `leave-requests.ts`: bỏ import `dashboard.scss`/`employee-list.scss` để "mượn" style bảng/pagination — phát hiện style bảng (`.logs-card`/`.logs-table`...) đã thực sự bị vỡ từ lúc tách dashboard thành component (dashboard.scss không còn các class đó). Đã tự chứa style trong `leave-requests.scss`, thêm `.hud-loading-state`/`.hud-spinner` dùng chung vào `_hud-form.scss`
-- [ ] `employee-detail.ts`: sửa bug `workingHours` — check-in cuối ngày không có check-out bị bỏ qua âm thầm, check-in trùng lặp ghi đè nhau, không có guard chống số giờ âm khi check-out sớm hơn check-in
+- [x] `employee-detail.ts`: sửa bug `workingHours` — check-in cuối ngày không có check-out giờ được đánh dấu "⚠️ Chưa tính đủ" thay vì âm thầm bỏ qua; check-in trùng lặp giữ lần đầu tiên (không ghi đè); thêm guard chống số giờ âm khi check-out sớm hơn check-in
 - [ ] `employee-list.ts`: import `EmployeeBase` từ `core/models/employee.model.ts` thay vì định nghĩa lại
 - [ ] `employee-list.ts`: dọn `triggerFileInput()` chết/hỏng (gọi sai id) + bỏ `onclick` thô trong template, thống nhất qua Angular binding
 
