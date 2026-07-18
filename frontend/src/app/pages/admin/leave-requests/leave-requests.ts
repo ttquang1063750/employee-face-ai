@@ -14,11 +14,7 @@ type StatusFilter = 'all' | 'pending' | 'approved' | 'rejected';
   standalone: true,
   imports: [FormsModule, DatePickerComponent],
   templateUrl: './leave-requests.html',
-  styleUrls: [
-    './leave-requests.scss',
-    '../dashboard/dashboard.scss',
-    '../employees/employee-list.scss',
-  ],
+  styleUrl: './leave-requests.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LeaveRequestsComponent implements OnInit {

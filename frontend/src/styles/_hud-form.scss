@@ -3,7 +3,7 @@
 //  Shared HUD Form Components — Employee Face AI Design System
 //  Provides: .hud-filter-bar, .hud-field, .hud-input, .hud-label,
 //            .hud-pagination, .hud-search-input, .hud-skeleton,
-//            .err-text, .retry-btn
+//            .err-text, .retry-btn, .hud-loading-state, .hud-spinner
 // ============================================================
 
 // ─── Filter Bar Container ───────────────────────────────────
@@ -591,5 +591,36 @@
     border-color: var(--color-red);
     box-shadow: var(--glow-red);
   }
+}
+
+// ─── Loading State ────────────────────────────────────────────
+// Usage:
+//   <div class="hud-loading-state">
+//     <div class="hud-spinner"></div>
+//     <p>Đang tải...</p>
+//   </div>
+.hud-loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 250px;
+  gap: var(--space-4);
+  color: var(--color-text-muted);
+  font-family: 'Inter', sans-serif;
+  width: 100%;
+}
+
+.hud-spinner {
+  width: 28px;
+  height: 28px;
+  border: 3px solid rgba(var(--color-cyan-rgb), 0.1);
+  border-radius: 50%;
+  border-top-color: var(--color-cyan);
+  animation: hud-spin 0.8s linear infinite;
+}
+
+@keyframes hud-spin {
+  to { transform: rotate(360deg); }
 }
 
