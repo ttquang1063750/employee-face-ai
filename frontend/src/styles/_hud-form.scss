@@ -2,7 +2,8 @@
 //  _hud-form.scss
 //  Shared HUD Form Components — Employee Face AI Design System
 //  Provides: .hud-filter-bar, .hud-field, .hud-input, .hud-label,
-//            .hud-pagination, .hud-search-input, .hud-skeleton
+//            .hud-pagination, .hud-search-input, .hud-skeleton,
+//            .err-text, .retry-btn
 // ============================================================
 
 // ─── Filter Bar Container ───────────────────────────────────
@@ -558,5 +559,37 @@
 @keyframes hud-skeleton-shimmer {
   0% { background-position: 100% 50%; }
   100% { background-position: 0 50%; }
+}
+
+// ─── Error State Text & Retry Button ─────────────────────────
+// Usage:
+//   <div class="error-state">
+//     <p class="err-text">⚠️ {{ errorMsg() }}</p>
+//     <button class="retry-btn" (click)="reload()">Thử lại</button>
+//   </div>
+.err-text {
+  color: var(--color-red);
+  font-family: 'Inter', sans-serif;
+  font-size: var(--text-base);
+  text-align: center;
+}
+
+.retry-btn {
+  background: transparent;
+  border: 1px solid rgba(var(--color-red-rgb), 0.5);
+  color: var(--color-red);
+  font-family: 'Orbitron', sans-serif;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  padding: 0.6rem var(--space-5);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: rgba(var(--color-red-rgb), 0.1);
+    border-color: var(--color-red);
+    box-shadow: var(--glow-red);
+  }
 }
 
