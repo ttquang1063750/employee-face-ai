@@ -147,9 +147,21 @@
           <!-- Pagination Controls -->
           @if (filteredRawLogs().length > 0) {
             <div class="hud-pagination">
-              <button class="pag-btn" [disabled]="currentPage() === 1" (click)="prevPage()">◀ TRƯỚC</button>
-              <span class="pag-info">TRANG {{ currentPage() }} / {{ totalPages() }}</span>
-              <button class="pag-btn" [disabled]="currentPage() === totalPages()" (click)="nextPage()">SAU ▶</button>
+              <div class="pag-size">
+                <label for="staff-page-size">Hiển thị</label>
+                <select id="staff-page-size" class="pag-size-select" [ngModel]="pageSize()" (ngModelChange)="pageSize.set(+$event); currentPage.set(1)">
+                  <option [value]="5">5</option>
+                  <option [value]="10">10</option>
+                  <option [value]="20">20</option>
+                  <option [value]="50">50</option>
+                </select>
+                <span>/ trang</span>
+              </div>
+              <div class="pag-controls">
+                <button class="pag-btn" [disabled]="currentPage() === 1" (click)="prevPage()">◀ TRƯỚC</button>
+                <span class="pag-info">TRANG {{ currentPage() }} / {{ totalPages() }}</span>
+                <button class="pag-btn" [disabled]="currentPage() === totalPages()" (click)="nextPage()">SAU ▶</button>
+              </div>
             </div>
           }
         </div>
