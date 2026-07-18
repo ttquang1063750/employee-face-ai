@@ -1,3 +1,5 @@
+import hashlib
+import hmac
 import secrets
 import time
 from datetime import datetime, timedelta
@@ -12,6 +14,52 @@ DB_CONFIG = {
     "password": "mysecretpassword",
     "dbname": "employee_face_ai",
 }
+
+PBKDF2_ITERATIONS = 260_000
+
+
+def hash_password(plain_password):
+    """Hash a plaintext password for storage (PBKDF2-HMAC-SHA256, random salt
+    per password). Returns None unchanged so callers can pass through a
+    staff account that has no login access yet."""
+    if not plain_password:
+        return None
+    salt = secrets.token_hex(16)
+    digest = hashlib.pbkdf2_hmac("sha256", plain_password.encode("utf-8"), bytes.fromhex(salt), PBKDF2_ITERATIONS)
+    return f"pbkdf2_sha256${PBKDF2_ITERATIONS}${salt}${digest.hex()}"
+
+
+def _check_password(plain_password, stored_value):
+    """Constant-time check of a plaintext password against a stored value.
+    Also accepts a legacy plaintext row as a safety net in case a row
+    somehow bypasses the startup migration in migrate_legacy_passwords."""
+    if not stored_value or not plain_password:
+        return False
+    parts = stored_value.split("$")
+    if len(parts) == 4 and parts[0] == "pbkdf2_sha256":
+        _, iterations, salt, hash_hex = parts
+        digest = hashlib.pbkdf2_hmac("sha256", plain_password.encode("utf-8"), bytes.fromhex(salt), int(iterations))
+        return hmac.compare_digest(digest.hex(), hash_hex)
+    return hmac.compare_digest(stored_value, plain_password)
+
+
+def migrate_legacy_passwords(conn):
+    """One-time upgrade: hash any password still stored in plaintext from
+    before hashing was introduced. Safe to run on every startup — rows
+    already hashed (prefixed pbkdf2_sha256$) are skipped."""
+    cur = conn.cursor()
+    try:
+        cur.execute(
+            "SELECT id, password FROM employees WHERE password IS NOT NULL AND password NOT LIKE 'pbkdf2_sha256$%';"
+        )
+        rows = cur.fetchall()
+        for employee_id, plain in rows:
+            cur.execute("UPDATE employees SET password = %s WHERE id = %s;", (hash_password(plain), employee_id))
+        if rows:
+            conn.commit()
+            print(f"Migrated {len(rows)} legacy plaintext password(s) to hashed storage.", flush=True)
+    finally:
+        cur.close()
 
 
 def get_connection():
@@ -45,6 +93,9 @@ def init_db():
         """)
         # 1b. Migration for databases created before the username column existed
         cur.execute("ALTER TABLE employees ADD COLUMN IF NOT EXISTS username VARCHAR(50) UNIQUE;")
+        # 1c. Widen password column to fit a PBKDF2 hash (salt + digest), which
+        # is longer than the plaintext passwords the column was sized for.
+        cur.execute("ALTER TABLE employees ALTER COLUMN password TYPE VARCHAR(255);")
         conn.commit()
         # 2. employee_skills
         cur.execute("""
@@ -133,6 +184,8 @@ def init_db():
         # Runs after seeding so it also covers databases seeded before this column existed.
         cur.execute("UPDATE employees SET username = 'admin' WHERE role = 'admin' AND username IS NULL;")
         conn.commit()
+
+        migrate_legacy_passwords(conn)
 
     except Exception as e:
         conn.rollback()
@@ -484,9 +537,11 @@ def verify_login_credentials(username, password):
     conn = get_connection()
     cur = conn.cursor()
     try:
-        cur.execute("SELECT id FROM employees WHERE username = %s AND password = %s;", (username, password))
+        cur.execute("SELECT id, password FROM employees WHERE username = %s;", (username,))
         row = cur.fetchone()
-        return row[0] if row else None
+        if not row or not _check_password(password, row[1]):
+            return None
+        return row[0]
     finally:
         cur.close()
         conn.close()
@@ -526,7 +581,7 @@ def register_employee(name, age, image_path, role="staff", password=None, userna
             INSERT INTO employees (name, age, image_path, role, password, username)
             VALUES (%s, %s, %s, %s, %s, %s) RETURNING id;
         """,
-            (name, age, image_path, role, password, username),
+            (name, age, image_path, role, hash_password(password), username),
         )
         emp_id = cur.fetchone()[0]
         conn.commit()
@@ -630,7 +685,7 @@ def update_employee_profile(employee_id, name, age, role, username, password=Non
                 SET name = %s, age = %s, role = %s, username = %s, password = %s
                 WHERE id = %s;
             """,
-                (name, age, role, username, password, employee_id),
+                (name, age, role, username, hash_password(password), employee_id),
             )
         else:
             cur.execute(
@@ -654,8 +709,9 @@ def verify_password(employee_id, password):
     conn = get_connection()
     cur = conn.cursor()
     try:
-        cur.execute("SELECT id FROM employees WHERE id = %s AND password = %s;", (employee_id, password))
-        return cur.fetchone() is not None
+        cur.execute("SELECT password FROM employees WHERE id = %s;", (employee_id,))
+        row = cur.fetchone()
+        return _check_password(password, row[0]) if row else False
     finally:
         cur.close()
         conn.close()
@@ -665,7 +721,7 @@ def update_employee_password(employee_id, new_password):
     conn = get_connection()
     cur = conn.cursor()
     try:
-        cur.execute("UPDATE employees SET password = %s WHERE id = %s;", (new_password, employee_id))
+        cur.execute("UPDATE employees SET password = %s WHERE id = %s;", (hash_password(new_password), employee_id))
         conn.commit()
     except Exception as e:
         conn.rollback()
