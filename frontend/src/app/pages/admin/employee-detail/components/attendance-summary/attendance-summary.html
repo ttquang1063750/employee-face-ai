@@ -1,0 +1,76 @@
+<div class="lifecycle-card">
+  <h3 class="section-title">📅 THỐNG KÊ CHẤM CÔNG VÀ GIỜ CÔNG</h3>
+
+  <!-- Date range filter bar -->
+  <div class="hud-filter-bar">
+    <div class="hud-field">
+      <span class="hud-label">TỪ NGÀY</span>
+      <app-date-picker [ngModel]="filterStartDateInput()" (ngModelChange)="filterStartDateInputChange.emit($event)"></app-date-picker>
+    </div>
+    <div class="hud-field">
+      <span class="hud-label">ĐẾN NGÀY</span>
+      <app-date-picker [ngModel]="filterEndDateInput()" (ngModelChange)="filterEndDateInputChange.emit($event)"></app-date-picker>
+    </div>
+    <div class="hud-field filter-apply-field">
+      <button class="hud-btn-outline" (click)="applyFilter.emit()">ÁP DỤNG</button>
+    </div>
+  </div>
+
+  <!-- KPI analytics widgets -->
+  <div class="attendance-stats-cards">
+    <div class="stats-card">
+      <span class="stats-label">SỐ NGÀY LÀM VIỆC THỰC TẾ</span>
+      <span class="stats-value text-glow-green">{{ workingDays() }} ngày</span>
+    </div>
+    <div class="stats-card">
+      <span class="stats-label">SỐ GIỜ CÔNG TỔNG CỘNG</span>
+      <span class="stats-value text-glow-cyan">{{ workingHours() }} giờ</span>
+      @if (hasIncompleteAttendance()) {
+        <span class="stats-note" data-tooltip="Có ngày chấm công vào (CHECK-IN) nhưng chưa có chấm công ra (CHECK-OUT) — số giờ trên chưa tính đủ cho (các) ngày đó.">
+          ⚠️ Chưa tính đủ
+        </span>
+      }
+    </div>
+  </div>
+
+  <!-- Raw logs timeline table in selected scope -->
+  <div class="monthly-summary-table-wrapper">
+    <table class="monthly-table">
+      <thead>
+        <tr>
+          <th>Thời gian</th>
+          <th>Hành động</th>
+          <th>Cảm xúc</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (log of paginatedLogs(); track log.timestamp) {
+          <tr>
+            <td class="text-cyan">{{ log.timestamp | date:'HH:mm:ss - dd/MM/yyyy' }}</td>
+            <td>
+              <span class="action-tag" [class.check-in]="log.action === 'CHECK_IN'" [class.check-out]="log.action === 'CHECK_OUT'">
+                {{ log.action === 'CHECK_IN' ? 'VÀO CA' : 'RA CA' }}
+              </span>
+            </td>
+            <td>
+              <span class="mood-badge">{{ log.mood }}</span>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="3" class="no-data">Không có lịch sử chấm công trong khoảng thời gian đã chọn.</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination Controls -->
+  @if (totalCount() > 0) {
+    <div class="hud-pagination">
+      <button class="pag-btn" [disabled]="currentPage() === 1" (click)="prevPage.emit()">◀ TRƯỚC</button>
+      <span class="pag-info">TRANG {{ currentPage() }} / {{ totalPages() }}</span>
+      <button class="pag-btn" [disabled]="currentPage() === totalPages()" (click)="nextPage.emit()">SAU ▶</button>
+    </div>
+  }
+</div>

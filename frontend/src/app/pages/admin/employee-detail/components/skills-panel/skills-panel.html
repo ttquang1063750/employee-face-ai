@@ -1,0 +1,71 @@
+<div class="lifecycle-card">
+  <div class="section-header-row">
+    <h3 class="section-title">🧠 HỒ SƠ KỸ NĂNG (SKILLS SET)</h3>
+    <button class="hud-btn-mini" (click)="openModal()" data-tooltip="CẬP NHẬT KỸ NĂNG">⚙️</button>
+  </div>
+  <div class="skills-grid">
+    @for (sk of skills(); track sk.skill_name) {
+      <div class="skill-hud-box">
+        <div class="skill-name-badge">{{ sk.skill_name }}</div>
+        <p class="skill-desc">{{ sk.description }}</p>
+      </div>
+    } @empty {
+      <p class="no-data">Chưa cấu hình kỹ năng cho nhân sự này.</p>
+    }
+  </div>
+</div>
+
+@if (showModal()) {
+  <div class="modal-backdrop">
+    <div class="modal-card medium">
+      <div class="modal-header">
+        <h3>🧠 CẬP NHẬT HỒ SƠ KỸ NĂNG</h3>
+        <button class="close-btn" (click)="closeModal()">✖</button>
+      </div>
+      <div class="modal-body">
+        <div class="skills-editor-wrapper">
+          <!-- Skills list preview with delete options -->
+          <div class="skills-editor-list">
+            <span class="list-title">KỸ NĂNG HIỆN TẠI</span>
+            <div class="editor-badges-grid">
+              @for (sk of skillsListToEdit(); track sk.skill_name; let idx = $index) {
+                <div class="editor-badge-item">
+                  <div class="badge-header">
+                    <span class="badge-name">{{ sk.skill_name }}</span>
+                    <button class="remove-badge-btn" (click)="removeSkillFromList(idx)">✖</button>
+                  </div>
+                  <p class="badge-desc">{{ sk.description }}</p>
+                </div>
+              } @empty {
+                <p class="no-data">Chưa có kỹ năng nào trong danh sách.</p>
+              }
+            </div>
+          </div>
+
+          <!-- Add new skill form -->
+          <div class="skills-editor-form">
+            <span class="form-title">THÊM KỸ NĂNG MỚI</span>
+            <div class="form-fields">
+              <div class="form-group">
+                <label for="new-skill-name">TÊN KỸ NĂNG</label>
+                <input id="new-skill-name" type="text" [ngModel]="newSkillName()" (ngModelChange)="newSkillName.set($event)" placeholder="Ví dụ: Angular, Python, AWS" class="hud-input">
+              </div>
+              <div class="form-group">
+                <label for="new-skill-desc">MÔ TẢ KỸ NĂNG / MỨC ĐỘ THÀNH THẠO</label>
+                <textarea id="new-skill-desc" [ngModel]="newSkillDesc()" (ngModelChange)="newSkillDesc.set($event)" placeholder="Mô tả chi tiết" rows="2" class="hud-textarea"></textarea>
+              </div>
+              <button class="hud-btn-outline" [disabled]="!newSkillName()" (click)="addSkillToList()">THÊM VÀO DANH SÁCH</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="hud-btn-success" [disabled]="isSaving()" (click)="save()">
+          @if (isSaving()) { <div class="loader"></div> }
+          <span>LƯU HỒ SƠ KỸ NĂNG</span>
+        </button>
+        <button class="hud-btn-secondary" (click)="closeModal()">HỦY</button>
+      </div>
+    </div>
+  </div>
+}

@@ -1,3 +1,14 @@
+// ============================================================
+//  _employee-profile.scss
+//  Shared "employee profile detail" UI — the card/timeline/modal
+//  patterns used by both the admin employee-detail page (and its
+//  attendance-summary / positions-timeline / income-history /
+//  skills-panel / projects-panel / base-profile-modal components)
+//  and the read-only staff self-service profile page. Global (not
+//  component-scoped) so no component ever needs to reach into
+//  another component's own stylesheet for these.
+// ============================================================
+
 .detail-layout {
   min-height: 100%;
   color: var(--color-text-primary);
@@ -921,4 +932,3 @@
   from { opacity: 0; transform: translateY(-5px); }
   to { opacity: 1; transform: translateY(0); }
 }
-

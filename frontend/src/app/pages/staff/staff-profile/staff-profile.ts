@@ -28,7 +28,7 @@ import { todayLocalDateString, startOfMonthLocalDateString } from '../../../core
   standalone: true,
   imports: [FormsModule, CommonModule, DatePickerComponent],
   templateUrl: './staff-profile.html',
-  styleUrls: ['./staff-profile.scss', '../../admin/employee-detail/employee-detail.scss'],
+  styleUrl: './staff-profile.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [WebcamCaptureService],
 })

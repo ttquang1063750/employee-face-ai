@@ -1,0 +1,93 @@
+<div class="lifecycle-card">
+  <div class="section-header-row">
+    <h3 class="section-title">📂 LỊCH SỬ DỰ ÁN (PROJECTS LOG)</h3>
+    <button class="hud-btn-mini" (click)="openModal()" data-tooltip="QUẢN LÝ DỰ ÁN">⚙️</button>
+  </div>
+  <div class="projects-timeline">
+    @for (prj of projects(); track prj.project_name) {
+      <div class="project-item">
+        <div class="project-header">
+          <h4 class="name">{{ prj.project_name }}</h4>
+          <span class="role text-cyan">{{ prj.role }}</span>
+        </div>
+        <p class="desc">{{ prj.description }}</p>
+        <p class="dates">📅 {{ prj.start_date }} @if (prj.end_date) { đến {{ prj.end_date }} } @else { (Đang tham gia) }</p>
+      </div>
+    } @empty {
+      <p class="no-data">Chưa tham gia dự án nào.</p>
+    }
+  </div>
+</div>
+
+@if (showModal()) {
+  <div class="modal-backdrop">
+    <div class="modal-card medium">
+      <div class="modal-header">
+        <h3>📂 QUẢN LÝ LỊCH SỬ DỰ ÁN</h3>
+        <button class="close-btn" (click)="closeModal()">✖</button>
+      </div>
+      <div class="modal-body">
+        <div class="projects-editor-wrapper">
+          <!-- Projects list preview with delete options -->
+          <div class="projects-editor-list">
+            <span class="list-title">DANH SÁCH DỰ ÁN HIỆN TẠI</span>
+            <div class="editor-projects-grid">
+              @for (prj of projectsListToEdit(); track prj.project_name; let idx = $index) {
+                <div class="editor-project-card">
+                  <div class="card-header-row">
+                    <span class="proj-name">{{ prj.project_name }}</span>
+                    <button class="remove-badge-btn" (click)="removeProjectFromList(idx)">✖ XÓA</button>
+                  </div>
+                  <div class="card-sub-header">
+                    <span class="proj-role">{{ prj.role }}</span>
+                    <span class="proj-dates">{{ prj.start_date }} @if (prj.end_date) { đến {{ prj.end_date }} } @else { (Đang chạy) }</span>
+                  </div>
+                  <p class="proj-desc">{{ prj.description }}</p>
+                </div>
+              } @empty {
+                <p class="no-data">Chưa tham gia dự án nào.</p>
+              }
+            </div>
+          </div>
+
+          <!-- Add new project form -->
+          <div class="projects-editor-form">
+            <span class="form-title">THÊM DỰ ÁN MỚI</span>
+            <div class="form-fields">
+              <div class="form-group">
+                <label for="new-proj-name">TÊN DỰ ÁN</label>
+                <input id="new-proj-name" type="text" [ngModel]="newProjName()" (ngModelChange)="newProjName.set($event)" placeholder="Ví dụ: ERP Portal, AI Kiosk" class="hud-input">
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="new-proj-role">VAI TRÒ</label>
+                  <input id="new-proj-role" type="text" [ngModel]="newProjRole()" (ngModelChange)="newProjRole.set($event)" placeholder="Ví dụ: Tech Lead, FE Dev" class="hud-input">
+                </div>
+                <div class="form-group">
+                  <span>NGÀY BẮT ĐẦU</span>
+                  <app-date-picker [ngModel]="newProjStartDate()" (ngModelChange)="newProjStartDate.set($event)"></app-date-picker>
+                </div>
+              </div>
+              <div class="form-group">
+                <span>NGÀY KẾT THÚC (Để trống nếu đang diễn ra)</span>
+                <app-date-picker [ngModel]="newProjEndDate()" (ngModelChange)="newProjEndDate.set($event)"></app-date-picker>
+              </div>
+              <div class="form-group">
+                <label for="new-proj-desc">MÔ TẢ CHI TIẾT NHIỆM VỤ DỰ ÁN</label>
+                <textarea id="new-proj-desc" [ngModel]="newProjDesc()" (ngModelChange)="newProjDesc.set($event)" placeholder="Nhiệm vụ cụ thể" rows="2" class="hud-textarea"></textarea>
+              </div>
+              <button class="hud-btn-outline" [disabled]="!newProjName()" (click)="addProjectToList()">THÊM DỰ ÁN VÀO DANH SÁCH</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="hud-btn-success" [disabled]="isSaving()" (click)="save()">
+          @if (isSaving()) { <div class="loader"></div> }
+          <span>LƯU LỊCH SỬ DỰ ÁN</span>
+        </button>
+        <button class="hud-btn-secondary" (click)="closeModal()">HỦY</button>
+      </div>
+    </div>
+  </div>
+}

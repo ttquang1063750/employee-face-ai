@@ -1,0 +1,84 @@
+<div class="modal-backdrop">
+  <div class="modal-card mini">
+    <div class="modal-header">
+      <h3>⚙️ CẬP NHẬT HỒ SƠ CƠ BẢN</h3>
+      <button class="close-btn" (click)="close()">✖</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-fields">
+        <div class="form-group">
+          <label for="edit-emp-name">HỌ VÀ TÊN</label>
+          <input id="edit-emp-name" type="text" [ngModel]="editName()" (ngModelChange)="editName.set($event)" class="hud-input">
+        </div>
+        <div class="form-group">
+          <label for="edit-emp-age">TUỔI</label>
+          <input id="edit-emp-age" type="number" [ngModel]="editAge()" (ngModelChange)="editAge.set($event)" class="hud-input">
+        </div>
+        <div class="form-group">
+          <label for="edit-emp-role">PHÂN QUYỀN HỆ THỐNG</label>
+          <select id="edit-emp-role" [ngModel]="editRole()" (ngModelChange)="editRole.set($event)" class="hud-select">
+            <option value="staff">Nhân sự (Staff)</option>
+            <option value="admin">Quản lý (Admin)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="edit-emp-username">USERNAME *</label>
+          <input id="edit-emp-username" type="text" [ngModel]="editUsername()" (ngModelChange)="onUsernameInput($event)" autocomplete="off" class="hud-input">
+          @if (usernameStatus() === 'checking') {
+            <p class="field-hint">⏳ Đang kiểm tra username...</p>
+          } @else if (usernameStatus() === 'taken') {
+            <p class="field-hint error">✖ Username đã tồn tại.</p>
+          } @else if (usernameStatus() === 'available') {
+            <p class="field-hint success">✔ Username hợp lệ.</p>
+          }
+        </div>
+        <div class="form-group">
+          <label for="edit-emp-password">MẬT KHẨU MỚI (Để trống nếu giữ nguyên)</label>
+          <div class="input-with-actions">
+            <input id="edit-emp-password" [type]="showEditPassword() ? 'text' : 'password'" [ngModel]="editPassword()" (ngModelChange)="editPassword.set($event)" class="hud-input" autocomplete="new-password">
+            <button type="button" class="hud-btn-mini" data-tooltip="Hiện/ẩn mật khẩu" (click)="showEditPassword.set(!showEditPassword())">{{ showEditPassword() ? '🙈' : '👁' }}</button>
+            <button type="button" class="hud-btn-mini" data-tooltip="Tạo mật khẩu ngẫu nhiên" (click)="generatePassword()">🎲</button>
+          </div>
+          @if (editPassword() && !passwordValid()) {
+            <p class="field-hint error">✖ {{ passwordHint }}</p>
+          }
+        </div>
+
+        <!-- Avatar Update Section -->
+        <div class="form-camera-zone">
+          <span class="camera-label">ẢNH CHÂN DUNG ĐỐI CHIẾU (MẪU)</span>
+
+          <div class="camera-viewport-frame">
+            @if (showWebcam()) {
+              <video #videoElement autoplay playsinline class="modal-video"></video>
+              <button class="camera-cap-btn" (click)="capturePhoto()">📸 CHỤP ẢNH MẪU</button>
+            } @else {
+              @if (imgBase64()) {
+                <img [src]="imgBase64()" alt="Ảnh chân dung đã chụp" class="captured-preview-img">
+              } @else {
+                <img
+                  [src]="'http://localhost:8000/' + employee().image_path"
+                  (error)="onImageError($event)"
+                  class="captured-preview-img"
+                  alt="{{ employee().name }}">
+              }
+              <div class="photo-controls">
+                <button class="hud-btn-outline" (click)="startWebcam()">📸 CAMERA CHỤP TRỰC TIẾP</button>
+                <input type="file" id="employee-detail-file-input" (change)="handleFileUpload($event)" style="display:none;" accept="image/*">
+                <button class="hud-btn-outline" (click)="triggerFileInput()">📁 TẢI LÊN FILE ẢNH</button>
+              </div>
+            }
+          </div>
+          <canvas #canvasElement style="display:none;"></canvas>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="hud-btn-success" [disabled]="isSaving() || !canSave()" (click)="save()">
+        @if (isSaving()) { <div class="loader"></div> }
+        <span>LƯU THAY ĐỔI</span>
+      </button>
+      <button class="hud-btn-secondary" (click)="close()">HỦY</button>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,51 @@
+<div class="lifecycle-card">
+  <div class="section-header-row">
+    <h3 class="section-title">📈 LỊCH SỬ THĂNG TIẾN (POSITIONS)</h3>
+    <button class="hud-btn-mini" (click)="openModal()" data-tooltip="BỔ NHIỆM">⚙️</button>
+  </div>
+  <div class="timeline">
+    @for (pos of positions(); track pos.id) {
+      <div class="timeline-item">
+        <div class="timeline-marker"></div>
+        <div class="timeline-content">
+          <div class="timeline-header-row">
+            <h4 class="title text-glow-cyan">{{ pos.title }}</h4>
+            <button class="remove-inline-btn" (click)="deletePosition(pos.id)" title="Xóa mốc chức vụ này">✖</button>
+          </div>
+          <p class="dates">📅 Từ: {{ pos.start_date }} @if (pos.end_date) { - Đến: {{ pos.end_date }} } @else { - Hiện tại }</p>
+        </div>
+      </div>
+    }
+  </div>
+</div>
+
+@if (showModal()) {
+  <div class="modal-backdrop">
+    <div class="modal-card mini">
+      <div class="modal-header">
+        <h3>📈 BỔ NHIỆM CHỨC DANH MỚI</h3>
+        <button class="close-btn" (click)="closeModal()">✖</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-fields">
+          <div class="form-group">
+            <label for="new-pos-title">CHỨC DANH MỚI</label>
+            <input id="new-pos-title" type="text" [ngModel]="newTitle()" (ngModelChange)="newTitle.set($event)" placeholder="Ví dụ: Team Leader, Senior Manager" class="hud-input">
+          </div>
+          <div class="form-group">
+            <span>NGÀY HIỆU LỰC BỔ NHIỆM</span>
+            <app-date-picker [ngModel]="newStartDate()" (ngModelChange)="newStartDate.set($event)"></app-date-picker>
+          </div>
+          <p class="warning-alert">ℹ️ Ghi chú: Hệ thống sẽ tự động chuyển chức danh hiện tại của nhân sự này sang trạng thái kết thúc vào ngày bổ nhiệm.</p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="hud-btn-success" [disabled]="isSaving() || !newTitle()" (click)="save()">
+          @if (isSaving()) { <div class="loader"></div> }
+          <span>GHI NHẬN BỔ NHIỆM</span>
+        </button>
+        <button class="hud-btn-secondary" (click)="closeModal()">HỦY</button>
+      </div>
+    </div>
+  </div>
+}

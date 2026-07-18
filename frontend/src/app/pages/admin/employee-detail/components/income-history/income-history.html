@@ -1,0 +1,54 @@
+<div class="lifecycle-card">
+  <div class="section-header-row">
+    <h3 class="section-title">💵 LỊCH SỬ THU NHẬP (COMPENSATION)</h3>
+    <button class="hud-btn-mini" (click)="openModal()" data-tooltip="ĐIỀU CHỈNH LƯƠNG">⚙️</button>
+  </div>
+  <div class="comp-list">
+    @for (inc of incomeHistory(); track inc.id) {
+      <div class="comp-item">
+        <div class="comp-amount text-glow-green">
+          <span>${{ inc.amount }} / month</span>
+          <button class="remove-inline-btn" (click)="deleteIncome(inc.id)" title="Xóa mốc lương này">✖</button>
+        </div>
+        <div class="comp-details">
+          <span class="reason">{{ inc.change_reason }}</span>
+          <span class="date">📅 {{ inc.effective_date }}</span>
+        </div>
+      </div>
+    }
+  </div>
+</div>
+
+@if (showModal()) {
+  <div class="modal-backdrop">
+    <div class="modal-card mini">
+      <div class="modal-header">
+        <h3>💵 ĐIỀU CHỈNH MỨC LƯƠNG</h3>
+        <button class="close-btn" (click)="closeModal()">✖</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-fields">
+          <div class="form-group">
+            <label for="new-inc-amount">MỨC LƯƠNG MỚI (USD/Tháng)</label>
+            <input id="new-inc-amount" type="number" [ngModel]="newAmount()" (ngModelChange)="newAmount.set($event)" placeholder="Nhập số tiền" class="hud-input">
+          </div>
+          <div class="form-group">
+            <span>NGÀY HIỆU LỰC MỚI</span>
+            <app-date-picker [ngModel]="newEffectiveDate()" (ngModelChange)="newEffectiveDate.set($event)"></app-date-picker>
+          </div>
+          <div class="form-group">
+            <label for="new-inc-reason">LÝ DO ĐIỀU CHỈNH</label>
+            <input id="new-inc-reason" type="text" [ngModel]="newReason()" (ngModelChange)="newReason.set($event)" placeholder="Ví dụ: Annual Review, Promotion Raise" class="hud-input">
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="hud-btn-success" [disabled]="isSaving() || newAmount() <= 0" (click)="save()">
+          @if (isSaving()) { <div class="loader"></div> }
+          <span>CẬP NHẬT LƯƠNG</span>
+        </button>
+        <button class="hud-btn-secondary" (click)="closeModal()">HỦY</button>
+      </div>
+    </div>
+  </div>
+}
