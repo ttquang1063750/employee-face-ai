@@ -1009,6 +1009,31 @@ def add_attendance_log(employee_id, action, mood, captured_image_path):
         conn.close()
 
 
+def get_last_attendance_action_today(employee_id):
+    """Most recent CHECK_IN/CHECK_OUT action for this employee today, or None
+    if they haven't scanned in yet today. Scoped to "today" rather than
+    all-time so a forgotten check-out yesterday doesn't permanently lock the
+    employee out of checking in again — there's no admin UI to fix/delete a
+    stray attendance log, so each day effectively resets the state machine."""
+    conn = get_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute(
+            """
+            SELECT action FROM attendance_logs
+            WHERE employee_id = %s AND timestamp::date = CURRENT_DATE
+            ORDER BY timestamp DESC
+            LIMIT 1;
+            """,
+            (employee_id,),
+        )
+        row = cur.fetchone()
+        return row[0] if row else None
+    finally:
+        cur.close()
+        conn.close()
+
+
 def get_attendance_logs():
     conn = get_connection()
     cur = conn.cursor(cursor_factory=RealDictCursor)

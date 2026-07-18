@@ -44,6 +44,13 @@ export class KioskComponent implements OnInit, OnDestroy {
   isSuccess = signal<boolean>(false);
   resultData = signal<AttendanceResult | null>(null);
 
+  // The scan is a single instant snapshot, not a continuous live scan — this
+  // freezes that captured frame over the video feed (plus a brief flash) so
+  // it's visually obvious the photo is already taken and the user doesn't
+  // need to keep holding still while the request is in flight.
+  capturedFrame = signal<string | null>(null);
+  showFlash = signal<boolean>(false);
+
   private readonly apiUrl = 'http://localhost:8000/api';
 
   ngOnInit(): void {
@@ -93,6 +100,10 @@ export class KioskComponent implements OnInit, OnDestroy {
     const base64Data = this.webcam.capture(video, canvas);
 
     if (base64Data) {
+      this.capturedFrame.set(base64Data);
+      this.showFlash.set(true);
+      setTimeout(() => this.showFlash.set(false), 250);
+
       this.http
         .post<ApiResponse<AttendanceResult>>(`${this.apiUrl}/attendance`, {
           img: base64Data,
@@ -104,6 +115,7 @@ export class KioskComponent implements OnInit, OnDestroy {
             this.isLoading.set(false);
             this.isSuccess.set(true);
             this.resultData.set(res.data ?? null);
+            this.capturedFrame.set(null);
 
             // Clear status after 10 seconds automatically
             setTimeout(() => {
@@ -115,6 +127,7 @@ export class KioskComponent implements OnInit, OnDestroy {
           error: (err: HttpErrorResponse) => {
             this.isLoading.set(false);
             this.isSuccess.set(false);
+            this.capturedFrame.set(null);
             if (err.error && err.error.error) {
               this.statusMsg.set(err.error.error);
             } else {

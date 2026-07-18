@@ -22,10 +22,22 @@
           <div class="camera-wrapper">
             <video #videoElement autoplay playsinline class="webcam-feed"></video>
             <canvas #canvasElement style="display:none;"></canvas>
-            
+
             <!-- Animated scanner line -->
             <div class="scanner-laser"></div>
             <div class="scanner-grid"></div>
+
+            <!-- The scan is one instant snapshot, not a live continuous scan —
+                 freeze the captured frame over the video (plus a brief flash)
+                 so it's obvious the photo is taken and holding still isn't needed. -->
+            @if (capturedFrame()) {
+              <img [src]="capturedFrame()" alt="Ảnh vừa chụp" class="captured-freeze-frame">
+              <div class="freeze-frame-label">📸 ĐÃ CHỤP ẢNH — KHÔNG CẦN GIỮ YÊN NỮA</div>
+            }
+
+            @if (showFlash()) {
+              <div class="camera-flash"></div>
+            }
           </div>
         </div>
       </div>

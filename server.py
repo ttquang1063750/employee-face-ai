@@ -912,6 +912,30 @@ class EmployeeFaceAIRequestHandler(BaseHTTPRequestHandler):
 
             employee_name = row[0]
 
+            # Reject a check-in/check-out that doesn't follow the employee's
+            # own last scan today (e.g. checking in twice in a row, or
+            # checking out without having checked in) — otherwise anyone
+            # could keep tapping the same button with no server-side guard.
+            last_action_today = db.get_last_attendance_action_today(employee_id)
+            if action == "CHECK_IN" and last_action_today == "CHECK_IN":
+                self.send_json_response(
+                    400,
+                    {
+                        "success": False,
+                        "error": f"{employee_name} đã check-in rồi, vui lòng check-out trước khi check-in lại.",
+                    },
+                )
+                return
+            if action == "CHECK_OUT" and last_action_today != "CHECK_IN":
+                self.send_json_response(
+                    400,
+                    {
+                        "success": False,
+                        "error": f"{employee_name} chưa check-in hôm nay, không thể check-out.",
+                    },
+                )
+                return
+
             # Analyze emotion
             print("Analyzing emotion...", flush=True)
             with DEEPFACE_LOCK:
