@@ -37,6 +37,7 @@ export interface IncomeEntry {
 }
 
 export interface AttendanceLog {
+  id: number;
   timestamp: string;
   action: 'CHECK_IN' | 'CHECK_OUT';
   mood: string;

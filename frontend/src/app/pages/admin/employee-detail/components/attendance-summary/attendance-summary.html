@@ -42,10 +42,11 @@
           <th>Hành động</th>
           <th>Cảm xúc</th>
           <th>Ảnh</th>
+          <th style="width: 80px; text-align: center;">Hành động</th>
         </tr>
       </thead>
       <tbody>
-        @for (log of paginatedLogs(); track log.timestamp) {
+        @for (log of paginatedLogs(); track log.id) {
           <tr>
             <td class="text-cyan">{{ log.timestamp | date:'HH:mm:ss - dd/MM/yyyy' }}</td>
             <td>
@@ -59,10 +60,13 @@
             <td>
               <app-audit-photo-button [imagePath]="log.captured_image_path" />
             </td>
+            <td style="text-align: center;">
+              <button type="button" class="hud-btn-mini" style="border-color: rgba(var(--color-red-rgb), 0.4); color: var(--color-red);" data-tooltip="Xóa lượt chấm công" (click)="deleteLog.emit(log.id)">🗑️</button>
+            </td>
           </tr>
         } @empty {
           <tr>
-            <td colspan="4" class="no-data">Không có lịch sử chấm công trong khoảng thời gian đã chọn.</td>
+            <td colspan="5" class="no-data">Không có lịch sử chấm công trong khoảng thời gian đã chọn.</td>
           </tr>
         }
       </tbody>

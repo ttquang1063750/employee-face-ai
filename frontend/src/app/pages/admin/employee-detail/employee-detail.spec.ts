@@ -23,7 +23,7 @@ function makeEmployee(rawLogs: AttendanceLog[]): DetailedEmployee {
 }
 
 function log(action: 'CHECK_IN' | 'CHECK_OUT', timestamp: string): AttendanceLog {
-  return { action, timestamp, mood: 'neutral' };
+  return { id: 1, action, timestamp, mood: 'neutral' };
 }
 
 describe('EmployeeDetailComponent', () => {

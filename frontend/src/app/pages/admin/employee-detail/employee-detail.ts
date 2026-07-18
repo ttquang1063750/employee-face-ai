@@ -11,6 +11,7 @@ import { IncomeHistoryComponent } from './components/income-history/income-histo
 import { SkillsPanelComponent } from './components/skills-panel/skills-panel';
 import { ProjectsPanelComponent } from './components/projects-panel/projects-panel';
 import { BaseProfileModalComponent } from './components/base-profile-modal/base-profile-modal';
+import { DialogService } from '../../../core/services/dialog.service';
 
 @Component({
   selector: 'app-employee-detail',
@@ -30,6 +31,7 @@ import { BaseProfileModalComponent } from './components/base-profile-modal/base-
 export class EmployeeDetailComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private http = inject(HttpClient);
+  private dialogService = inject(DialogService);
 
   employee = signal<DetailedEmployee | null>(null);
   isLoading = signal<boolean>(true);
@@ -241,5 +243,24 @@ export class EmployeeDetailComponent implements OnInit {
     if (this.currentPage() < this.totalPages()) {
       this.currentPage.update((p) => p + 1);
     }
+  }
+
+  onDeleteLog(id: number): void {
+    this.dialogService.confirm('XÁC NHẬN XÓA', 'Bạn có chắc chắn muốn xóa lượt chấm công này? Thao tác này không thể hoàn tác.').then((confirmed) => {
+      if (confirmed) {
+        this.http.delete<ApiResponse<any>>(`${this.apiUrl}/logs/${id}`).subscribe({
+          next: (res) => {
+            if (res.success) {
+              this.loadEmployeeDetails(true);
+            } else {
+              this.dialogService.alert('LỖI', res.error || 'Không thể xóa lượt chấm công.');
+            }
+          },
+          error: () => {
+            this.dialogService.alert('LỖI', 'Lỗi kết nối máy chủ.');
+          }
+        });
+      }
+    });
   }
 }

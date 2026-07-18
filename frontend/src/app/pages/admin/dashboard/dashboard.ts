@@ -19,6 +19,7 @@ import { StatWidgetComponent } from './components/stat-widget/stat-widget';
 import { HourlyChartComponent } from './components/hourly-chart/hourly-chart';
 import { MoodDonutComponent } from './components/mood-donut/mood-donut';
 import { LogsTableComponent } from './components/logs-table/logs-table';
+import { DialogService } from '../../../core/services/dialog.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -37,6 +38,7 @@ import { LogsTableComponent } from './components/logs-table/logs-table';
 })
 export class DashboardComponent implements OnInit, OnDestroy {
   private http = inject(HttpClient);
+  private dialogService = inject(DialogService);
 
   employees = signal<EmployeeBase[]>([]);
   logs = signal<AttendanceLogEntry[]>([]);
@@ -377,5 +379,30 @@ export class DashboardComponent implements OnInit, OnDestroy {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  }
+
+  onDeleteLog(id: number): void {
+    this.dialogService.confirm('XÁC NHẬN XÓA', 'Bạn có chắc chắn muốn xóa lượt chấm công này? Thao tác này không thể hoàn tác.').then((confirmed) => {
+      if (confirmed) {
+        this.http.delete<ApiResponse<any>>(`${this.apiUrl}/logs/${id}`).subscribe({
+          next: (res) => {
+            if (res.success) {
+              this.http.get<ApiResponse<AttendanceLogEntry[]>>(`${this.apiUrl}/logs`).subscribe({
+                next: (logRes) => {
+                  if (logRes.success && logRes.data) {
+                    this.logs.set(logRes.data);
+                  }
+                }
+              });
+            } else {
+              this.dialogService.alert('LỖI', res.error || 'Không thể xóa lượt chấm công.');
+            }
+          },
+          error: () => {
+            this.dialogService.alert('LỖI', 'Lỗi kết nối máy chủ.');
+          }
+        });
+      }
+    });
   }
 }

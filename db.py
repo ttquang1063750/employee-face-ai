@@ -975,7 +975,7 @@ def get_detailed_employee(employee_id):
         cur = conn.cursor(cursor_factory=RealDictCursor)
         cur.execute(
             """
-            SELECT timestamp, action, mood, captured_image_path
+            SELECT id, timestamp, action, mood, captured_image_path
             FROM attendance_logs
             WHERE employee_id = %s
             ORDER BY timestamp DESC;
@@ -1169,3 +1169,34 @@ def delete_employee_income(income_id):
     finally:
         cur.close()
         conn.close()
+
+
+def delete_attendance_log(log_id):
+    import os
+    conn = get_connection()
+    cur = conn.cursor()
+    try:
+        # Retrieve image path first to delete the file
+        cur.execute("SELECT captured_image_path FROM attendance_logs WHERE id = %s;", (log_id,))
+        row = cur.fetchone()
+        img_path = row[0] if row else None
+        
+        cur.execute("DELETE FROM attendance_logs WHERE id = %s;", (log_id,))
+        conn.commit()
+        
+        # Delete file if exists
+        if img_path:
+            abs_path = os.path.abspath(img_path)
+            if os.path.isfile(abs_path):
+                try:
+                    os.remove(abs_path)
+                    print(f"Deleted audit photo file: {abs_path}", flush=True)
+                except Exception as e:
+                    print(f"Failed to delete audit photo file: {abs_path}, error: {str(e)}", flush=True)
+    except Exception as e:
+        conn.rollback()
+        raise e
+    finally:
+        cur.close()
+        conn.close()
+

@@ -13,6 +13,7 @@
           <th>TRẠNG THÁI</th>
           <th>CẢM XÚC (MOOD)</th>
           <th>ẢNH</th>
+          <th style="width: 80px; text-align: center;">HÀNH ĐỘNG</th>
         </tr>
       </thead>
       <tbody>
@@ -21,6 +22,7 @@
             <tr>
               <td><div class="hud-skeleton skel-cell"></div></td>
               <td><div class="hud-skeleton skel-cell"></div></td>
+              <td><div class="hud-skeleton skel-badge"></div></td>
               <td><div class="hud-skeleton skel-badge"></div></td>
               <td><div class="hud-skeleton skel-badge"></div></td>
               <td><div class="hud-skeleton skel-badge"></div></td>
@@ -44,10 +46,13 @@
               <td>
                 <app-audit-photo-button [imagePath]="log.captured_image_path" />
               </td>
+              <td style="text-align: center;">
+                <button type="button" class="hud-btn-mini" style="border-color: rgba(var(--color-red-rgb), 0.4); color: var(--color-red);" data-tooltip="Xóa lượt chấm công" (click)="deleteLog.emit(log.id)">🗑️</button>
+              </td>
             </tr>
           } @empty {
             <tr>
-              <td colspan="5" class="no-data">Không tìm thấy lượt chấm công nào phù hợp với bộ lọc.</td>
+              <td colspan="6" class="no-data">Không tìm thấy lượt chấm công nào phù hợp với bộ lọc.</td>
             </tr>
           }
         }

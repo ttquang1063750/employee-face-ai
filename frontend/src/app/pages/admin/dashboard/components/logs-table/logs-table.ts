@@ -24,6 +24,7 @@ export class LogsTableComponent {
   nextPage = output<void>();
   pageSizeChange = output<number>();
   exportCsv = output<void>();
+  deleteLog = output<number>();
 
   readonly translateMood = translateMood;
   readonly skeletonRows = [1, 2, 3, 4, 5];

@@ -256,6 +256,8 @@ class EmployeeFaceAIRequestHandler(BaseHTTPRequestHandler):
             self.handle_delete_income()
         elif self.path.startswith("/api/employees/"):
             self.handle_delete_employee()
+        elif self.path.startswith("/api/logs/"):
+            self.handle_delete_log()
         else:
             self.send_error(404, "Endpoint Not Found")
 
@@ -853,6 +855,19 @@ class EmployeeFaceAIRequestHandler(BaseHTTPRequestHandler):
                 os.remove(image_path)
 
             self.send_json_response(200, {"success": True, "message": "Xóa hồ sơ nhân sự thành công."})
+        except Exception as e:
+            self.send_json_response(500, {"success": False, "error": str(e)})
+
+    def handle_delete_log(self):
+        user = self.get_authenticated_user()
+        if not user or user["role"] != "admin":
+            self.send_json_response(401, {"success": False, "error": "Unauthorized access"})
+            return
+
+        try:
+            log_id = int(self.path.split("/")[-1])
+            db.delete_attendance_log(log_id)
+            self.send_json_response(200, {"success": True, "message": "Xóa lượt chấm công thành công."})
         except Exception as e:
             self.send_json_response(500, {"success": False, "error": str(e)})
 

@@ -28,4 +28,5 @@ export class AttendanceSummaryComponent {
   applyFilter = output<void>();
   prevPage = output<void>();
   nextPage = output<void>();
+  deleteLog = output<number>();
 }
