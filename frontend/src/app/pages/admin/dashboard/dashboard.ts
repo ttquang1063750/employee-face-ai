@@ -35,9 +35,13 @@ export class DashboardComponent implements OnInit {
   isLoading = signal<boolean>(true);
   errorMsg = signal<string | null>(null);
 
-  // Filters for logs list
+  // Filters for logs list (applied values used by filteredLogs below;
+  // the *Input signals are the draft date-range values bound to the date
+  // pickers and only take effect once ÁP DỤNG is clicked)
   filterStartDate = signal<string>('');
   filterEndDate = signal<string>('');
+  filterStartDateInput = signal<string>('');
+  filterEndDateInput = signal<string>('');
   filterEmployeeName = signal<string>('');
 
   // Autocomplete dropdown state
@@ -220,8 +224,12 @@ export class DashboardComponent implements OnInit {
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const pad = (n: number) => n.toString().padStart(2, '0');
     
-    this.filterStartDate.set(`${startOfMonth.getFullYear()}-${pad(startOfMonth.getMonth() + 1)}-01`);
-    this.filterEndDate.set(`${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`);
+    const startStr = `${startOfMonth.getFullYear()}-${pad(startOfMonth.getMonth() + 1)}-01`;
+    const endStr = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+    this.filterStartDate.set(startStr);
+    this.filterEndDate.set(endStr);
+    this.filterStartDateInput.set(startStr);
+    this.filterEndDateInput.set(endStr);
 
     this.loadDashboardData();
   }
@@ -255,6 +263,12 @@ export class DashboardComponent implements OnInit {
         this.errorMsg.set('Không thể kết nối đến máy chủ API.');
       }
     });
+  }
+
+  applyDateFilter(): void {
+    this.filterStartDate.set(this.filterStartDateInput());
+    this.filterEndDate.set(this.filterEndDateInput());
+    this.currentPage.set(1);
   }
 
   prevPage(): void {

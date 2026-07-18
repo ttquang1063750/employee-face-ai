@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, computed, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, signal, computed, ElementRef, viewChild, ChangeDetectionStrategy } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
@@ -14,6 +14,9 @@ import { CommonModule } from '@angular/common';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class EmployeeDetailComponent implements OnInit {
+  videoElement = viewChild<ElementRef<HTMLVideoElement>>('videoElement');
+  canvasElement = viewChild<ElementRef<HTMLCanvasElement>>('canvasElement');
+
   employee = signal<any | null>(null);
   isLoading = signal<boolean>(true);
   errorMsg = signal<string | null>(null);
@@ -32,6 +35,11 @@ export class EmployeeDetailComponent implements OnInit {
   editAge = signal<number>(30);
   editRole = signal<'staff' | 'admin'>('staff');
   editPassword = signal<string>('');
+
+  // 1a. Avatar update fields (webcam capture / file upload)
+  imgBase64 = signal<string>('');
+  showWebcam = signal<boolean>(false);
+  private webcamStream: MediaStream | null = null;
 
   // 2. Promotion (Positions) Edit Fields
   newPosTitle = signal<string>('');
@@ -55,9 +63,13 @@ export class EmployeeDetailComponent implements OnInit {
   newProjStartDate = signal<string>('');
   newProjEndDate = signal<string>('');
 
-  // 6. Attendance Filters
+  // 6. Attendance Filters (applied values used by the computed logs below;
+  // the *Input signals are the draft values bound to the date pickers and
+  // only take effect once ÁP DỤNG is clicked)
   filterStartDate = signal<string>('');
   filterEndDate = signal<string>('');
+  filterStartDateInput = signal<string>('');
+  filterEndDateInput = signal<string>('');
 
   // Pagination for logs list
   currentPage = signal<number>(1);
@@ -201,6 +213,8 @@ export class EmployeeDetailComponent implements OnInit {
     
     this.filterStartDate.set(startStr);
     this.filterEndDate.set(endStr);
+    this.filterStartDateInput.set(startStr);
+    this.filterEndDateInput.set(endStr);
 
     // Populate skills array copy
     this.skillsListToEdit.set(data.skills ? JSON.parse(JSON.stringify(data.skills)) : []);
@@ -211,23 +225,94 @@ export class EmployeeDetailComponent implements OnInit {
 
   // --- 1. Save Base Profile ---
   openBaseModal(): void {
+    this.imgBase64.set('');
+    this.showWebcam.set(false);
     this.showBaseModal.set(true);
   }
 
   closeBaseModal(): void {
+    this.stopWebcam();
     this.showBaseModal.set(false);
+  }
+
+  async startWebcam(): Promise<void> {
+    this.showWebcam.set(true);
+    try {
+      this.webcamStream = await navigator.mediaDevices.getUserMedia({
+        video: { width: 400, height: 300, facingMode: 'user' }
+      });
+      setTimeout(() => {
+        if (this.videoElement()) {
+          this.videoElement()!.nativeElement.srcObject = this.webcamStream;
+        }
+      }, 100);
+    } catch (err: any) {
+      await this.dialogService.alert('LỖI CAMERA', 'Không thể khởi chạy camera: ' + err.message);
+      this.showWebcam.set(false);
+    }
+  }
+
+  stopWebcam(): void {
+    if (this.webcamStream) {
+      this.webcamStream.getTracks().forEach(track => track.stop());
+      this.webcamStream = null;
+    }
+    this.showWebcam.set(false);
+  }
+
+  capturePhoto(): void {
+    if (!this.webcamStream) return;
+    const video = this.videoElement()!.nativeElement;
+    const canvas = this.canvasElement()!.nativeElement;
+    const ctx = canvas.getContext('2d');
+
+    if (ctx) {
+      canvas.width = 400;
+      canvas.height = 300;
+
+      // Mirror the webcam frame during snapshot
+      ctx.translate(canvas.width, 0);
+      ctx.scale(-1, 1);
+
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      // Reset transform
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+
+      this.imgBase64.set(canvas.toDataURL('image/jpeg', 0.95));
+      this.stopWebcam();
+    }
+  }
+
+  triggerFileInput(): void {
+    const fileInput = document.getElementById('employee-detail-file-input') as HTMLInputElement;
+    if (fileInput) fileInput.click();
+  }
+
+  handleFileUpload(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files[0]) {
+      const reader = new FileReader();
+      reader.onload = (e: any) => {
+        this.imgBase64.set(e.target.result);
+      };
+      reader.readAsDataURL(input.files[0]);
+    }
   }
 
   saveBaseProfile(): void {
     if (!this.employeeId) return;
     this.isSaving.set(true);
 
-    const payload = {
+    const payload: any = {
       name: this.editName(),
       age: this.editAge(),
       role: this.editRole(),
       password: this.editRole() === 'admin' && this.editPassword() ? this.editPassword() : null
     };
+    if (this.imgBase64()) {
+      payload.img = this.imgBase64();
+    }
 
     this.http.put<any>(`${this.apiUrl}/employees/${this.employeeId}`, payload).subscribe({
       next: async (res) => {
@@ -429,6 +514,12 @@ export class EmployeeDetailComponent implements OnInit {
         await this.dialogService.alert('LỖI CẬP NHẬT', 'Lỗi cập nhật lịch sử dự án: ' + (err.error?.error || err.message));
       }
     });
+  }
+
+  applyDateFilter(): void {
+    this.filterStartDate.set(this.filterStartDateInput());
+    this.filterEndDate.set(this.filterEndDateInput());
+    this.currentPage.set(1);
   }
 
   prevPage(): void {

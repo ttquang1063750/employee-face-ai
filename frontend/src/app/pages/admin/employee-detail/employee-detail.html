@@ -42,16 +42,90 @@
         </button>
       </div>
 
-      <!-- Display Mode: Employee Lifecycle Grid -->
-      <div class="lifecycle-grid">
-        
-        <!-- Career Positions Timeline & Comp history -->
-        <div class="lifecycle-left-col">
+      <!-- Attendance summary (left, ~65%) + Lifecycle sections (right, ~35%) -->
+      <div class="lifecycle-layout">
+
+        <!-- 5. Attendance logs and time metrics aggregation -->
+        <div class="lifecycle-card">
+          <h3 class="section-title">📅 THỐNG KÊ CHẤM CÔNG VÀ GIỜ CÔNG</h3>
+
+          <!-- Date range filter bar -->
+          <div class="hud-filter-bar">
+            <div class="hud-field">
+              <label class="hud-label">TỪ NGÀY</label>
+              <input type="date" [ngModel]="filterStartDateInput()" (ngModelChange)="filterStartDateInput.set($event)" class="hud-input">
+            </div>
+            <div class="hud-field">
+              <label class="hud-label">ĐẾN NGÀY</label>
+              <input type="date" [ngModel]="filterEndDateInput()" (ngModelChange)="filterEndDateInput.set($event)" class="hud-input">
+            </div>
+            <div class="hud-field filter-apply-field">
+              <button class="hud-btn-outline" (click)="applyDateFilter()">ÁP DỤNG</button>
+            </div>
+          </div>
+
+          <!-- KPI analytics widgets -->
+          <div class="attendance-stats-cards">
+            <div class="stats-card">
+              <span class="stats-label">SỐ NGÀY LÀM VIỆC THỰC TẾ</span>
+              <span class="stats-value text-glow-green">{{ workingDays() }} ngày</span>
+            </div>
+            <div class="stats-card">
+              <span class="stats-label">SỐ GIỜ CÔNG TỔNG CỘNG</span>
+              <span class="stats-value text-glow-cyan">{{ workingHours() }} giờ</span>
+            </div>
+          </div>
+
+          <!-- Raw logs timeline table in selected scope -->
+          <div class="monthly-summary-table-wrapper">
+            <table class="monthly-table">
+              <thead>
+                <tr>
+                  <th>Thời gian</th>
+                  <th>Hành động</th>
+                  <th>Cảm xúc</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (log of paginatedRawLogs(); track log.timestamp) {
+                  <tr>
+                    <td class="text-cyan">{{ log.timestamp | date:'HH:mm:ss - dd/MM/yyyy' }}</td>
+                    <td>
+                      <span class="action-tag" [class.check-in]="log.action === 'CHECK_IN'" [class.check-out]="log.action === 'CHECK_OUT'">
+                        {{ log.action === 'CHECK_IN' ? 'VÀO CA' : 'RA CA' }}
+                      </span>
+                    </td>
+                    <td>
+                      <span class="mood-badge">{{ log.mood }}</span>
+                    </td>
+                  </tr>
+                } @empty {
+                  <tr>
+                    <td colspan="3" class="no-data">Không có lịch sử chấm công trong khoảng thời gian đã chọn.</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Pagination Controls -->
+          @if (filteredRawLogs().length > 0) {
+            <div class="hud-pagination">
+              <button class="pag-btn" [disabled]="currentPage() === 1" (click)="prevPage()">◀ TRƯỚC</button>
+              <span class="pag-info">TRANG {{ currentPage() }} / {{ totalPages() }}</span>
+              <button class="pag-btn" [disabled]="currentPage() === totalPages()" (click)="nextPage()">SAU ▶</button>
+            </div>
+          }
+        </div>
+
+        <!-- Lifecycle side column: Positions, Compensation, Skills, Projects -->
+        <div class="lifecycle-side-col">
+
           <!-- 1. Career positions history -->
           <div class="lifecycle-card">
             <div class="section-header-row">
               <h3 class="section-title">📈 LỊCH SỬ THĂNG TIẾN (POSITIONS)</h3>
-              <button class="hud-btn-mini" (click)="openPositionModal()">⚙️ BỔ NHIỆM</button>
+              <button class="hud-btn-mini" (click)="openPositionModal()" data-tooltip="BỔ NHIỆM">⚙️</button>
             </div>
             <div class="timeline">
               @for (pos of employee()?.positions; track pos.id) {
@@ -73,7 +147,7 @@
           <div class="lifecycle-card">
             <div class="section-header-row">
               <h3 class="section-title">💵 LỊCH SỬ THU NHẬP (COMPENSATION)</h3>
-              <button class="hud-btn-mini" (click)="openIncomeModal()">⚙️ ĐIỀU CHỈNH LƯƠNG</button>
+              <button class="hud-btn-mini" (click)="openIncomeModal()" data-tooltip="ĐIỀU CHỈNH LƯƠNG">⚙️</button>
             </div>
             <div class="comp-list">
               @for (inc of employee()?.income_history; track inc.id) {
@@ -90,15 +164,12 @@
               }
             </div>
           </div>
-        </div>
 
-        <!-- Project history & Skills Registry & Attendance summaries -->
-        <div class="lifecycle-right-col">
           <!-- 3. Skills Registry with descriptions -->
           <div class="lifecycle-card">
             <div class="section-header-row">
               <h3 class="section-title">🧠 HỒ SƠ KỸ NĂNG (SKILLS SET)</h3>
-              <button class="hud-btn-mini" (click)="openSkillsModal()">⚙️ CẬP NHẬT KỸ NĂNG</button>
+              <button class="hud-btn-mini" (click)="openSkillsModal()" data-tooltip="CẬP NHẬT KỸ NĂNG">⚙️</button>
             </div>
             <div class="skills-grid">
               @for (sk of employee()?.skills; track sk.skill_name) {
@@ -116,7 +187,7 @@
           <div class="lifecycle-card">
             <div class="section-header-row">
               <h3 class="section-title">📂 LỊCH SỬ DỰ ÁN (PROJECTS LOG)</h3>
-              <button class="hud-btn-mini" (click)="openProjectsModal()">⚙️ QUẢN LÝ DỰ ÁN</button>
+              <button class="hud-btn-mini" (click)="openProjectsModal()" data-tooltip="QUẢN LÝ DỰ ÁN">⚙️</button>
             </div>
             <div class="projects-timeline">
               @for (prj of employee()?.projects; track prj.project_name) {
@@ -134,77 +205,7 @@
             </div>
           </div>
 
-          <!-- 5. Attendance logs and time metrics aggregation -->
-          <div class="lifecycle-card">
-            <h3 class="section-title">📅 THỐNG KÊ CHẤM CÔNG VÀ GIỜ CÔNG</h3>
-            
-            <!-- Date range filter bar -->
-            <div class="hud-filter-bar">
-              <div class="hud-field">
-                <label class="hud-label">TỪ NGÀY</label>
-                <input type="date" [ngModel]="filterStartDate()" (ngModelChange)="filterStartDate.set($event); currentPage.set(1)" class="hud-input">
-              </div>
-              <div class="hud-field">
-                <label class="hud-label">ĐẾN NGÀY</label>
-                <input type="date" [ngModel]="filterEndDate()" (ngModelChange)="filterEndDate.set($event); currentPage.set(1)" class="hud-input">
-              </div>
-            </div>
-
-            <!-- KPI analytics widgets -->
-            <div class="attendance-stats-cards">
-              <div class="stats-card">
-                <span class="stats-label">SỐ NGÀY LÀM VIỆC THỰC TẾ</span>
-                <span class="stats-value text-glow-green">{{ workingDays() }} ngày</span>
-              </div>
-              <div class="stats-card">
-                <span class="stats-label">SỐ GIỜ CÔNG TỔNG CỘNG</span>
-                <span class="stats-value text-glow-cyan">{{ workingHours() }} giờ</span>
-              </div>
-            </div>
-
-            <!-- Raw logs timeline table in selected scope -->
-            <div class="monthly-summary-table-wrapper">
-              <table class="monthly-table">
-                <thead>
-                  <tr>
-                    <th>Thời gian</th>
-                    <th>Hành động</th>
-                    <th>Cảm xúc</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  @for (log of paginatedRawLogs(); track log.timestamp) {
-                    <tr>
-                      <td class="text-cyan">{{ log.timestamp | date:'HH:mm:ss - dd/MM/yyyy' }}</td>
-                      <td>
-                        <span class="action-tag" [class.check-in]="log.action === 'CHECK_IN'" [class.check-out]="log.action === 'CHECK_OUT'">
-                          {{ log.action === 'CHECK_IN' ? 'VÀO CA' : 'RA CA' }}
-                        </span>
-                      </td>
-                      <td>
-                        <span class="mood-badge">{{ log.mood }}</span>
-                      </td>
-                    </tr>
-                  } @empty {
-                    <tr>
-                      <td colspan="3" class="no-data">Không có lịch sử chấm công trong khoảng thời gian đã chọn.</td>
-                    </tr>
-                  }
-                </tbody>
-              </table>
-            </div>
-
-            <!-- Pagination Controls -->
-            @if (filteredRawLogs().length > 0) {
-              <div class="hud-pagination">
-                <button class="pag-btn" [disabled]="currentPage() === 1" (click)="prevPage()">◀ TRƯỚC</button>
-                <span class="pag-info">TRANG {{ currentPage() }} / {{ totalPages() }}</span>
-                <button class="pag-btn" [disabled]="currentPage() === totalPages()" (click)="nextPage()">SAU ▶</button>
-              </div>
-            }
-          </div>
         </div>
-
       </div>
     }
   </div>
@@ -243,6 +244,34 @@
               <input type="password" [ngModel]="editPassword()" (ngModelChange)="editPassword.set($event)" class="hud-input">
             </div>
           }
+
+          <!-- Avatar Update Section -->
+          <div class="form-camera-zone">
+            <label class="camera-label">ẢNH CHÂN DUNG ĐỐI CHIẾU (MẪU)</label>
+
+            <div class="camera-viewport-frame">
+              @if (showWebcam()) {
+                <video #videoElement autoplay playsinline class="modal-video"></video>
+                <button class="camera-cap-btn" (click)="capturePhoto()">📸 CHỤP ẢNH MẪU</button>
+              } @else {
+                @if (imgBase64()) {
+                  <img [src]="imgBase64()" class="captured-preview-img">
+                } @else {
+                  <img
+                    [src]="'http://localhost:8000/' + employee()?.image_path"
+                    (error)="onImageError($event)"
+                    class="captured-preview-img"
+                    alt="{{ employee()?.name }}">
+                }
+                <div class="photo-controls">
+                  <button class="hud-btn-outline" (click)="startWebcam()">📸 CAMERA CHỤP TRỰC TIẾP</button>
+                  <input type="file" id="employee-detail-file-input" (change)="handleFileUpload($event)" style="display:none;" accept="image/*">
+                  <button class="hud-btn-outline" (click)="triggerFileInput()">📁 TẢI LÊN FILE ẢNH</button>
+                </div>
+              }
+            </div>
+            <canvas #canvasElement style="display:none;"></canvas>
+          </div>
         </div>
       </div>
       <div class="modal-footer">

@@ -65,6 +65,8 @@ class EmployeeFaceAIRequestHandler(BaseHTTPRequestHandler):
             self.handle_get_employees()
         elif self.path.startswith('/api/employees/'):
             self.handle_get_employee_detail()
+        elif self.path.startswith('/database/'):
+            self.serve_database_image()
         # Serve the single page index.html for static hosting fallback
         elif self.path == '/' or self.path == '/index.html':
             self.serve_static_index()
@@ -120,6 +122,32 @@ class EmployeeFaceAIRequestHandler(BaseHTTPRequestHandler):
             self.wfile.write(content)
         except FileNotFoundError:
             self.send_error(404, 'File Not Found: index.html')
+
+    def serve_database_image(self):
+        database_root = os.path.realpath('database')
+        requested_path = os.path.realpath(os.path.join(database_root, self.path[len('/database/'):]))
+
+        # Guard against path traversal outside the database directory
+        if os.path.commonpath([database_root, requested_path]) != database_root:
+            self.send_error(403, 'Forbidden')
+            return
+
+        ext = os.path.splitext(requested_path)[1].lower()
+        content_type = {'.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png'}.get(ext)
+        if not content_type:
+            self.send_error(403, 'Forbidden')
+            return
+
+        try:
+            with open(requested_path, 'rb') as f:
+                content = f.read()
+            self.send_response(200)
+            self.send_header('Content-Type', content_type)
+            self.send_header('Content-Length', str(len(content)))
+            self.end_headers()
+            self.wfile.write(content)
+        except FileNotFoundError:
+            self.send_error(404, 'File Not Found')
 
     def handle_login(self):
         try:
@@ -272,6 +300,7 @@ class EmployeeFaceAIRequestHandler(BaseHTTPRequestHandler):
             age = int(data.get('age', 30))
             role = data.get('role', 'staff')
             password = data.get('password')
+            img_base64 = data.get('img')
 
             new_position = data.get('position')
             new_skills = data.get('skills', [])       # list of {skill_name, description}
@@ -282,6 +311,17 @@ class EmployeeFaceAIRequestHandler(BaseHTTPRequestHandler):
             db.update_employee_profile(employee_id, name, age, role, password)
             current_detail = db.get_detailed_employee(employee_id)
             today_str = datetime.now().date().isoformat()
+
+            # 1b. Update reference avatar photo, if a new one was captured/uploaded
+            if img_base64:
+                final_filepath = f"database/{employee_id}.jpg"
+                if save_base64_image(img_base64, final_filepath):
+                    conn = db.get_connection()
+                    cur = conn.cursor()
+                    cur.execute("UPDATE employees SET image_path = %s WHERE id = %s;", (final_filepath, employee_id))
+                    conn.commit()
+                    cur.close()
+                    conn.close()
 
             # 2. Update Position Lifecycle
             if new_position and new_position != current_detail.get('current_position'):

@@ -21,32 +21,6 @@
   margin-bottom: var(--space-2);
 }
 
-.hud-btn-outline {
-  background: rgba(var(--color-bg-card-rgb), 1);
-  border: 1px solid rgba(var(--color-cyan-rgb), 0.5);
-  color: var(--color-cyan);
-  font-family: 'Orbitron', sans-serif;
-  font-size: var(--text-sm);
-  font-weight: 600;
-  padding: 0.6rem var(--space-5);
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  transition: all 0.2s;
-  text-align: center;
-
-  &:hover {
-    background: rgba(var(--color-cyan-rgb), 0.1);
-    border-color: var(--color-cyan);
-    box-shadow: 0 0 10px rgba(var(--color-cyan-rgb), 0.3);
-  }
-
-  &[disabled] {
-    opacity: 0.5;
-    cursor: not-allowed;
-    &:hover { box-shadow: none; background: transparent; }
-  }
-}
-
 /* Profile Summary Header */
 .profile-header-card {
   background: rgba(var(--color-bg-card-rgb), 1);
@@ -161,20 +135,21 @@
   }
 }
 
-/* Two-column Lifecycles Display */
-.lifecycle-grid {
+/* Attendance summary (main, ~65%) + lifecycle sections (side, ~35%) */
+.lifecycle-layout {
   display: grid;
-  grid-template-columns: 1fr 1.2fr;
+  grid-template-columns: 65fr 35fr;
   gap: var(--space-8);
+  align-items: start;
 }
 
 @media (max-width: 992px) {
-  .lifecycle-grid {
+  .lifecycle-layout {
     grid-template-columns: 1fr;
   }
 }
 
-.lifecycle-left-col, .lifecycle-right-col {
+.lifecycle-side-col {
   display: flex;
   flex-direction: column;
   gap: var(--space-8);
@@ -214,25 +189,6 @@
   border-bottom: 1px solid rgba(var(--color-border-rgb), 0.45);
   padding-bottom: var(--space-3);
   margin-bottom: var(--space-6);
-}
-
-.hud-btn-mini {
-  background: transparent;
-  border: 1px solid rgba(var(--color-cyan-rgb), 0.4);
-  color: var(--color-cyan);
-  font-family: 'Orbitron', sans-serif;
-  font-size: 0.7rem;
-  font-weight: 700;
-  padding: 0.3rem 0.65rem;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  transition: all 0.2s;
-
-  &:hover {
-    background: rgba(var(--color-cyan-rgb), 0.1);
-    border-color: var(--color-cyan);
-    box-shadow: 0 0 8px rgba(var(--color-cyan-rgb), 0.25);
-  }
 }
 
 /* 1. Positions career timeline */

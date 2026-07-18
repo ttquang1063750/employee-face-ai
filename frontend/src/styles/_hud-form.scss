@@ -49,6 +49,45 @@
   &.grow-3 { flex: 3; }
 }
 
+// ─── Filter Apply Field ──────────────────────────────────────
+// Usage: <div class="hud-field filter-apply-field"><button class="hud-btn-outline">ÁP DỤNG</button></div>
+// Pairs with draft/applied filter signals so filters only take effect on click.
+.filter-apply-field {
+  flex: 0 0 auto;
+
+  .hud-btn-outline {
+    height: var(--input-height);
+  }
+}
+
+// ─── Outline Button ───────────────────────────────────────────
+// Usage: secondary/utility action, e.g. <button class="hud-btn-outline">ÁP DỤNG</button>
+.hud-btn-outline {
+  background: rgba(var(--color-bg-card-rgb), 1);
+  border: 1px solid rgba(var(--color-cyan-rgb), 0.5);
+  color: var(--color-cyan);
+  font-family: 'Orbitron', sans-serif;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  padding: 0.6rem var(--space-5);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+
+  &:hover {
+    background: rgba(var(--color-cyan-rgb), 0.1);
+    border-color: var(--color-cyan);
+    box-shadow: 0 0 10px rgba(var(--color-cyan-rgb), 0.3);
+  }
+
+  &[disabled] {
+    opacity: 0.5;
+    cursor: not-allowed;
+    &:hover { box-shadow: none; background: transparent; }
+  }
+}
+
 // ─── HUD Label ──────────────────────────────────────────────
 .hud-label {
   font-family: var(--font-hud);
@@ -304,6 +343,141 @@
     color: var(--color-text-muted);
     font-style: italic;
     text-align: center;
+  }
+}
+
+// ─── Portrait Camera Capture Zone ────────────────────────────
+// Usage: webcam/file-upload avatar capture, e.g. in registration
+// and profile-edit modals.
+.form-camera-zone {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+
+  .camera-label {
+    color: var(--color-text-muted);
+    font-size: 0.7rem;
+    font-family: 'Orbitron', sans-serif;
+    letter-spacing: 1px;
+    font-weight: 600;
+  }
+}
+
+.camera-viewport-frame {
+  border: 1px solid rgba(var(--color-border-rgb), 0.7);
+  border-radius: var(--radius-md);
+  background-color: #000000;
+  aspect-ratio: 4/3;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.camera-cap-btn {
+  position: absolute;
+  bottom: 1rem;
+  background: rgba(var(--color-bg-card-rgb), 1);
+  border: 1px solid var(--color-cyan);
+  color: var(--color-cyan);
+  font-family: 'Orbitron', sans-serif;
+  padding: var(--space-2) var(--space-4);
+  font-size: var(--text-sm);
+  font-weight: bold;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  box-shadow: 0 0 10px rgba(var(--color-cyan-rgb), 0.2);
+  &:hover { background: var(--color-cyan); color: #000000; }
+}
+
+.captured-preview-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.camera-placeholder {
+  color: var(--color-text-muted);
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.85rem;
+  letter-spacing: 1.5px;
+}
+
+.photo-controls {
+  position: absolute;
+  bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: 90%;
+}
+
+// ─── Hover Tooltip ────────────────────────────────────────────
+// Usage: add [data-tooltip] to any element with `position: relative`
+// (e.g. .hud-btn-mini) to reveal its label on hover.
+[data-tooltip] {
+  position: relative;
+
+  &::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    background: rgba(var(--color-bg-card-rgb), 1);
+    border: 1px solid rgba(var(--color-cyan-rgb), 0.4);
+    color: var(--color-cyan);
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+    padding: 0.3rem 0.65rem;
+    border-radius: var(--radius-sm);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
+    opacity: 0;
+    transform: translateY(-4px);
+    pointer-events: none;
+    transition: opacity 0.15s ease, transform 0.15s ease;
+    z-index: 20;
+  }
+
+  &:hover::after {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// ─── Icon-only Mini Action Button ─────────────────────────────
+// Usage: small square icon button, pair with [data-tooltip] for
+// its label, e.g. <button class="hud-btn-mini" data-tooltip="...">
+.hud-btn-mini {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  background: transparent;
+  border: 1px solid rgba(var(--color-cyan-rgb), 0.4);
+  color: var(--color-cyan);
+  font-size: 0.9rem;
+  line-height: 1;
+  padding: 0;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    background: rgba(var(--color-cyan-rgb), 0.1);
+    border-color: var(--color-cyan);
+    box-shadow: 0 0 8px rgba(var(--color-cyan-rgb), 0.25);
   }
 }
 
