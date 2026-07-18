@@ -60,7 +60,7 @@ To track the employee lifecycle comprehensively, the schema is normalized across
                                                                    +-------------+
 ```
 
-1. **`employees`**: Base identity profile. `username` is `UNIQUE` and nullable (existing rows without one simply can't log in until an admin assigns one via the edit form) — every login (admin or staff) is username + password, not the numeric `id`. `password` is plaintext in this dev/demo build; there is no hashing yet.
+1. **`employees`**: Base identity profile. `username` is `UNIQUE` and nullable (existing rows without one simply can't log in until an admin assigns one via the edit form) — every login (admin or staff) is username + password, not the numeric `id`. `password` is stored as a PBKDF2-HMAC-SHA256 hash (`db.hash_password`/`db._check_password` in `db.py`), never plaintext — a startup migration (`db.migrate_legacy_passwords`) upgrades any legacy plaintext row it finds. `server.py` never touches the `password` column directly; it always goes through `db.py`'s functions.
 2. **`employee_skills`**: Skills registry containing `skill_name` and custom competency `description`.
 3. **`employee_positions`**: Title progressions over time. `end_date = NULL` represents the current active title.
 4. **`employee_projects`**: Historic project assignments containing `project_name`, `role`, and `description` of duties.
