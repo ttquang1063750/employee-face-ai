@@ -1,0 +1,67 @@
+<div class="login-container">
+  <div class="glow-bg"></div>
+  <div class="hud-login-box">
+    <div class="hud-header">
+      <div class="corner-dot top-left"></div>
+      <div class="corner-dot top-right"></div>
+      <h2 class="title">MAINFRAME AUTHENTICATION</h2>
+      <p class="subtitle">Employee Face AI System</p>
+    </div>
+
+    @if (errorMsg()) {
+      <div class="alert-box error">
+        <span class="alert-icon">⚠️</span>
+        <span class="alert-text">{{ errorMsg() }}</span>
+      </div>
+    }
+
+    <form (submit)="onSubmit()" class="login-form">
+      <div class="form-group">
+        <label for="emp-id">MÃ NHÂN VIÊN (ID)</label>
+        <div class="input-wrapper">
+          <input 
+            type="number" 
+            id="emp-id" 
+            [ngModel]="id()" 
+            (ngModelChange)="id.set($event)" 
+            name="id" 
+            required 
+            placeholder="Nhập ID (Ví dụ: 1)"
+            class="hud-input">
+          <span class="input-glow"></span>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="emp-password">MẬT KHẨU QUẢN TRỊ</label>
+        <div class="input-wrapper">
+          <input 
+            type="password" 
+            id="emp-password" 
+            [ngModel]="password()" 
+            (ngModelChange)="password.set($event)" 
+            name="password" 
+            required 
+            placeholder="••••••••"
+            class="hud-input">
+          <span class="input-glow"></span>
+        </div>
+      </div>
+
+      <button type="submit" class="hud-btn-primary" [disabled]="isLoading()">
+        @if (isLoading()) {
+          <div class="loader"></div>
+          <span>ĐANG XÁC THỰC...</span>
+        } @else {
+          <span>ĐĂNG NHẬP MAINFRAME</span>
+        }
+      </button>
+    </form>
+    
+    <div class="hud-footer">
+      <div class="corner-dot bottom-left"></div>
+      <div class="corner-dot bottom-right"></div>
+      <a class="kiosk-link" href="/kiosk">Trở về Chấm công</a>
+    </div>
+  </div>
+</div>

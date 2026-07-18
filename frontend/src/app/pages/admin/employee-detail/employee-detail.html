@@ -1,0 +1,469 @@
+<div class="detail-layout">
+  <!-- Navbar HUD -->
+  <header class="admin-header">
+    <div class="header-logo">
+      <span class="logo-icon">💻</span>
+      <div class="logo-text">
+        <h1>HR CONTROL PANEL</h1>
+        <p>Mainframe Security Console</p>
+      </div>
+    </div>
+    <nav class="admin-nav">
+      <a class="nav-link" routerLink="/admin/dashboard">📊 Bảng thống kê</a>
+      <a class="nav-link active" routerLink="/admin/employees">👥 Quản lý Nhân viên</a>
+    </nav>
+  </header>
+
+  <div class="detail-content">
+    <div class="back-row">
+      <button class="hud-btn-outline" routerLink="/admin/employees">⬅️ QUAY LẠI DANH SÁCH</button>
+    </div>
+
+    @if (isLoading()) {
+      <div class="loading-state">
+        <div class="radial-spinner"></div>
+        <p>Đang truy xuất hồ sơ Mainframe...</p>
+      </div>
+    } @else if (errorMsg()) {
+      <div class="error-state">
+        <p>⚠️ {{ errorMsg() }}</p>
+      </div>
+    } @else {
+      <!-- 1. Employee Profile Header -->
+      <div class="profile-header-card">
+        <div class="card-glow"></div>
+        <div class="profile-summary">
+          <div class="avatar-frame">
+            <img 
+              [src]="'http://localhost:8000/' + employee()?.image_path" 
+              (error)="onImageError($event)"
+              alt="{{ employee()?.name }}">
+          </div>
+          <div class="info-block">
+            <h2 class="name">{{ employee()?.name }}</h2>
+            <p class="title-label text-cyan">{{ employee()?.current_position }}</p>
+            <div class="meta-row">
+              <span class="id">ID: #{{ employee()?.id }}</span>
+              <span class="age">{{ employee()?.age }} tuổi</span>
+              <span class="role-tag" [class.admin]="employee()?.role === 'admin'">
+                {{ employee()?.role === 'admin' ? 'Hệ thống Admin' : 'Nhân sự Staff' }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <button class="hud-btn-primary" (click)="openBaseModal()">
+          ⚙️ SỬA THÔNG TIN BẢN THÂN
+        </button>
+      </div>
+
+      <!-- Display Mode: Employee Lifecycle Grid -->
+      <div class="lifecycle-grid">
+        
+        <!-- Career Positions Timeline & Comp history -->
+        <div class="lifecycle-left-col">
+          <!-- 1. Career positions history -->
+          <div class="lifecycle-card">
+            <div class="section-header-row">
+              <h3 class="section-title">📈 LỊCH SỬ THĂNG TIẾN (POSITIONS)</h3>
+              <button class="hud-btn-mini" (click)="openPositionModal()">⚙️ BỔ NHIỆM</button>
+            </div>
+            <div class="timeline">
+              @for (pos of employee()?.positions; track pos.id) {
+                <div class="timeline-item">
+                  <div class="timeline-marker"></div>
+                  <div class="timeline-content">
+                    <div class="timeline-header-row">
+                      <h4 class="title text-glow-cyan">{{ pos.title }}</h4>
+                      <button class="remove-inline-btn" (click)="deletePosition(pos.id)" title="Xóa mốc chức vụ này">✖</button>
+                    </div>
+                    <p class="dates">📅 Từ: {{ pos.start_date }} @if (pos.end_date) { - Đến: {{ pos.end_date }} } @else { - Hiện tại }</p>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+
+          <!-- 2. Compensation raises history -->
+          <div class="lifecycle-card">
+            <div class="section-header-row">
+              <h3 class="section-title">💵 LỊCH SỬ THU NHẬP (COMPENSATION)</h3>
+              <button class="hud-btn-mini" (click)="openIncomeModal()">⚙️ ĐIỀU CHỈNH LƯƠNG</button>
+            </div>
+            <div class="comp-list">
+              @for (inc of employee()?.income_history; track inc.id) {
+                <div class="comp-item">
+                  <div class="comp-amount text-glow-green">
+                    <span>${{ inc.amount }} / month</span>
+                    <button class="remove-inline-btn" (click)="deleteIncome(inc.id)" title="Xóa mốc lương này">✖</button>
+                  </div>
+                  <div class="comp-details">
+                    <span class="reason">{{ inc.change_reason }}</span>
+                    <span class="date">📅 {{ inc.effective_date }}</span>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+
+        <!-- Project history & Skills Registry & Attendance summaries -->
+        <div class="lifecycle-right-col">
+          <!-- 3. Skills Registry with descriptions -->
+          <div class="lifecycle-card">
+            <div class="section-header-row">
+              <h3 class="section-title">🧠 HỒ SƠ KỸ NĂNG (SKILLS SET)</h3>
+              <button class="hud-btn-mini" (click)="openSkillsModal()">⚙️ CẬP NHẬT KỸ NĂNG</button>
+            </div>
+            <div class="skills-grid">
+              @for (sk of employee()?.skills; track sk.skill_name) {
+                <div class="skill-hud-box">
+                  <div class="skill-name-badge">{{ sk.skill_name }}</div>
+                  <p class="skill-desc">{{ sk.description }}</p>
+                </div>
+              } @empty {
+                <p class="no-data">Chưa cấu hình kỹ năng cho nhân sự này.</p>
+              }
+            </div>
+          </div>
+
+          <!-- 4. Projects Assignment History with description -->
+          <div class="lifecycle-card">
+            <div class="section-header-row">
+              <h3 class="section-title">📂 LỊCH SỬ DỰ ÁN (PROJECTS LOG)</h3>
+              <button class="hud-btn-mini" (click)="openProjectsModal()">⚙️ QUẢN LÝ DỰ ÁN</button>
+            </div>
+            <div class="projects-timeline">
+              @for (prj of employee()?.projects; track prj.project_name) {
+                <div class="project-item">
+                  <div class="project-header">
+                    <h4 class="name">{{ prj.project_name }}</h4>
+                    <span class="role text-cyan">{{ prj.role }}</span>
+                  </div>
+                  <p class="desc">{{ prj.description }}</p>
+                  <p class="dates">📅 {{ prj.start_date }} @if (prj.end_date) { đến {{ prj.end_date }} } @else { (Đang tham gia) }</p>
+                </div>
+              } @empty {
+                <p class="no-data">Chưa tham gia dự án nào.</p>
+              }
+            </div>
+          </div>
+
+          <!-- 5. Attendance logs and time metrics aggregation -->
+          <div class="lifecycle-card">
+            <h3 class="section-title">📅 THỐNG KÊ CHẤM CÔNG VÀ GIỜ CÔNG</h3>
+            
+            <!-- Date range filter bar -->
+            <div class="hud-filter-bar">
+              <div class="hud-field">
+                <label class="hud-label">TỪ NGÀY</label>
+                <input type="date" [ngModel]="filterStartDate()" (ngModelChange)="filterStartDate.set($event); currentPage.set(1)" class="hud-input">
+              </div>
+              <div class="hud-field">
+                <label class="hud-label">ĐẾN NGÀY</label>
+                <input type="date" [ngModel]="filterEndDate()" (ngModelChange)="filterEndDate.set($event); currentPage.set(1)" class="hud-input">
+              </div>
+            </div>
+
+            <!-- KPI analytics widgets -->
+            <div class="attendance-stats-cards">
+              <div class="stats-card">
+                <span class="stats-label">SỐ NGÀY LÀM VIỆC THỰC TẾ</span>
+                <span class="stats-value text-glow-green">{{ workingDays() }} ngày</span>
+              </div>
+              <div class="stats-card">
+                <span class="stats-label">SỐ GIỜ CÔNG TỔNG CỘNG</span>
+                <span class="stats-value text-glow-cyan">{{ workingHours() }} giờ</span>
+              </div>
+            </div>
+
+            <!-- Raw logs timeline table in selected scope -->
+            <div class="monthly-summary-table-wrapper">
+              <table class="monthly-table">
+                <thead>
+                  <tr>
+                    <th>Thời gian</th>
+                    <th>Hành động</th>
+                    <th>Cảm xúc</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (log of paginatedRawLogs(); track log.timestamp) {
+                    <tr>
+                      <td class="text-cyan">{{ log.timestamp | date:'HH:mm:ss - dd/MM/yyyy' }}</td>
+                      <td>
+                        <span class="action-tag" [class.check-in]="log.action === 'CHECK_IN'" [class.check-out]="log.action === 'CHECK_OUT'">
+                          {{ log.action === 'CHECK_IN' ? 'VÀO CA' : 'RA CA' }}
+                        </span>
+                      </td>
+                      <td>
+                        <span class="mood-badge">{{ log.mood }}</span>
+                      </td>
+                    </tr>
+                  } @empty {
+                    <tr>
+                      <td colspan="3" class="no-data">Không có lịch sử chấm công trong khoảng thời gian đã chọn.</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Pagination Controls -->
+            @if (filteredRawLogs().length > 0) {
+              <div class="hud-pagination">
+                <button class="pag-btn" [disabled]="currentPage() === 1" (click)="prevPage()">◀ TRƯỚC</button>
+                <span class="pag-info">TRANG {{ currentPage() }} / {{ totalPages() }}</span>
+                <button class="pag-btn" [disabled]="currentPage() === totalPages()" (click)="nextPage()">SAU ▶</button>
+              </div>
+            }
+          </div>
+        </div>
+
+      </div>
+    }
+  </div>
+</div>
+
+<!-- ================= MODALS CONTAINER ================= -->
+
+<!-- 1. BASE PROFILE MODAL -->
+@if (showBaseModal()) {
+  <div class="modal-backdrop">
+    <div class="modal-card mini">
+      <div class="modal-header">
+        <h3>⚙️ CẬP NHẬT HỒ SƠ CƠ BẢN</h3>
+        <button class="close-btn" (click)="closeBaseModal()">✖</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-fields">
+          <div class="form-group">
+            <label>HỌ VÀ TÊN</label>
+            <input type="text" [ngModel]="editName()" (ngModelChange)="editName.set($event)" class="hud-input">
+          </div>
+          <div class="form-group">
+            <label>TUỔI</label>
+            <input type="number" [ngModel]="editAge()" (ngModelChange)="editAge.set($event)" class="hud-input">
+          </div>
+          <div class="form-group">
+            <label>PHÂN QUYỀN HỆ THỐNG</label>
+            <select [ngModel]="editRole()" (ngModelChange)="editRole.set($event)" class="hud-select">
+              <option value="staff">Nhân sự (Staff)</option>
+              <option value="admin">Quản lý (Admin)</option>
+            </select>
+          </div>
+          @if (editRole() === 'admin') {
+            <div class="form-group animate-in">
+              <label>MẬT KHẨU MỚI (Để trống nếu giữ nguyên)</label>
+              <input type="password" [ngModel]="editPassword()" (ngModelChange)="editPassword.set($event)" class="hud-input">
+            </div>
+          }
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="hud-btn-success" [disabled]="isSaving()" (click)="saveBaseProfile()">
+          @if (isSaving()) { <div class="loader"></div> }
+          <span>LƯU THAY ĐỔI</span>
+        </button>
+        <button class="hud-btn-secondary" (click)="closeBaseModal()">HỦY</button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- 2. POSITION PROMOTION MODAL -->
+@if (showPositionModal()) {
+  <div class="modal-backdrop">
+    <div class="modal-card mini">
+      <div class="modal-header">
+        <h3>📈 BỔ NHIỆM CHỨC DANH MỚI</h3>
+        <button class="close-btn" (click)="closePositionModal()">✖</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-fields">
+          <div class="form-group">
+            <label>CHỨC DANH MỚI</label>
+            <input type="text" [ngModel]="newPosTitle()" (ngModelChange)="newPosTitle.set($event)" placeholder="Ví dụ: Team Leader, Senior Manager" class="hud-input">
+          </div>
+          <div class="form-group">
+            <label>NGÀY HIỆU LỰC BỔ NHIỆM</label>
+            <input type="date" [ngModel]="newPosStartDate()" (ngModelChange)="newPosStartDate.set($event)" class="hud-input">
+          </div>
+          <p class="warning-alert">ℹ️ Ghi chú: Hệ thống sẽ tự động chuyển chức danh hiện tại của nhân sự này sang trạng thái kết thúc vào ngày bổ nhiệm.</p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="hud-btn-success" [disabled]="isSaving() || !newPosTitle()" (click)="savePromotion()">
+          @if (isSaving()) { <div class="loader"></div> }
+          <span>GHI NHẬN BỔ NHIỆM</span>
+        </button>
+        <button class="hud-btn-secondary" (click)="closePositionModal()">HỦY</button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- 3. COMPENSATION ADJUSTMENT MODAL -->
+@if (showIncomeModal()) {
+  <div class="modal-backdrop">
+    <div class="modal-card mini">
+      <div class="modal-header">
+        <h3>💵 ĐIỀU CHỈNH MỨC LƯƠNG</h3>
+        <button class="close-btn" (click)="closeIncomeModal()">✖</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-fields">
+          <div class="form-group">
+            <label>MỨC LƯƠNG MỚI (USD/Tháng)</label>
+            <input type="number" [ngModel]="newIncAmount()" (ngModelChange)="newIncAmount.set($event)" placeholder="Nhập số tiền" class="hud-input">
+          </div>
+          <div class="form-group">
+            <label>NGÀY HIỆU LỰC MỚI</label>
+            <input type="date" [ngModel]="newIncEffectiveDate()" (ngModelChange)="newIncEffectiveDate.set($event)" class="hud-input">
+          </div>
+          <div class="form-group">
+            <label>LÝ DO ĐIỀU CHỈNH</label>
+            <input type="text" [ngModel]="newIncReason()" (ngModelChange)="newIncReason.set($event)" placeholder="Ví dụ: Annual Review, Promotion Raise" class="hud-input">
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="hud-btn-success" [disabled]="isSaving() || newIncAmount() <= 0" (click)="saveIncomeAdjustment()">
+          @if (isSaving()) { <div class="loader"></div> }
+          <span>CẬP NHẬT LƯƠNG</span>
+        </button>
+        <button class="hud-btn-secondary" (click)="closeIncomeModal()">HỦY</button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- 4. SKILLS MODAL -->
+@if (showSkillsModal()) {
+  <div class="modal-backdrop">
+    <div class="modal-card medium">
+      <div class="modal-header">
+        <h3>🧠 CẬP NHẬT HỒ SƠ KỸ NĂNG</h3>
+        <button class="close-btn" (click)="closeSkillsModal()">✖</button>
+      </div>
+      <div class="modal-body">
+        <div class="skills-editor-wrapper">
+          <!-- Skills list preview with delete options -->
+          <div class="skills-editor-list">
+            <label class="list-title">KỸ NĂNG HIỆN TẠI</label>
+            <div class="editor-badges-grid">
+              @for (sk of skillsListToEdit(); track sk.skill_name; let idx = $index) {
+                <div class="editor-badge-item">
+                  <div class="badge-header">
+                    <span class="badge-name">{{ sk.skill_name }}</span>
+                    <button class="remove-badge-btn" (click)="removeSkillFromList(idx)">✖</button>
+                  </div>
+                  <p class="badge-desc">{{ sk.description }}</p>
+                </div>
+              } @empty {
+                <p class="no-data">Chưa có kỹ năng nào trong danh sách.</p>
+              }
+            </div>
+          </div>
+
+          <!-- Add new skill form -->
+          <div class="skills-editor-form">
+            <label class="form-title">➕ THÊM KỸ NĂNG MỚI</label>
+            <div class="form-fields">
+              <div class="form-group">
+                <label>TÊN KỸ NĂNG</label>
+                <input type="text" [ngModel]="newSkillName()" (ngModelChange)="newSkillName.set($event)" placeholder="Ví dụ: Angular, Python, AWS" class="hud-input">
+              </div>
+              <div class="form-group">
+                <label>MÔ TẢ KỸ NĂNG / MỨC ĐỘ THÀNH THẠO</label>
+                <textarea [ngModel]="newSkillDesc()" (ngModelChange)="newSkillDesc.set($event)" placeholder="Mô tả chi tiết" rows="2" class="hud-textarea"></textarea>
+              </div>
+              <button class="hud-btn-outline" [disabled]="!newSkillName()" (click)="addSkillToList()">THÊM VÀO DANH SÁCH</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="hud-btn-success" [disabled]="isSaving()" (click)="saveSkills()">
+          @if (isSaving()) { <div class="loader"></div> }
+          <span>LƯU HỒ SƠ KỸ NĂNG</span>
+        </button>
+        <button class="hud-btn-secondary" (click)="closeSkillsModal()">HỦY</button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- 5. PROJECTS MODAL -->
+@if (showProjectsModal()) {
+  <div class="modal-backdrop">
+    <div class="modal-card medium">
+      <div class="modal-header">
+        <h3>📂 QUẢN LÝ LỊCH SỬ DỰ ÁN</h3>
+        <button class="close-btn" (click)="closeProjectsModal()">✖</button>
+      </div>
+      <div class="modal-body">
+        <div class="projects-editor-wrapper">
+          <!-- Projects list preview with delete options -->
+          <div class="projects-editor-list">
+            <label class="list-title">DANH SÁCH DỰ ÁN HIỆN TẠI</label>
+            <div class="editor-projects-grid">
+              @for (prj of projectsListToEdit(); track prj.project_name; let idx = $index) {
+                <div class="editor-project-card">
+                  <div class="card-header-row">
+                    <span class="proj-name">{{ prj.project_name }}</span>
+                    <button class="remove-badge-btn" (click)="removeProjectFromList(idx)">✖ XÓA</button>
+                  </div>
+                  <div class="card-sub-header">
+                    <span class="proj-role">{{ prj.role }}</span>
+                    <span class="proj-dates">{{ prj.start_date }} @if (prj.end_date) { đến {{ prj.end_date }} } @else { (Đang chạy) }</span>
+                  </div>
+                  <p class="proj-desc">{{ prj.description }}</p>
+                </div>
+              } @empty {
+                <p class="no-data">Chưa tham gia dự án nào.</p>
+              }
+            </div>
+          </div>
+
+          <!-- Add new project form -->
+          <div class="projects-editor-form">
+            <label class="form-title">➕ THÊM DỰ ÁN MỚI</label>
+            <div class="form-fields">
+              <div class="form-group">
+                <label>TÊN DỰ ÁN</label>
+                <input type="text" [ngModel]="newProjName()" (ngModelChange)="newProjName.set($event)" placeholder="Ví dụ: ERP Portal, AI Kiosk" class="hud-input">
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>VAI TRÒ</label>
+                  <input type="text" [ngModel]="newProjRole()" (ngModelChange)="newProjRole.set($event)" placeholder="Ví dụ: Tech Lead, FE Dev" class="hud-input">
+                </div>
+                <div class="form-group">
+                  <label>NGÀY BẮT ĐẦU</label>
+                  <input type="date" [ngModel]="newProjStartDate()" (ngModelChange)="newProjStartDate.set($event)" class="hud-input">
+                </div>
+              </div>
+              <div class="form-group">
+                <label>NGÀY KẾT THÚC (Để trống nếu đang diễn ra)</label>
+                <input type="date" [ngModel]="newProjEndDate()" (ngModelChange)="newProjEndDate.set($event)" class="hud-input">
+              </div>
+              <div class="form-group">
+                <label>MÔ TẢ CHI TIẾT NHIỆM VỤ DỰ ÁN</label>
+                <textarea [ngModel]="newProjDesc()" (ngModelChange)="newProjDesc.set($event)" placeholder="Nhiệm vụ cụ thể" rows="2" class="hud-textarea"></textarea>
+              </div>
+              <button class="hud-btn-outline" [disabled]="!newProjName()" (click)="addProjectToList()">THÊM DỰ ÁN VÀO DANH SÁCH</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="hud-btn-success" [disabled]="isSaving()" (click)="saveProjects()">
+          @if (isSaving()) { <div class="loader"></div> }
+          <span>LƯU LỊCH SỬ DỰ ÁN</span>
+        </button>
+        <button class="hud-btn-secondary" (click)="closeProjectsModal()">HỦY</button>
+      </div>
+    </div>
+  </div>
+}

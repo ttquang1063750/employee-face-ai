@@ -1,0 +1,247 @@
+<div class="dashboard-layout">
+  <!-- Mainframe Sidebar/Navbar -->
+  <header class="admin-header">
+    <div class="header-logo">
+      <span class="logo-icon">💻</span>
+      <div class="logo-text">
+        <h1>HR CONTROL PANEL</h1>
+        <p>Mainframe Security Console</p>
+      </div>
+    </div>
+    <nav class="admin-nav">
+      <a class="nav-link active" routerLink="/admin/dashboard">📊 Bảng thống kê</a>
+      <a class="nav-link" routerLink="/admin/employees">👥 Quản lý Nhân viên</a>
+      <button class="logout-btn" (click)="logout()">🚪 Đăng xuất</button>
+    </nav>
+  </header>
+
+  <div class="dashboard-content">
+    @if (isLoading()) {
+      <div class="loading-state">
+        <div class="radial-spinner"></div>
+        <p>Đang tải dữ liệu Mainframe...</p>
+      </div>
+    } @else if (errorMsg()) {
+      <div class="error-state">
+        <p class="err-text">⚠️ {{ errorMsg() }}</p>
+        <button class="retry-btn" (click)="loadDashboardData()">Thử lại</button>
+      </div>
+    } @else {
+      <!-- 1. Stats Widgets Grid -->
+      <div class="stats-grid">
+        <div class="widget-card">
+          <div class="widget-label">TỔNG NHÂN SỰ</div>
+          <div class="widget-value text-glow-cyan">{{ totalEmployees() }}</div>
+          <div class="widget-footer">Active Accounts</div>
+        </div>
+        <div class="widget-card">
+          <div class="widget-label">CHẤM CÔNG HÔM NAY</div>
+          <div class="widget-value text-glow-green">{{ totalLogsToday() }}</div>
+          <div class="widget-footer">Lượt quét hôm nay</div>
+        </div>
+        <div class="widget-card">
+          <div class="widget-label">CHỈ SỐ HẠNH PHÚC</div>
+          <div class="widget-value text-glow-pink">{{ moodStats().happy }}%</div>
+          <div class="widget-footer">Cảm xúc tích cực</div>
+        </div>
+        <div class="widget-card">
+          <div class="widget-label">ĐỊNH VỊ SERVER</div>
+          <div class="widget-value text-glow-yellow">Postgres</div>
+          <div class="widget-footer">Docker Container: 5432</div>
+        </div>
+      </div>
+
+      <!-- 2. Charts Section -->
+      <div class="charts-row">
+        <!-- SVG Line Chart for Hour Peaks -->
+        <div class="chart-card">
+          <h3 class="chart-title">📈 GIỜ CAO ĐIỂM CHẤM CÔNG (TẦN SUẤT / GIỜ)</h3>
+          <div class="svg-chart-container">
+            <svg viewBox="0 0 500 180" class="svg-graph">
+              <!-- Grid vertical lines -->
+              @for (pt of hourlyTimeline().points; track pt.hour) {
+                <line 
+                  [attr.x1]="pt.x" 
+                  y1="30" 
+                  [attr.x2]="pt.x" 
+                  y2="140" 
+                  stroke="rgba(0, 240, 255, 0.05)" 
+                  stroke-dasharray="3,3" />
+                <text 
+                  [attr.x]="pt.x" 
+                  y="160" 
+                  class="svg-axis-text" 
+                  text-anchor="middle">{{ pt.hour }}</text>
+              }
+
+              <!-- The actual glowing path -->
+              @if (hourlyTimeline().dPath) {
+                <path 
+                  [attr.d]="hourlyTimeline().dPath" 
+                  fill="none" 
+                  stroke="#00f0ff" 
+                  stroke-width="3" 
+                  class="glowing-line" />
+              }
+
+              <!-- Coordinate Points -->
+              @for (pt of hourlyTimeline().points; track pt.hour) {
+                <circle 
+                  [attr.cx]="pt.x" 
+                  [attr.cy]="pt.y" 
+                  r="5" 
+                  fill="#00ff66" 
+                  class="graph-dot" />
+                @if (pt.count > 0) {
+                  <text 
+                    [attr.x]="pt.x" 
+                    [attr.y]="pt.y - 10" 
+                    class="svg-value-text" 
+                    text-anchor="middle">{{ pt.count }}</text>
+                }
+              }
+            </svg>
+          </div>
+        </div>
+
+        <!-- Mood Stats breakdown -->
+        <div class="chart-card mood-card">
+          <h3 class="chart-title">🧠 ĐÁNH GIÁ CHỈ SỐ CẢM XÚC</h3>
+          <div class="mood-breakdown">
+            <div class="mood-item">
+              <div class="mood-lbl-row">
+                <span>Vui vẻ 😊</span>
+                <span class="text-green">{{ moodStats().happy }}%</span>
+              </div>
+              <div class="progress-bar-container">
+                <div class="bar progress-green" [style.width.%]="moodStats().happy"></div>
+              </div>
+            </div>
+
+            <div class="mood-item">
+              <div class="mood-lbl-row">
+                <span>Bình thường 😐</span>
+                <span class="text-cyan">{{ moodStats().neutral }}%</span>
+              </div>
+              <div class="progress-bar-container">
+                <div class="bar progress-cyan" [style.width.%]="moodStats().neutral"></div>
+              </div>
+            </div>
+
+            <div class="mood-item">
+              <div class="mood-lbl-row">
+                <span>Buồn bã 😢</span>
+                <span class="text-pink">{{ moodStats().sad }}%</span>
+              </div>
+              <div class="progress-bar-container">
+                <div class="bar progress-pink" [style.width.%]="moodStats().sad"></div>
+              </div>
+            </div>
+
+            <div class="mood-item">
+              <div class="mood-lbl-row">
+                <span>Căng thẳng / Lo lắng 😠😨</span>
+                <span class="text-yellow">{{ moodStats().stressed }}%</span>
+              </div>
+              <div class="progress-bar-container">
+                <div class="bar progress-yellow" [style.width.%]="moodStats().stressed"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. Logs Audit Grid -->
+      <div class="logs-card">
+        <div class="logs-header">
+          <h3 class="logs-title">📋 DANH SÁCH LƯỢT CHẤM CÔNG VÀ LỌC</h3>
+          <button class="csv-export-btn" (click)="exportCSV()" [disabled]="filteredLogs().length === 0">📥 XUẤT BÁO CÁO CSV</button>
+        </div>
+
+        <!-- Filter bar -->
+        <div class="hud-filter-bar">
+          <div class="hud-field">
+            <label class="hud-label">TỪ NGÀY</label>
+            <input type="date" [ngModel]="filterStartDate()" (ngModelChange)="filterStartDate.set($event); currentPage.set(1)" class="hud-input">
+          </div>
+          <div class="hud-field">
+            <label class="hud-label">ĐẾN NGÀY</label>
+            <input type="date" [ngModel]="filterEndDate()" (ngModelChange)="filterEndDate.set($event); currentPage.set(1)" class="hud-input">
+          </div>
+
+          <!-- Autocomplete employee name search -->
+          <div class="hud-field grow-3">
+            <label class="hud-label">TÊN NHÂN VIÊN</label>
+            <div class="hud-autocomplete">
+              <div class="hud-search-wrapper">
+                <input
+                  type="text"
+                  [ngModel]="filterEmployeeName()"
+                  (ngModelChange)="onSearchInput($event)"
+                  (focus)="showSuggestions.set(true)"
+                  (blur)="closeSuggestions()"
+                  placeholder="Tìm kiếm tên nhân viên..."
+                  class="hud-search-input"
+                  autocomplete="off">
+              </div>
+              @if (showSuggestions() && employeeSuggestions().length > 0) {
+                <ul class="hud-autocomplete-list">
+                  @for (name of employeeSuggestions(); track name) {
+                    <li class="hud-autocomplete-item" (mousedown)="selectSuggestion(name)">
+                      <span class="ac-icon">👤</span>
+                      <span class="ac-name">{{ name }}</span>
+                    </li>
+                  }
+                </ul>
+              }
+            </div>
+          </div>
+        </div>
+
+        <div class="logs-table-wrapper">
+          <table class="logs-table">
+            <thead>
+              <tr>
+                <th>THỜI GIAN CHẤM CÔNG</th>
+                <th>NHÂN VIÊN</th>
+                <th>TRẠNG THÁI</th>
+                <th>CẢM XÚC (MOOD)</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (log of paginatedLogs(); track log.id) {
+                <tr>
+                  <td class="log-time">{{ log.timestamp }}</td>
+                  <td class="log-name">{{ log.employee_name }}</td>
+                  <td>
+                    @if (log.action === 'CHECK_IN') {
+                      <span class="hud-badge badge-in">Check-in</span>
+                    } @else {
+                      <span class="hud-badge badge-out">Check-out</span>
+                    }
+                  </td>
+                  <td>
+                    <span class="hud-badge badge-mood">{{ translateMood(log.mood) }}</span>
+                  </td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="4" class="no-data">Không tìm thấy lượt chấm công nào phù hợp với bộ lọc.</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination Controls -->
+        @if (filteredLogs().length > 0) {
+          <div class="hud-pagination">
+            <button class="pag-btn" [disabled]="currentPage() === 1" (click)="prevPage()">◀ TRƯỚC</button>
+            <span class="pag-info">TRANG {{ currentPage() }} / {{ totalPages() }}</span>
+            <button class="pag-btn" [disabled]="currentPage() === totalPages()" (click)="nextPage()">SAU ▶</button>
+          </div>
+        }
+      </div>
+    }
+  </div>
+</div>

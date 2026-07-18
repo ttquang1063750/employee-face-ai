@@ -1,0 +1,198 @@
+<div class="employees-layout">
+  <!-- Navbar HUD -->
+  <header class="admin-header">
+    <div class="header-logo">
+      <span class="logo-icon">💻</span>
+      <div class="logo-text">
+        <h1>HR CONTROL PANEL</h1>
+        <p>Mainframe Security Console</p>
+      </div>
+    </div>
+    <nav class="admin-nav">
+      <a class="nav-link" routerLink="/admin/dashboard">📊 Bảng thống kê</a>
+      <a class="nav-link active" routerLink="/admin/employees">👥 Quản lý Nhân viên</a>
+      <button class="logout-btn" (click)="logout()">🚪 Đăng xuất</button>
+    </nav>
+  </header>
+
+  <div class="employees-content">
+    <div class="page-title-row">
+      <h2 class="title">👥 DANH SÁCH NHÂN SỰ Mainframe</h2>
+      <button class="hud-btn-success" (click)="openAddModal()">➕ ĐĂNG KÝ NHÂN VIÊN MỚI</button>
+    </div>
+
+    <!-- Search HUD panel -->
+    <div class="hud-filter-bar">
+      <div class="hud-field grow-3">
+        <label class="hud-label">TÌM KIẾM NHÂN SỰ</label>
+        <input 
+          type="text" 
+          [ngModel]="searchQuery()" 
+          (ngModelChange)="searchQuery.set($event); currentPage.set(1)" 
+          placeholder="Tìm theo Tên, ID hoặc Vị trí..." 
+          class="hud-search-input">
+      </div>
+    </div>
+
+    @if (isLoading()) {
+      <div class="loading-state">
+        <div class="radial-spinner"></div>
+        <p>Đang truy xuất hồ sơ nhân sự...</p>
+      </div>
+    } @else if (errorMsg()) {
+      <div class="error-state">
+        <p>⚠️ Lỗi: {{ errorMsg() }}</p>
+        <button class="retry-btn" (click)="loadEmployees()">Tải lại</button>
+      </div>
+    } @else {
+      <!-- Employees Card Grid -->
+      <div class="employees-grid">
+        @for (emp of paginatedEmployees(); track emp.id) {
+          <div class="employee-card">
+            <div class="card-glow"></div>
+            <div class="profile-pic-frame">
+              <img 
+                [src]="'http://localhost:8000/' + emp.image_path" 
+                (error)="onImageError($event)"
+                alt="{{ emp.name }}" 
+                class="profile-pic">
+            </div>
+
+            <div class="emp-info">
+              <h3 class="emp-name">{{ emp.name }}</h3>
+              <p class="emp-pos">{{ emp.current_position || 'Developer' }}</p>
+              <div class="emp-meta">
+                <span class="id">ID: #{{ emp.id }}</span>
+                <span class="age">{{ emp.age }} tuổi</span>
+              </div>
+              <div class="role-badge" [class.admin]="emp.role === 'admin'">
+                {{ emp.role === 'admin' ? 'Admin' : 'Staff' }}
+              </div>
+            </div>
+
+            <div class="emp-actions">
+              <button class="action-btn detail-btn" [routerLink]="['/admin/employees', emp.id]">🔍 Xem hồ sơ</button>
+              <button class="action-btn delete-btn" (click)="deleteEmployee(emp.id, emp.name)">🗑️ Xóa</button>
+            </div>
+          </div>
+        } @empty {
+          <div class="no-results">Không tìm thấy kết quả nào phù hợp với từ khóa tìm kiếm.</div>
+        }
+      </div>
+
+      <!-- Pagination Controls -->
+      @if (employees().length > 0) {
+        <div class="hud-pagination">
+          <button class="pag-btn" [disabled]="currentPage() === 1" (click)="prevPage()">◀ TRƯỚC</button>
+          <span class="pag-info">TRANG {{ currentPage() }} / {{ totalPages() }}</span>
+          <button class="pag-btn" [disabled]="currentPage() === totalPages()" (click)="nextPage()">SAU ▶</button>
+        </div>
+      }
+    }
+  </div>
+
+  <!-- ================= REGISTER NEW EMPLOYEE MODAL ================= -->
+  @if (showAddModal()) {
+    <div class="modal-backdrop">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3>➕ THÊM TÀI KHOẢN NHÂN SỰ MỚI</h3>
+          <button class="close-btn" (click)="closeAddModal()">✕</button>
+        </div>
+
+        <div class="modal-body">
+          <div class="form-grid">
+            <!-- Text Inputs Section -->
+            <div class="form-fields">
+              <div class="form-group">
+                <label>HỌ VÀ TÊN</label>
+                <input type="text" [ngModel]="newName()" (ngModelChange)="newName.set($event)" placeholder="Nguyễn Văn A" class="hud-input">
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label>TUỔI</label>
+                  <input type="number" [ngModel]="newAge()" (ngModelChange)="newAge.set($event)" class="hud-input">
+                </div>
+                <div class="form-group">
+                  <label>VỊ TRÍ / CHỨC VỤ</label>
+                  <input type="text" [ngModel]="newPosition()" (ngModelChange)="newPosition.set($event)" placeholder="Software Engineer" class="hud-input">
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label>MỨC LƯƠNG KHỞI ĐIỂM (USD)</label>
+                  <input type="number" [ngModel]="newIncome()" (ngModelChange)="newIncome.set($event)" class="hud-input">
+                </div>
+                <div class="form-group">
+                  <label>PHÂN QUYỀN HỆ THỐNG</label>
+                  <select [ngModel]="newRole()" (ngModelChange)="newRole.set($event)" class="hud-select">
+                    <option value="staff">Nhân viên (Staff)</option>
+                    <option value="admin">Quản lý (Admin)</option>
+                  </select>
+                </div>
+              </div>
+
+              @if (newRole() === 'admin') {
+                <div class="form-group animate-in">
+                  <label>MẬT KHẨU QUẢN TRỊ</label>
+                  <input type="password" [ngModel]="newPassword()" (ngModelChange)="newPassword.set($event)" placeholder="Nhập mật khẩu login admin" class="hud-input">
+                </div>
+              }
+
+              <!-- Skills & Projects Initial Seeding -->
+              <div class="form-group">
+                <label>KỸ NĂNG KHỞI ĐẦU (Định dạng: Skill: Mô tả, phân tách bằng dấu phẩy)</label>
+                <input type="text" [ngModel]="newSkills()" (ngModelChange)="newSkills.set($event)" placeholder="Angular: Thành thạo core, Python: Có kinh nghiệm viết REST API" class="hud-input">
+              </div>
+
+              <div class="form-group">
+                <label>DỰ ÁN BAN ĐẦU (Định dạng: Dự án: Vai trò: Mô tả công việc)</label>
+                <input type="text" [ngModel]="newProjects()" (ngModelChange)="newProjects.set($event)" placeholder="Employee Face AI: Lead Developer: Xây dựng UI chấm công bằng Angular" class="hud-input">
+              </div>
+            </div>
+
+            <!-- Face Camera Preview Section -->
+            <div class="form-camera-zone">
+              <label class="camera-label">ẢNH CHÂN DUNG ĐỐI CHIẾU (MẪU)</label>
+              
+              <div class="camera-viewport-frame">
+                @if (showWebcam()) {
+                  <video #videoElement autoplay playsinline class="modal-video"></video>
+                  <button class="camera-cap-btn" (click)="capturePhoto()">📸 CHỤP ẢNH MẪU</button>
+                } @else {
+                  @if (imgBase64()) {
+                    <img [src]="imgBase64()" class="captured-preview-img">
+                  } @else {
+                    <div class="camera-placeholder">
+                      <span>CHƯA CÓ ẢNH CHÂN DUNG</span>
+                    </div>
+                  }
+                  <div class="photo-controls">
+                    <button class="hud-btn-outline" (click)="startWebcam()">📸 CAMERA CHỤP TRỰC TIẾP</button>
+                    <input type="file" id="file-uploader" (change)="handleFileUpload($event)" style="display:none;" accept="image/*">
+                    <button class="hud-btn-outline" onclick="document.getElementById('file-uploader').click()">📁 TẢI LÊN FILE ẢNH</button>
+                  </div>
+                }
+              </div>
+              <canvas #canvasElement style="display:none;"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button class="hud-btn-secondary" (click)="closeAddModal()">HỦY BỎ</button>
+          <button class="hud-btn-success" [disabled]="isSubmitting()" (click)="submitEmployee()">
+            @if (isSubmitting()) {
+              <div class="loader"></div>
+              <span>ĐANG XỬ LÝ...</span>
+            } @else {
+              <span>ĐĂNG KÝ HỒ SƠ</span>
+            }
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

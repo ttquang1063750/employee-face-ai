@@ -1,0 +1,633 @@
+import os
+# Force TensorFlow to run strictly on CPU to avoid device hangs on macOS Apple Silicon
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
+
+import json
+import base64
+import tempfile
+import csv
+import io
+from datetime import datetime
+from http.server import HTTPServer, BaseHTTPRequestHandler
+from deepface import DeepFace
+import db
+
+MOOD_TRANSLATION = {
+    "happy": "Vui vẻ 😊",
+    "sad": "Buồn bã 😢",
+    "angry": "Tức giận 😠",
+    "surprise": "Ngạc nhiên 😲",
+    "fear": "Lo sợ 😨",
+    "disgust": "Khó chịu 😣",
+    "neutral": "Bình thường 😐"
+}
+
+def save_base64_image(base64_str, output_path):
+    try:
+        header, encoded = base64_str.split(",", 1)
+        data = base64.b64decode(encoded)
+        with open(output_path, "wb") as f:
+            f.write(data)
+        return True
+    except Exception as e:
+        print(f"Error saving base64 image: {e}", flush=True)
+        return False
+
+class EmployeeFaceAIRequestHandler(BaseHTTPRequestHandler):
+    def end_headers(self):
+        # Enable CORS headers for development/testing
+        self.send_header('Access-Control-Allow-Origin', 'http://localhost:4200')
+        self.send_header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+        self.send_header('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+        self.send_header('Access-Control-Allow-Credentials', 'true')
+        super().end_headers()
+
+    def do_OPTIONS(self):
+        self.send_response(200)
+        self.end_headers()
+
+    def get_authenticated_user(self):
+        auth_header = self.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return None
+        token = auth_header.split(" ")[1]
+        session = db.verify_session(token)
+        return session
+
+    def do_GET(self):
+        # Router
+        if self.path == '/api/logs/export':
+            self.handle_export_csv()
+        elif self.path == '/api/logs':
+            self.handle_get_logs()
+        elif self.path == '/api/employees':
+            self.handle_get_employees()
+        elif self.path.startswith('/api/employees/'):
+            self.handle_get_employee_detail()
+        # Serve the single page index.html for static hosting fallback
+        elif self.path == '/' or self.path == '/index.html':
+            self.serve_static_index()
+        else:
+            self.send_error(404, 'Not Found')
+
+    def do_POST(self):
+        if self.path == '/api/login':
+            self.handle_login()
+        elif self.path == '/api/refresh':
+            self.handle_refresh_token()
+        elif self.path == '/api/logout':
+            self.handle_logout()
+        elif self.path == '/api/employees':
+            self.handle_create_employee()
+        elif self.path.startswith('/api/employees/') and self.path.endswith('/positions'):
+            self.handle_promote_position()
+        elif self.path.startswith('/api/employees/') and self.path.endswith('/income'):
+            self.handle_adjust_income()
+        elif self.path == '/api/attendance':
+            self.handle_attendance()
+        else:
+            self.send_error(404, 'Endpoint Not Found')
+
+    def do_PUT(self):
+        if self.path.startswith('/api/employees/') and self.path.endswith('/skills'):
+            self.handle_update_skills()
+        elif self.path.startswith('/api/employees/') and self.path.endswith('/projects'):
+            self.handle_update_projects()
+        elif self.path.startswith('/api/employees/'):
+            self.handle_update_employee()
+        else:
+            self.send_error(404, 'Endpoint Not Found')
+
+    def do_DELETE(self):
+        if self.path.startswith('/api/positions/'):
+            self.handle_delete_position()
+        elif self.path.startswith('/api/income/'):
+            self.handle_delete_income()
+        elif self.path.startswith('/api/employees/'):
+            self.handle_delete_employee()
+        else:
+            self.send_error(404, 'Endpoint Not Found')
+
+    # API Handlers
+    def serve_static_index(self):
+        try:
+            with open('index.html', 'rb') as f:
+                content = f.read()
+            self.send_response(200)
+            self.send_header('Content-Type', 'text/html; charset=utf-8')
+            self.end_headers()
+            self.wfile.write(content)
+        except FileNotFoundError:
+            self.send_error(404, 'File Not Found: index.html')
+
+    def handle_login(self):
+        try:
+            content_length = int(self.headers['Content-Length'])
+            post_data = self.rfile.read(content_length)
+            data = json.loads(post_data.decode('utf-8'))
+
+            admin_id = int(data.get('id'))
+            password = data.get('password')
+
+            if db.verify_admin_credentials(admin_id, password):
+                tokens = db.create_session(admin_id)
+                self.send_json_response(200, {"success": True, "tokens": tokens})
+            else:
+                self.send_json_response(401, {"success": False, "error": "ID nhân viên hoặc mật khẩu quản trị không đúng."})
+        except Exception as e:
+            self.send_json_response(400, {"success": False, "error": f"Lỗi yêu cầu: {str(e)}"})
+
+    def handle_refresh_token(self):
+        try:
+            content_length = int(self.headers['Content-Length'])
+            post_data = self.rfile.read(content_length)
+            data = json.loads(post_data.decode('utf-8'))
+
+            refresh_token = data.get('refresh_token')
+            if not refresh_token:
+                self.send_json_response(400, {"success": False, "error": "Thiếu Refresh Token."})
+                return
+
+            tokens = db.refresh_session(refresh_token)
+            if tokens:
+                self.send_json_response(200, {"success": True, "tokens": tokens})
+            else:
+                self.send_json_response(401, {"success": False, "error": "Refresh Token đã hết hạn hoặc không hợp lệ. Vui lòng đăng nhập lại."})
+        except Exception as e:
+            self.send_json_response(500, {"success": False, "error": str(e)})
+
+    def handle_logout(self):
+        auth_header = self.headers.get('Authorization')
+        if auth_header and auth_header.startswith('Bearer '):
+            token = auth_header.split(" ")[1]
+            db.revoke_session(token)
+        self.send_json_response(200, {"success": True})
+
+    def handle_get_employees(self):
+        user = self.get_authenticated_user()
+        if not user or user["role"] != "admin":
+            self.send_json_response(401, {"success": False, "error": "Token expired or unauthorized access"})
+            return
+
+        try:
+            employees = db.get_all_employees()
+            self.send_json_response(200, {"success": True, "data": employees})
+        except Exception as e:
+            self.send_json_response(500, {"success": False, "error": str(e)})
+
+    def handle_get_employee_detail(self):
+        user = self.get_authenticated_user()
+        if not user or user["role"] != "admin":
+            self.send_json_response(401, {"success": False, "error": "Unauthorized access"})
+            return
+
+        try:
+            employee_id = int(self.path.split("/")[-1])
+            employee = db.get_detailed_employee(employee_id)
+            if employee:
+                self.send_json_response(200, {"success": True, "data": employee})
+            else:
+                self.send_json_response(404, {"success": False, "error": "Nhân viên không tồn tại."})
+        except Exception as e:
+            self.send_json_response(500, {"success": False, "error": str(e)})
+
+    def handle_create_employee(self):
+        user = self.get_authenticated_user()
+        if not user or user["role"] != "admin":
+            self.send_json_response(401, {"success": False, "error": "Unauthorized access"})
+            return
+
+        try:
+            content_length = int(self.headers['Content-Length'])
+            post_data = self.rfile.read(content_length)
+            data = json.loads(post_data.decode('utf-8'))
+
+            name = data.get('name')
+            age = int(data.get('age', 30))
+            role = data.get('role', 'staff')
+            password = data.get('password')
+            img_base64 = data.get('img')
+
+            # Initial details
+            position = data.get('position', 'Staff Member')
+            skills = data.get('skills', [])       # list of {skill_name, description}
+            projects = data.get('projects', [])   # list of {project_name, role, description}
+            income = float(data.get('income', 1000.00))
+
+            if not name or not img_base64:
+                self.send_json_response(400, {"success": False, "error": "Vui lòng nhập tên và chụp ảnh mẫu."})
+                return
+
+            # Register base profile
+            temp_path = "database/temp.jpg"
+            employee_id = db.register_employee(name, age, temp_path, role, password)
+
+            # Final filepath
+            final_filepath = f"database/{employee_id}.jpg"
+            if save_base64_image(img_base64, final_filepath):
+                # Update image path
+                conn = db.get_connection()
+                cur = conn.cursor()
+                cur.execute("UPDATE employees SET image_path = %s WHERE id = %s;", (final_filepath, employee_id))
+                conn.commit()
+                cur.close()
+                conn.close()
+
+                # Add initial career components
+                db.add_employee_position(employee_id, position, datetime.now().date().isoformat())
+                db.add_employee_income(employee_id, income, datetime.now().date().isoformat(), "Onboarding Salary")
+                
+                for sk in skills:
+                    db.add_employee_skills(employee_id, sk.get('skill_name'), sk.get('description'))
+                for prj in projects:
+                    db.add_employee_project(
+                        employee_id, 
+                        prj.get('project_name'), 
+                        prj.get('role'), 
+                        prj.get('description'), 
+                        datetime.now().date().isoformat()
+                    )
+
+                self.send_json_response(200, {"success": True, "id": employee_id, "message": "Đăng ký nhân viên mới thành công."})
+            else:
+                self.send_json_response(500, {"success": False, "error": "Không thể lưu hình ảnh mẫu."})
+
+        except Exception as e:
+            self.send_json_response(500, {"success": False, "error": f"Lỗi đăng ký: {str(e)}"})
+
+    def handle_update_employee(self):
+        user = self.get_authenticated_user()
+        if not user or user["role"] != "admin":
+            self.send_json_response(401, {"success": False, "error": "Unauthorized access"})
+            return
+
+        try:
+            employee_id = int(self.path.split("/")[-1])
+            content_length = int(self.headers['Content-Length'])
+            post_data = self.rfile.read(content_length)
+            data = json.loads(post_data.decode('utf-8'))
+
+            name = data.get('name')
+            age = int(data.get('age', 30))
+            role = data.get('role', 'staff')
+            password = data.get('password')
+
+            new_position = data.get('position')
+            new_skills = data.get('skills', [])       # list of {skill_name, description}
+            new_projects = data.get('projects', [])   # list of {project_name, role, description}
+            new_income = data.get('income')
+
+            # 1. Update Base Details
+            db.update_employee_profile(employee_id, name, age, role, password)
+            current_detail = db.get_detailed_employee(employee_id)
+            today_str = datetime.now().date().isoformat()
+
+            # 2. Update Position Lifecycle
+            if new_position and new_position != current_detail.get('current_position'):
+                # Terminate active position
+                conn = db.get_connection()
+                cur = conn.cursor()
+                cur.execute("UPDATE employee_positions SET end_date = %s WHERE employee_id = %s AND end_date IS NULL;", (today_str, employee_id))
+                conn.commit()
+                cur.close()
+                conn.close()
+                # Insert new position
+                db.add_employee_position(employee_id, new_position, today_str)
+
+            # 3. Update Income Lifecycle
+            if new_income is not None:
+                new_income = float(new_income)
+                current_income = current_detail['income_history'][0]['amount'] if current_detail['income_history'] else 0.00
+                if new_income != current_income:
+                    db.add_employee_income(employee_id, new_income, today_str, "Salary Adjustment / HR Update")
+
+            # 4. Refresh Skills Registry
+            conn = db.get_connection()
+            cur = conn.cursor()
+            cur.execute("DELETE FROM employee_skills WHERE employee_id = %s;", (employee_id,))
+            conn.commit()
+            cur.close()
+            conn.close()
+            for sk in new_skills:
+                db.add_employee_skills(employee_id, sk.get('skill_name'), sk.get('description'))
+
+            # 5. Refresh Projects Assignments (re-insert or smart update)
+            conn = db.get_connection()
+            cur = conn.cursor()
+            cur.execute("DELETE FROM employee_projects WHERE employee_id = %s;", (employee_id,))
+            conn.commit()
+            cur.close()
+            conn.close()
+            for prj in new_projects:
+                db.add_employee_project(
+                    employee_id,
+                    prj.get('project_name'),
+                    prj.get('role'),
+                    prj.get('description'),
+                    prj.get('start_date', today_str),
+                    prj.get('end_date')
+                )
+
+            self.send_json_response(200, {"success": True, "message": "Cập nhật hồ sơ nhân sự thành công."})
+        except Exception as e:
+            self.send_json_response(500, {"success": False, "error": str(e)})
+
+    def handle_delete_employee(self):
+        user = self.get_authenticated_user()
+        if not user or user["role"] != "admin":
+            self.send_json_response(401, {"success": False, "error": "Unauthorized access"})
+            return
+
+        try:
+            employee_id = int(self.path.split("/")[-1])
+            image_path = db.delete_employee_profile(employee_id)
+            
+            # Delete physical reference file
+            if image_path and os.path.exists(image_path) and "temp.jpg" not in image_path:
+                os.remove(image_path)
+                
+            self.send_json_response(200, {"success": True, "message": "Xóa hồ sơ nhân sự thành công."})
+        except Exception as e:
+            self.send_json_response(500, {"success": False, "error": str(e)})
+
+    def handle_attendance(self):
+        temp_img_path = None
+        try:
+            content_length = int(self.headers['Content-Length'])
+            post_data = self.rfile.read(content_length)
+            data = json.loads(post_data.decode('utf-8'))
+
+            img_base64 = data.get('img')
+            action = data.get('action') # CHECK_IN or CHECK_OUT
+            detector_backend = data.get('detector_backend', 'retinaface')
+
+            if not img_base64 or not action:
+                self.send_json_response(400, {"success": False, "error": "Thiếu dữ liệu chụp ảnh hoặc trạng thái chấm công."})
+                return
+
+            employees = db.get_all_employees()
+            if not employees:
+                self.send_json_response(400, {"success": False, "error": "Không có dữ liệu nhân viên đối sánh. Vui lòng liên hệ HR."})
+                return
+
+            # Save captured image to temporary file
+            with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as temp_file:
+                temp_img_path = temp_file.name
+            
+            save_base64_image(img_base64, temp_img_path)
+
+            print(f"Finding match using detector: {detector_backend}...", flush=True)
+            dfs = DeepFace.find(
+                img_path=temp_img_path,
+                db_path="database",
+                detector_backend=detector_backend,
+                enforce_detection=True
+            )
+
+            if not dfs or len(dfs) == 0 or len(dfs[0]) == 0:
+                self.send_json_response(400, {"success": False, "error": "Không tìm thấy khuôn mặt trùng khớp trong kho dữ liệu nhân sự."})
+                return
+
+            # Retrieve match filename
+            matched_img_path = dfs[0].iloc[0]['identity']
+            filename = os.path.basename(matched_img_path)
+            employee_id = int(os.path.splitext(filename)[0]) # filename is {employee_id}.jpg
+
+            conn = db.get_connection()
+            cur = conn.cursor()
+            cur.execute("SELECT name FROM employees WHERE id = %s;", (employee_id,))
+            row = cur.fetchone()
+            cur.close()
+            conn.close()
+
+            if not row:
+                self.send_json_response(404, {"success": False, "error": "Nhân viên không tồn tại trong cơ sở dữ liệu."})
+                return
+
+            employee_name = row[0]
+
+            # Analyze emotion
+            print("Analyzing emotion...", flush=True)
+            analysis = DeepFace.analyze(
+                img_path=temp_img_path,
+                actions=['emotion'],
+                detector_backend=detector_backend,
+                enforce_detection=True
+            )
+
+            dominant_emotion = "neutral"
+            if isinstance(analysis, list) and len(analysis) > 0:
+                dominant_emotion = analysis[0]["dominant_emotion"]
+            elif isinstance(analysis, dict):
+                dominant_emotion = analysis["dominant_emotion"]
+
+            # Save file to logs
+            timestamp_str = datetime.now().strftime("%Y%m%d_%H%M%S")
+            audit_filepath = f"logs/{timestamp_str}_{action}_{employee_id}.jpg"
+            os.rename(temp_img_path, audit_filepath)
+            temp_img_path = None
+
+            # Add Log to DB
+            db.add_attendance_log(employee_id, action, dominant_emotion, audit_filepath)
+
+            mood_text = MOOD_TRANSLATION.get(dominant_emotion, dominant_emotion)
+            action_text = "Vào ca (Check-in)" if action == "CHECK_IN" else "Ra ca (Check-out)"
+
+            self.send_json_response(200, {
+                "success": True,
+                "message": "Chấm công ghi nhận thành công!",
+                "data": {
+                    "employee_name": employee_name,
+                    "action": action_text,
+                    "mood": mood_text,
+                    "time": datetime.now().strftime("%H:%M:%S - %d/%m/%Y")
+                }
+            })
+
+        except ValueError as ve:
+            print(f"Face error: {ve}", flush=True)
+            self.send_json_response(400, {"success": False, "error": "Không tìm thấy khuôn mặt trong ảnh. Vui lòng chụp rõ mặt."})
+        except Exception as e:
+            print(f"System error: {e}", flush=True)
+            self.send_json_response(500, {"success": False, "error": str(e)})
+        finally:
+            if temp_img_path and os.path.exists(temp_img_path):
+                os.remove(temp_img_path)
+
+    def handle_get_logs(self):
+        user = self.get_authenticated_user()
+        if not user or user["role"] != "admin":
+            self.send_json_response(401, {"success": False, "error": "Unauthorized access"})
+            return
+
+        try:
+            logs = db.get_attendance_logs()
+            self.send_json_response(200, {"success": True, "data": logs})
+        except Exception as e:
+            self.send_json_response(500, {"success": False, "error": str(e)})
+
+    def handle_export_csv(self):
+        user = self.get_authenticated_user()
+        if not user or user["role"] != "admin":
+            self.send_json_response(401, {"success": False, "error": "Unauthorized access"})
+            return
+
+        try:
+            logs = db.get_attendance_logs()
+            
+            output = io.StringIO()
+            writer = csv.writer(output)
+            writer.writerow(['STT', 'Mã NV', 'Tên nhân viên', 'Thời gian', 'Hành động', 'Cảm xúc'])
+            
+            for index, log in enumerate(logs):
+                writer.writerow([
+                    index + 1,
+                    log['employee_id'],
+                    log['employee_name'],
+                    log['timestamp'],
+                    log['action'],
+                    log['mood']
+                ])
+                
+            csv_data = output.getvalue()
+            output.close()
+
+            # Stream CSV data
+            self.send_response(200)
+            self.send_header('Content-Type', 'text/csv; charset=utf-8-sig') # BOM for Excel Vietnamese compatibility
+            self.send_header('Content-Disposition', 'attachment; filename="attendance_report.csv"')
+            self.end_headers()
+            
+            self.wfile.write(csv_data.encode('utf-8-sig'))
+        except Exception as e:
+            self.send_json_response(500, {"success": False, "error": str(e)})
+
+    def handle_promote_position(self):
+        user = self.get_authenticated_user()
+        if not user or user["role"] != "admin":
+            self.send_json_response(401, {"success": False, "error": "Unauthorized access"})
+            return
+        try:
+            employee_id = int(self.path.split("/")[-2])
+            content_length = int(self.headers['Content-Length'])
+            post_data = self.rfile.read(content_length)
+            data = json.loads(post_data.decode('utf-8'))
+
+            title = data.get('title')
+            start_date = data.get('start_date', datetime.now().date().isoformat())
+
+            if not title:
+                self.send_json_response(400, {"success": False, "error": "Thiếu thông tin chức danh mới."})
+                return
+
+            db.promote_employee_position(employee_id, title, start_date)
+            self.send_json_response(200, {"success": True, "message": "Ghi nhận thông tin bổ nhiệm mới thành công."})
+        except Exception as e:
+            self.send_json_response(500, {"success": False, "error": str(e)})
+
+    def handle_adjust_income(self):
+        user = self.get_authenticated_user()
+        if not user or user["role"] != "admin":
+            self.send_json_response(401, {"success": False, "error": "Unauthorized access"})
+            return
+        try:
+            employee_id = int(self.path.split("/")[-2])
+            content_length = int(self.headers['Content-Length'])
+            post_data = self.rfile.read(content_length)
+            data = json.loads(post_data.decode('utf-8'))
+
+            amount = float(data.get('amount', 0))
+            effective_date = data.get('effective_date', datetime.now().date().isoformat())
+            change_reason = data.get('change_reason', 'HR Adjustment')
+
+            if amount <= 0:
+                self.send_json_response(400, {"success": False, "error": "Mức lương điều chỉnh phải lớn hơn 0."})
+                return
+
+            db.add_employee_income(employee_id, amount, effective_date, change_reason)
+            self.send_json_response(200, {"success": True, "message": "Ghi nhận điều chỉnh mức lương thành công."})
+        except Exception as e:
+            self.send_json_response(500, {"success": False, "error": str(e)})
+
+    def handle_update_skills(self):
+        user = self.get_authenticated_user()
+        if not user or user["role"] != "admin":
+            self.send_json_response(401, {"success": False, "error": "Unauthorized access"})
+            return
+        try:
+            employee_id = int(self.path.split("/")[-2])
+            content_length = int(self.headers['Content-Length'])
+            post_data = self.rfile.read(content_length)
+            skills_list = json.loads(post_data.decode('utf-8'))
+
+            db.update_employee_skills(employee_id, skills_list)
+            self.send_json_response(200, {"success": True, "message": "Cập nhật hồ sơ kỹ năng thành công."})
+        except Exception as e:
+            self.send_json_response(500, {"success": False, "error": str(e)})
+
+    def handle_update_projects(self):
+        user = self.get_authenticated_user()
+        if not user or user["role"] != "admin":
+            self.send_json_response(401, {"success": False, "error": "Unauthorized access"})
+            return
+        try:
+            employee_id = int(self.path.split("/")[-2])
+            content_length = int(self.headers['Content-Length'])
+            post_data = self.rfile.read(content_length)
+            projects_list = json.loads(post_data.decode('utf-8'))
+
+            db.update_employee_projects(employee_id, projects_list)
+            self.send_json_response(200, {"success": True, "message": "Cập nhật lịch sử dự án thành công."})
+        except Exception as e:
+            self.send_json_response(500, {"success": False, "error": str(e)})
+
+    def handle_delete_position(self):
+        user = self.get_authenticated_user()
+        if not user or user["role"] != "admin":
+            self.send_json_response(401, {"success": False, "error": "Unauthorized access"})
+            return
+        try:
+            position_id = int(self.path.split("/")[-1])
+            db.delete_employee_position(position_id)
+            self.send_json_response(200, {"success": True, "message": "Xóa chức vụ thành công."})
+        except Exception as e:
+            self.send_json_response(500, {"success": False, "error": str(e)})
+
+    def handle_delete_income(self):
+        user = self.get_authenticated_user()
+        if not user or user["role"] != "admin":
+            self.send_json_response(401, {"success": False, "error": "Unauthorized access"})
+            return
+        try:
+            income_id = int(self.path.split("/")[-1])
+            db.delete_employee_income(income_id)
+            self.send_json_response(200, {"success": True, "message": "Xóa lịch sử thu nhập thành công."})
+        except Exception as e:
+            self.send_json_response(500, {"success": False, "error": str(e)})
+
+    def send_json_response(self, status_code, payload):
+        response_bytes = json.dumps(payload).encode('utf-8')
+        self.send_response(status_code)
+        self.send_header('Content-Type', 'application/json; charset=utf-8')
+        self.end_headers()
+        self.wfile.write(response_bytes)
+
+def run(server_class=HTTPServer, handler_class=EmployeeFaceAIRequestHandler, port=8000):
+    print("Connecting to PostgreSQL and verifying schemas...", flush=True)
+    db.init_db()
+
+    server_address = ('', port)
+    httpd = server_class(server_address, handler_class)
+    print(f"Starting server on port {port}...", flush=True)
+    print(f"Local URL: http://localhost:{port}", flush=True)
+    try:
+        httpd.serve_forever()
+    except KeyboardInterrupt:
+        pass
+    finally:
+        httpd.server_close()
+        print("Server stopped.", flush=True)
+
+if __name__ == '__main__':
+    run()

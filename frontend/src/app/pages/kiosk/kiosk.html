@@ -1,0 +1,123 @@
+<div class="kiosk-container">
+  <header class="kiosk-header">
+    <div class="header-logo">
+      <span class="logo-icon">👁️</span>
+      <div class="logo-text">
+        <h1>EMPLOYEE FACE AI</h1>
+        <p>Cổng Biometric Chấm Công & Tâm Lý Nhân Sự</p>
+      </div>
+    </div>
+  </header>
+
+  <div class="kiosk-content">
+    <div class="kiosk-grid">
+      <!-- Camera Preview -->
+      <div class="camera-card">
+        <div class="hud-frame">
+          <div class="corner t-l"></div>
+          <div class="corner t-r"></div>
+          <div class="corner b-l"></div>
+          <div class="corner b-r"></div>
+          
+          <div class="camera-wrapper">
+            <video #videoElement autoplay playsinline class="webcam-feed"></video>
+            <canvas #canvasElement style="display:none;"></canvas>
+            
+            <!-- Animated scanner line -->
+            <div class="scanner-laser"></div>
+            <div class="scanner-grid"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Panel -->
+      <div class="action-card">
+        <div class="card-inner">
+          <h2 class="panel-title">HỆ THỐNG GHI NHẬN</h2>
+          
+          <div class="action-selector">
+            <button 
+              type="button" 
+              class="action-btn check-in-btn" 
+              [class.active]="currentAction() === 'CHECK_IN'"
+              (click)="selectAction('CHECK_IN')">
+              <span class="btn-title">CHECK IN</span>
+              <span class="btn-desc">Bắt đầu ca làm việc</span>
+            </button>
+            
+            <button 
+              type="button" 
+              class="action-btn check-out-btn" 
+              [class.active]="currentAction() === 'CHECK_OUT'"
+              (click)="selectAction('CHECK_OUT')">
+              <span class="btn-title">CHECK OUT</span>
+              <span class="btn-desc">Kết thúc ca làm việc</span>
+            </button>
+          </div>
+
+          <div class="form-group">
+            <label for="backend-detector">MODULE PHÁT HIỆN KHUÔN MẶT</label>
+            <select 
+              id="backend-detector" 
+              [ngModel]="detector()" 
+              (ngModelChange)="detector.set($event)" 
+              class="hud-select">
+              <option value="retinaface">RetinaFace (Độ chính xác cao nhất)</option>
+              <option value="mtcnn">MTCNN (Tốc độ xử lý nhanh)</option>
+              <option value="ssd">SSD (Tối ưu lực lượng tính toán)</option>
+            </select>
+          </div>
+
+          <div class="action-submit-zone">
+            <button 
+              class="scan-trigger-btn" 
+              [class.loading]="isLoading()"
+              [disabled]="isLoading()"
+              (click)="submitAttendance()">
+              @if (isLoading()) {
+                <div class="radial-spinner"></div>
+                <span>ĐANG QUÉT SINH TRẮC HỌC...</span>
+              } @else {
+                <span>BẤT ĐẦU QUÉT KHUÔN MẶT</span>
+              }
+            </button>
+          </div>
+
+          <!-- Notification Cards -->
+          @if (resultData()) {
+            <div class="status-card success">
+              <div class="card-glow"></div>
+              <h3 class="status-title">🎉 GHI NHẬN THÀNH CÔNG</h3>
+              <div class="status-details">
+                <div class="detail-row">
+                  <span class="lbl">Nhân viên:</span>
+                  <span class="val name">{{ resultData()?.employee_name }}</span>
+                </div>
+                <div class="detail-row">
+                  <span class="lbl">Hành động:</span>
+                  <span class="val">{{ resultData()?.action }}</span>
+                </div>
+                <div class="detail-row">
+                  <span class="lbl">Thời gian:</span>
+                  <span class="val">{{ resultData()?.time }}</span>
+                </div>
+                <div class="detail-row highlight">
+                  <span class="lbl">Đánh giá tâm lý (Mood):</span>
+                  <span class="val mood">{{ resultData()?.mood }}</span>
+                </div>
+              </div>
+            </div>
+          }
+
+          @if (statusMsg()) {
+            <div class="status-card error">
+              <div class="card-glow"></div>
+              <h3 class="status-title">⚠️ LỖI GHI NHẬN</h3>
+              <p class="error-desc">{{ statusMsg() }}</p>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

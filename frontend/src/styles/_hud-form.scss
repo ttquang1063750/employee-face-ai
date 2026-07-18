@@ -1,0 +1,263 @@
+// ============================================================
+//  _hud-form.scss
+//  Shared HUD Form Components — Employee Face AI Design System
+//  Provides: .hud-filter-bar, .hud-field, .hud-input, .hud-label,
+//            .hud-pagination, .hud-search-input
+// ============================================================
+
+// ─── Filter Bar Container ───────────────────────────────────
+// Usage: wrap input groups inside <div class="hud-filter-bar">
+.hud-filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  align-items: flex-end;
+  background: var(--color-bg-filter);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  padding: var(--space-5) var(--space-6);
+  margin-bottom: var(--space-6);
+  position: relative;
+  /* NOTE: overflow must NOT be hidden — autocomplete dropdown overflows this box */
+
+  // Subtle cyan top-edge accent line
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--color-cyan), transparent);
+    opacity: 0.35;
+  }
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+}
+
+// ─── Individual Field Group ─────────────────────────────────
+// Usage: <div class="hud-field"> <label> + <input> </div>
+.hud-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  flex: 1;
+  min-width: 140px;
+
+  &.grow-2 { flex: 2; }
+  &.grow-3 { flex: 3; }
+}
+
+// ─── HUD Label ──────────────────────────────────────────────
+.hud-label {
+  font-family: var(--font-hud);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 1.2px;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  user-select: none;
+}
+
+// ─── Base HUD Input ─────────────────────────────────────────
+// Applies to: input[type="text"], input[type="date"], input[type="number"]
+.hud-input {
+  width: 100%;
+  height: var(--input-height);
+  background: var(--color-bg-input);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--input-radius);
+  color: var(--color-text-primary);
+  font-family: var(--font-body);
+  font-size: var(--input-font-size);
+  padding: var(--input-padding-y) var(--input-padding-x);
+  outline: none;
+  transition: var(--transition-base);
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.3);
+  appearance: none;
+  -webkit-appearance: none;
+
+  // Date picker icon color on WebKit
+  &::-webkit-calendar-picker-indicator {
+    filter: invert(0.5) sepia(1) saturate(2) hue-rotate(155deg);
+    cursor: pointer;
+    opacity: 0.7;
+
+    &:hover { opacity: 1; }
+  }
+
+  &::placeholder {
+    color: var(--color-text-muted);
+    font-style: italic;
+    font-size: var(--text-sm);
+  }
+
+  &:hover {
+    border-color: var(--color-border-cyan-glow);
+  }
+
+  &:focus {
+    border-color: var(--color-cyan);
+    background: var(--color-bg-input-focus);
+    box-shadow: 0 0 0 3px rgba(0, 240, 255, 0.08), var(--glow-cyan);
+  }
+}
+
+// ─── Search Wrapper (use instead of raw .hud-search-input) ──
+// Usage: <div class="hud-search-wrapper"> <input class="hud-search-input"> </div>
+.hud-search-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 1;
+
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0.75rem;
+    width: 15px;
+    height: 15px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='15' height='15' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.5' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-size: contain;
+    pointer-events: none;
+    transition: var(--transition-fast);
+    z-index: 1;
+  }
+
+  &:focus-within::before {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='15' height='15' viewBox='0 0 24 24' fill='none' stroke='%2300f0ff' stroke-width='2.5' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E");
+  }
+}
+
+// ─── Search Input ────────────────────────────────────────────
+.hud-search-input {
+  @extend .hud-input;
+  padding-left: 2.4rem;
+  width: 100%;
+}
+
+// ─── HUD Pagination Bar ─────────────────────────────────────
+.hud-pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: var(--space-6);
+  margin-top: var(--space-6);
+  font-family: var(--font-hud);
+
+  .pag-info {
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+    letter-spacing: 1px;
+    font-weight: 600;
+  }
+
+  .pag-btn {
+    background: transparent;
+    border: 1px solid var(--color-border-cyan-glow);
+    color: var(--color-cyan);
+    padding: var(--space-2) var(--space-4);
+    font-family: var(--font-hud);
+    font-size: var(--text-xs);
+    font-weight: 700;
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+    transition: var(--transition-fast);
+    box-shadow: 0 0 6px rgba(0, 240, 255, 0.1);
+
+    &:hover:not([disabled]) {
+      background: rgba(0, 240, 255, 0.1);
+      box-shadow: var(--glow-cyan);
+      border-color: var(--color-cyan);
+    }
+
+    &[disabled] {
+      opacity: 0.35;
+      cursor: not-allowed;
+      border-color: var(--color-border-dim);
+      color: var(--color-text-muted);
+      box-shadow: none;
+    }
+  }
+}
+
+// ─── Autocomplete Dropdown ───────────────────────────────────
+// Usage:
+//   <div class="hud-autocomplete">
+//     <div class="hud-search-wrapper"><input class="hud-search-input"></div>
+//     <ul class="hud-autocomplete-list">
+//       <li class="hud-autocomplete-item">...</li>
+//     </ul>
+//   </div>
+.hud-autocomplete {
+  position: relative;
+  flex: 1;
+
+  .hud-autocomplete-list {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    z-index: 9999;
+    background: rgba(6, 10, 22, 0.97);
+    border: 1px solid var(--color-border-cyan);
+    border-radius: var(--radius-md);
+    list-style: none;
+    margin: 0;
+    padding: var(--space-1) 0;
+    box-shadow: var(--glow-cyan), 0 8px 32px rgba(0,0,0,0.5);
+    backdrop-filter: blur(12px);
+    overflow: hidden;
+    animation: acDropIn 0.15s ease;
+
+    @keyframes acDropIn {
+      from { opacity: 0; transform: translateY(-6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+  }
+
+  .hud-autocomplete-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    font-family: var(--font-body);
+    font-size: var(--text-base);
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    transition: var(--transition-fast);
+    border-left: 2px solid transparent;
+
+    .ac-icon {
+      font-size: 0.75rem;
+      opacity: 0.5;
+    }
+
+    .ac-name {
+      flex: 1;
+    }
+
+    em {
+      font-style: normal;
+      color: var(--color-cyan);
+      font-weight: 600;
+    }
+
+    &:hover, &.active {
+      background: rgba(0, 240, 255, 0.07);
+      color: var(--color-white);
+      border-left-color: var(--color-cyan);
+    }
+  }
+
+  .hud-autocomplete-empty {
+    padding: var(--space-3) var(--space-4);
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+    font-style: italic;
+    text-align: center;
+  }
+}
+
