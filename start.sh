@@ -32,9 +32,6 @@ if [ ! -f "./venv/bin/python" ]; then
     exit 1
 fi
 
-# Force CPU mode for DeepFace on Apple Silicon
-export CUDA_VISIBLE_DEVICES="-1"
-
 # Launch Backend in the background
 ./venv/bin/python -u server.py > backend.log 2>&1 &
 BACKEND_PID=$!
