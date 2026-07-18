@@ -9,7 +9,6 @@ import {
   ChangeDetectionStrategy,
   inject,
 } from '@angular/core';
-import { RealtimeService } from '../../../core/services/realtime.service';
 import { Router } from '@angular/router';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
@@ -159,7 +158,6 @@ export class StaffProfileComponent implements OnInit, OnDestroy {
   });
 
   private readonly apiUrl = 'http://localhost:8000/api';
-  private realtimeService = inject(RealtimeService);
   private pollIntervalId: ReturnType<typeof setInterval> | null = null;
 
   ngOnInit(): void {

@@ -10,7 +10,6 @@ import {
 import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { DatePickerComponent } from '../../../core/components/date-picker/date-picker';
-import { RealtimeService } from '../../../core/services/realtime.service';
 import { ApiResponse } from '../../../core/models/api-response.model';
 import { EmployeeBase } from '../../../core/models/employee.model';
 import { AttendanceLogEntry } from '../../../core/models/attendance-log.model';
@@ -227,7 +226,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
   hasHourlyData = computed(() => this.hourlyTimeline().points.some((pt) => pt.count > 0));
 
   private readonly apiUrl = 'http://localhost:8000/api';
-  private realtimeService = inject(RealtimeService);
   private pollIntervalId: ReturnType<typeof setInterval> | null = null;
 
   ngOnInit(): void {
