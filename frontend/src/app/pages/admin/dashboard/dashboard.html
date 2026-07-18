@@ -1,11 +1,6 @@
 <div class="dashboard-layout">
   <div class="dashboard-content">
-    @if (isLoading()) {
-      <div class="loading-state">
-        <div class="radial-spinner"></div>
-        <p>Đang tải dữ liệu Mainframe...</p>
-      </div>
-    } @else if (errorMsg()) {
+    @if (errorMsg()) {
       <div class="error-state">
         <p class="err-text">⚠️ {{ errorMsg() }}</p>
         <button class="retry-btn" (click)="loadDashboardData()">Thử lại</button>
@@ -57,174 +52,52 @@
 
       <!-- 1. Stats Widgets Grid -->
       <div class="stats-grid">
-        <div class="widget-card kind-info">
-          <div class="widget-top-row">
-            <div class="widget-chip">Σ</div>
-            <span class="widget-status">info</span>
-          </div>
-          <div class="widget-label">TỔNG NHÂN SỰ</div>
-          <div class="widget-value">{{ totalEmployees() }}</div>
-          <div class="widget-footer">Active Accounts</div>
-        </div>
-        <div class="widget-card kind-info">
-          <div class="widget-top-row">
-            <div class="widget-chip">✓</div>
-            <span class="widget-status">info</span>
-          </div>
-          <div class="widget-label">LƯỢT CHẤM CÔNG</div>
-          <div class="widget-value">{{ totalLogsInRange() }}</div>
-          <div class="widget-footer">Lượt quét trong khoảng đã chọn</div>
-        </div>
-        <div class="widget-card" [class.kind-success]="happinessLevel() === 'success'"
-             [class.kind-warning]="happinessLevel() === 'warning'"
-             [class.kind-danger]="happinessLevel() === 'danger'">
-          <div class="widget-top-row">
-            <div class="widget-chip">☺</div>
-            <span class="widget-status">{{ happinessStatusLabel() }}</span>
-          </div>
-          <div class="widget-label">CHỈ SỐ HẠNH PHÚC</div>
-          <div class="widget-value">{{ hasMoodData() ? moodStats().happy + '%' : '--' }}</div>
-          <div class="widget-footer">Cảm xúc tích cực · mục tiêu ≥ 60%</div>
-        </div>
+        <app-stat-widget
+          icon="Σ"
+          label="TỔNG NHÂN SỰ"
+          [value]="totalEmployees()"
+          footer="Active Accounts"
+          [loading]="isLoading()" />
+        <app-stat-widget
+          icon="✓"
+          label="LƯỢT CHẤM CÔNG"
+          [value]="totalLogsInRange()"
+          footer="Lượt quét trong khoảng đã chọn"
+          [loading]="isLoading()" />
+        <app-stat-widget
+          icon="☺"
+          label="CHỈ SỐ HẠNH PHÚC"
+          [value]="hasMoodData() ? moodStats().happy + '%' : '--'"
+          footer="Cảm xúc tích cực · mục tiêu ≥ 60%"
+          [statusLabel]="happinessStatusLabel()"
+          [kind]="happinessLevel()"
+          [loading]="isLoading()" />
       </div>
 
       <!-- 2. Charts Section -->
       <div class="charts-row">
-        <!-- SVG Bar Chart for Hour Peaks -->
-        <div class="chart-card">
-          <h3 class="chart-title">📈 GIỜ CAO ĐIỂM CHẤM CÔNG (TẦN SUẤT / GIỜ)</h3>
-          <div class="svg-chart-container">
-            <svg viewBox="0 0 500 180" class="svg-graph">
-              <!-- Baseline -->
-              <line x1="30" y1="140" x2="470" y2="140" class="chart-grid-line" />
-
-              @for (pt of hourlyTimeline().points; track pt.hour) {
-                @if (pt.count > 0) {
-                  <rect
-                    [attr.x]="pt.x - 12"
-                    [attr.y]="pt.y"
-                    width="24"
-                    [attr.height]="140 - pt.y"
-                    rx="4"
-                    class="chart-bar" />
-                  <text
-                    [attr.x]="pt.x"
-                    [attr.y]="pt.y - 8"
-                    class="svg-value-text"
-                    text-anchor="middle">{{ pt.count }}</text>
-                }
-                <text
-                  [attr.x]="pt.x"
-                  y="160"
-                  class="svg-axis-text"
-                  text-anchor="middle">{{ pt.hour }}</text>
-              }
-
-              @if (!hasHourlyData()) {
-                <text x="250" y="90" class="svg-empty-text" text-anchor="middle">Chưa có dữ liệu chấm công trong khoảng thời gian này</text>
-              }
-            </svg>
-          </div>
-        </div>
-
-        <!-- Mood Stats breakdown (donut) -->
-        <div class="chart-card mood-card">
-          <h3 class="chart-title">🧠 ĐÁNH GIÁ CHỈ SỐ CẢM XÚC</h3>
-          @if (hasMoodData()) {
-            <div class="donut-wrap">
-              <svg viewBox="0 0 42 42" class="donut-chart">
-                @for (seg of moodDonut(); track seg.key) {
-                  <circle cx="21" cy="21" r="15.9" fill="transparent"
-                    [style.stroke]="seg.color"
-                    stroke-width="6"
-                    [attr.stroke-dasharray]="seg.value + ' ' + (100 - seg.value)"
-                    [attr.stroke-dashoffset]="seg.offset" />
-                }
-              </svg>
-              <ul class="donut-legend">
-                @for (seg of moodDonut(); track seg.key) {
-                  <li>
-                    <span class="swatch" [style.background]="seg.color"></span>
-                    <span class="legend-label">{{ seg.label }}</span>
-                    <span class="legend-pct" [style.color]="seg.color">{{ seg.value }}%</span>
-                  </li>
-                }
-              </ul>
-            </div>
-          } @else {
-            <div class="donut-empty">
-              <svg viewBox="0 0 42 42" class="donut-chart">
-                <circle cx="21" cy="21" r="15.9" fill="transparent" stroke="rgba(var(--color-border-rgb), 0.25)" stroke-width="6" />
-              </svg>
-              <p>Chưa có dữ liệu chấm công trong khoảng thời gian này</p>
-            </div>
-          }
-        </div>
+        <app-hourly-chart
+          [points]="hourlyTimeline().points"
+          [hasData]="hasHourlyData()"
+          [loading]="isLoading()" />
+        <app-mood-donut
+          [segments]="moodDonut()"
+          [hasData]="hasMoodData()"
+          [loading]="isLoading()" />
       </div>
 
       <!-- 3. Logs Audit Grid -->
-      <div class="logs-card">
-        <div class="logs-header">
-          <h3 class="logs-title">📋 DANH SÁCH LƯỢT CHẤM CÔNG VÀ LỌC</h3>
-          <button class="csv-export-btn" (click)="exportCSV()" [disabled]="filteredLogs().length === 0">📥 XUẤT BÁO CÁO CSV</button>
-        </div>
-
-        <div class="logs-table-wrapper">
-          <table class="logs-table">
-            <thead>
-              <tr>
-                <th>THỜI GIAN CHẤM CÔNG</th>
-                <th>NHÂN VIÊN</th>
-                <th>TRẠNG THÁI</th>
-                <th>CẢM XÚC (MOOD)</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (log of paginatedLogs(); track log.id) {
-                <tr>
-                  <td class="log-time">{{ log.timestamp }}</td>
-                  <td class="log-name">{{ log.employee_name }}</td>
-                  <td>
-                    @if (log.action === 'CHECK_IN') {
-                      <span class="hud-badge badge-in">Check-in</span>
-                    } @else {
-                      <span class="hud-badge badge-out">Check-out</span>
-                    }
-                  </td>
-                  <td>
-                    <span class="hud-badge badge-mood">{{ translateMood(log.mood) }}</span>
-                  </td>
-                </tr>
-              } @empty {
-                <tr>
-                  <td colspan="4" class="no-data">Không tìm thấy lượt chấm công nào phù hợp với bộ lọc.</td>
-                </tr>
-              }
-            </tbody>
-          </table>
-        </div>
-
-        <!-- Pagination Controls -->
-        @if (filteredLogs().length > 0) {
-          <div class="hud-pagination">
-            <div class="pag-size">
-              <label for="logs-page-size">Hiển thị</label>
-              <select id="logs-page-size" class="pag-size-select" [ngModel]="pageSize()" (ngModelChange)="pageSize.set(+$event); currentPage.set(1)">
-                <option [value]="8">8</option>
-                <option [value]="16">16</option>
-                <option [value]="24">24</option>
-                <option [value]="50">50</option>
-              </select>
-              <span>/ trang</span>
-            </div>
-            <div class="pag-controls">
-              <button class="pag-btn" [disabled]="currentPage() === 1" (click)="prevPage()">◀ TRƯỚC</button>
-              <span class="pag-info">TRANG {{ currentPage() }} / {{ totalPages() }}</span>
-              <button class="pag-btn" [disabled]="currentPage() === totalPages()" (click)="nextPage()">SAU ▶</button>
-            </div>
-          </div>
-        }
-      </div>
+      <app-logs-table
+        [logs]="paginatedLogs()"
+        [totalCount]="filteredLogs().length"
+        [currentPage]="currentPage()"
+        [totalPages]="totalPages()"
+        [pageSize]="pageSize()"
+        [loading]="isLoading()"
+        (prevPage)="prevPage()"
+        (nextPage)="nextPage()"
+        (pageSizeChange)="onPageSizeChange($event)"
+        (exportCsv)="exportCSV()" />
     }
   </div>
 </div>

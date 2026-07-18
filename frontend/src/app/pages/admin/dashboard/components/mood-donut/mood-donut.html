@@ -1,0 +1,42 @@
+<div class="chart-card mood-card">
+  <h3 class="chart-title">🧠 ĐÁNH GIÁ CHỈ SỐ CẢM XÚC</h3>
+
+  @if (loading()) {
+    <div class="donut-wrap">
+      <div class="hud-skeleton skel-donut"></div>
+      <ul class="skel-legend">
+        @for (i of [1, 2, 3, 4]; track i) {
+          <li class="hud-skeleton skel-legend-line"></li>
+        }
+      </ul>
+    </div>
+  } @else if (hasData()) {
+    <div class="donut-wrap">
+      <svg viewBox="0 0 42 42" class="donut-chart">
+        @for (seg of segments(); track seg.key) {
+          <circle cx="21" cy="21" r="15.9" fill="transparent"
+            [style.stroke]="seg.color"
+            stroke-width="6"
+            [attr.stroke-dasharray]="seg.value + ' ' + (100 - seg.value)"
+            [attr.stroke-dashoffset]="seg.offset" />
+        }
+      </svg>
+      <ul class="donut-legend">
+        @for (seg of segments(); track seg.key) {
+          <li>
+            <span class="swatch" [style.background]="seg.color"></span>
+            <span class="legend-label">{{ seg.label }}</span>
+            <span class="legend-pct" [style.color]="seg.color">{{ seg.value }}%</span>
+          </li>
+        }
+      </ul>
+    </div>
+  } @else {
+    <div class="donut-empty">
+      <svg viewBox="0 0 42 42" class="donut-chart">
+        <circle cx="21" cy="21" r="15.9" fill="transparent" stroke="rgba(var(--color-border-rgb), 0.25)" stroke-width="6" />
+      </svg>
+      <p>Chưa có dữ liệu chấm công trong khoảng thời gian này</p>
+    </div>
+  }
+</div>

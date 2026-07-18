@@ -1,0 +1,101 @@
+.widget-card {
+  background: rgba(var(--color-bg-card-rgb), 1);
+  border-radius: 14px;
+  padding: var(--space-6);
+  box-shadow: var(--shadow-card);
+  position: relative;
+  height: 100%;
+}
+
+.widget-top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-3);
+}
+
+.widget-chip {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  background: rgba(var(--color-info-rgb), 0.16);
+  color: var(--color-info);
+}
+
+.widget-status {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  background: rgba(var(--color-heading-rgb), 0.06);
+  color: var(--color-text-muted);
+}
+
+.widget-card.kind-success .widget-chip { background: rgba(var(--color-cyan-rgb), 0.16); color: var(--color-cyan); }
+.widget-card.kind-warning .widget-chip { background: rgba(var(--color-orange-rgb), 0.16); color: var(--color-orange); }
+.widget-card.kind-danger .widget-chip { background: rgba(var(--color-red-rgb), 0.16); color: var(--color-red); }
+
+.widget-card.kind-success .widget-value { color: var(--color-cyan); }
+.widget-card.kind-warning .widget-value { color: var(--color-orange); }
+.widget-card.kind-danger .widget-value { color: var(--color-red); }
+
+.widget-card.kind-warning .widget-status { background: rgba(var(--color-orange-rgb), 0.16); color: var(--color-orange); }
+.widget-card.kind-danger .widget-status { background: rgba(var(--color-red-rgb), 0.16); color: var(--color-red); }
+.widget-card.kind-success .widget-status { background: rgba(var(--color-cyan-rgb), 0.16); color: var(--color-cyan); }
+
+.widget-label {
+  font-size: 0.75rem;
+  letter-spacing: 1.5px;
+  color: var(--color-text-muted);
+  font-weight: 600;
+}
+
+.widget-value {
+  color: var(--color-heading);
+  font-size: 2.25rem;
+  font-weight: 700;
+  margin: var(--space-2) 0;
+  font-family: 'Orbitron', sans-serif;
+  letter-spacing: 1px;
+}
+
+.widget-footer {
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+  font-family: 'Inter', sans-serif;
+}
+
+/* Skeleton placeholders — sized to roughly match the real content they stand in for */
+.skel-chip {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+}
+
+.skel-status {
+  width: 48px;
+  height: 18px;
+  border-radius: 999px;
+}
+
+.skel-label {
+  width: 60%;
+  height: 12px;
+  margin-bottom: var(--space-3);
+}
+
+.skel-value {
+  width: 40%;
+  height: 2.25rem;
+  margin: var(--space-2) 0;
+}
+
+.skel-footer {
+  width: 80%;
+  height: 10px;
+}

@@ -1,0 +1,44 @@
+<div class="chart-card">
+  <h3 class="chart-title">📈 GIỜ CAO ĐIỂM CHẤM CÔNG (TẦN SUẤT / GIỜ)</h3>
+
+  @if (loading()) {
+    <div class="svg-chart-container skeleton-bars">
+      @for (i of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]; track i) {
+        <div class="hud-skeleton skel-bar" [style.height.%]="30 + (i % 5) * 12"></div>
+      }
+    </div>
+  } @else {
+    <div class="svg-chart-container">
+      <svg viewBox="0 0 500 180" class="svg-graph">
+        <!-- Baseline -->
+        <line x1="30" y1="140" x2="470" y2="140" class="chart-grid-line" />
+
+        @for (pt of points(); track pt.hour) {
+          @if (pt.count > 0) {
+            <rect
+              [attr.x]="pt.x - 12"
+              [attr.y]="pt.y"
+              width="24"
+              [attr.height]="140 - pt.y"
+              rx="4"
+              class="chart-bar" />
+            <text
+              [attr.x]="pt.x"
+              [attr.y]="pt.y - 8"
+              class="svg-value-text"
+              text-anchor="middle">{{ pt.count }}</text>
+          }
+          <text
+            [attr.x]="pt.x"
+            y="160"
+            class="svg-axis-text"
+            text-anchor="middle">{{ pt.hour }}</text>
+        }
+
+        @if (!hasData()) {
+          <text x="250" y="90" class="svg-empty-text" text-anchor="middle">Chưa có dữ liệu chấm công trong khoảng thời gian này</text>
+        }
+      </svg>
+    </div>
+  }
+</div>

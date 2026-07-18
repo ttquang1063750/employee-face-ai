@@ -1,0 +1,22 @@
+<div class="widget-card"
+     [class.kind-success]="kind() === 'success'"
+     [class.kind-warning]="kind() === 'warning'"
+     [class.kind-danger]="kind() === 'danger'">
+  @if (loading()) {
+    <div class="widget-top-row">
+      <div class="hud-skeleton skel-chip"></div>
+      <div class="hud-skeleton skel-status"></div>
+    </div>
+    <div class="hud-skeleton skel-label"></div>
+    <div class="hud-skeleton skel-value"></div>
+    <div class="hud-skeleton skel-footer"></div>
+  } @else {
+    <div class="widget-top-row">
+      <div class="widget-chip">{{ icon() }}</div>
+      <span class="widget-status">{{ statusLabel() }}</span>
+    </div>
+    <div class="widget-label">{{ label() }}</div>
+    <div class="widget-value">{{ value() }}</div>
+    <div class="widget-footer">{{ footer() }}</div>
+  }
+</div>

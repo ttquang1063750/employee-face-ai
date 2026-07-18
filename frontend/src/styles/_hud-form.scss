@@ -2,7 +2,7 @@
 //  _hud-form.scss
 //  Shared HUD Form Components — Employee Face AI Design System
 //  Provides: .hud-filter-bar, .hud-field, .hud-input, .hud-label,
-//            .hud-pagination, .hud-search-input
+//            .hud-pagination, .hud-search-input, .hud-skeleton
 // ============================================================
 
 // ─── Filter Bar Container ───────────────────────────────────
@@ -536,5 +536,27 @@
     border-color: rgba(var(--color-red-rgb), 0.3);
     color: var(--color-red);
   }
+}
+
+// ─── Skeleton Loading Placeholder ───────────────────────────
+// Usage: <div class="hud-skeleton" style="width: 60%; height: 14px"></div>
+// Give it an explicit width/height (or a component-scoped modifier class)
+// per use — this primitive only supplies the shimmer look, not sizing.
+.hud-skeleton {
+  display: block;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(
+    90deg,
+    rgba(var(--color-border-rgb), 0.12) 25%,
+    rgba(var(--color-border-rgb), 0.24) 37%,
+    rgba(var(--color-border-rgb), 0.12) 63%
+  );
+  background-size: 400% 100%;
+  animation: hud-skeleton-shimmer 1.4s ease infinite;
+}
+
+@keyframes hud-skeleton-shimmer {
+  0% { background-position: 100% 50%; }
+  100% { background-position: 0 50%; }
 }
 

@@ -12,30 +12,25 @@ import { FormsModule } from '@angular/forms';
 import { DatePickerComponent } from '../../../core/components/date-picker/date-picker';
 import { RealtimeService } from '../../../core/services/realtime.service';
 import { ApiResponse } from '../../../core/models/api-response.model';
-
-export interface EmployeeBase {
-  id: number;
-  name: string;
-  age: number;
-  image_path: string;
-  role: string;
-  current_position: string;
-}
-
-export interface AttendanceLog {
-  id: number;
-  employee_id: number;
-  employee_name: string;
-  timestamp: string;
-  action: string;
-  mood: string;
-  captured_image_path: string;
-}
+import { EmployeeBase } from '../../../core/models/employee.model';
+import { AttendanceLogEntry } from '../../../core/models/attendance-log.model';
+import { translateMood } from '../../../core/utils/mood.util';
+import { StatWidgetComponent } from './components/stat-widget/stat-widget';
+import { HourlyChartComponent } from './components/hourly-chart/hourly-chart';
+import { MoodDonutComponent } from './components/mood-donut/mood-donut';
+import { LogsTableComponent } from './components/logs-table/logs-table';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [FormsModule, DatePickerComponent],
+  imports: [
+    FormsModule,
+    DatePickerComponent,
+    StatWidgetComponent,
+    HourlyChartComponent,
+    MoodDonutComponent,
+    LogsTableComponent,
+  ],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -44,7 +39,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private http = inject(HttpClient);
 
   employees = signal<EmployeeBase[]>([]);
-  logs = signal<AttendanceLog[]>([]);
+  logs = signal<AttendanceLogEntry[]>([]);
   isLoading = signal<boolean>(true);
   errorMsg = signal<string | null>(null);
 
@@ -226,16 +221,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       return { x, y, hour: `${h}h`, count: counts[i] };
     });
 
-    let d = '';
-    points.forEach((pt, i) => {
-      d += i === 0 ? `M ${pt.x} ${pt.y}` : ` L ${pt.x} ${pt.y}`;
-    });
-
-    return {
-      points,
-      dPath: d,
-      hours: hours.map((h) => `${h}h`),
-    };
+    return { points };
   });
 
   hasHourlyData = computed(() => this.hourlyTimeline().points.some((pt) => pt.count > 0));
@@ -272,7 +258,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
           }
         },
       });
-      this.http.get<ApiResponse<AttendanceLog[]>>(`${this.apiUrl}/logs`).subscribe({
+      this.http.get<ApiResponse<AttendanceLogEntry[]>>(`${this.apiUrl}/logs`).subscribe({
         next: (res) => {
           if (res.success && res.data) {
             this.logs.set(res.data);
@@ -303,7 +289,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         if (empRes.success && empRes.data) {
           this.employees.set(empRes.data);
 
-          this.http.get<ApiResponse<AttendanceLog[]>>(`${this.apiUrl}/logs`).subscribe({
+          this.http.get<ApiResponse<AttendanceLogEntry[]>>(`${this.apiUrl}/logs`).subscribe({
             next: (logRes) => {
               this.isLoading.set(false);
               if (logRes.success && logRes.data) {
@@ -342,6 +328,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
   }
 
+  onPageSizeChange(size: number): void {
+    this.pageSize.set(size);
+    this.currentPage.set(1);
+  }
+
   selectSuggestion(name: string): void {
     this.filterEmployeeName.set(name);
     this.showSuggestions.set(false);
@@ -368,7 +359,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       log.timestamp,
       `${log.employee_name} (#${log.employee_id})`,
       log.action === 'CHECK_IN' ? 'CHECK-IN' : 'CHECK-OUT',
-      this.translateMood(log.mood),
+      translateMood(log.mood),
     ]);
 
     // CSV UTF-8 BOM so Excel decodes Vietnamese characters correctly
@@ -391,18 +382,5 @@ export class DashboardComponent implements OnInit, OnDestroy {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-  }
-
-  translateMood(mood: string): string {
-    const map: Record<string, string> = {
-      happy: 'Vui vẻ 😊',
-      sad: 'Buồn bã 😢',
-      angry: 'Tức giận 😠',
-      surprise: 'Ngạc nhiên 😲',
-      fear: 'Lo sợ 😨',
-      disgust: 'Khó chịu 😣',
-      neutral: 'Bình thường 😐',
-    };
-    return map[mood.toLowerCase()] || mood;
   }
 }
