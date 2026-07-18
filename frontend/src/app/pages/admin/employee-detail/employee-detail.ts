@@ -226,25 +226,37 @@ export class EmployeeDetailComponent implements OnInit {
     }
   }
 
-  loadEmployeeDetails(): void {
+  // `silent`: used when refreshing after a save/delete inside a modal — the
+  // page content is already on screen and correct except for the just-saved
+  // change, so it skips the full-page loading skeleton (which would blank
+  // out the whole profile for a moment) and swallows a refresh failure
+  // instead of replacing the page with an error state, since the save/delete
+  // itself already succeeded and reported its own result to the user.
+  loadEmployeeDetails(silent = false): void {
     if (!this.employeeId) return;
 
-    this.isLoading.set(true);
-    this.errorMsg.set(null);
+    if (!silent) {
+      this.isLoading.set(true);
+      this.errorMsg.set(null);
+    }
 
     this.http.get<ApiResponse<DetailedEmployee>>(`${this.apiUrl}/employees/${this.employeeId}`).subscribe({
       next: (res) => {
-        this.isLoading.set(false);
+        if (!silent) {
+          this.isLoading.set(false);
+        }
         if (res.success && res.data) {
           this.employee.set(res.data);
           this.initializeSubFormData(res.data);
-        } else {
+        } else if (!silent) {
           this.errorMsg.set(res.error || 'Không thể lấy thông tin chi tiết nhân sự.');
         }
       },
       error: () => {
-        this.isLoading.set(false);
-        this.errorMsg.set('Lỗi kết nối máy chủ API.');
+        if (!silent) {
+          this.isLoading.set(false);
+          this.errorMsg.set('Lỗi kết nối máy chủ API.');
+        }
       },
     });
   }
@@ -393,7 +405,7 @@ export class EmployeeDetailComponent implements OnInit {
         if (res.success) {
           await this.dialogService.alert('THÀNH CÔNG', 'Cập nhật thông tin cơ bản thành công.');
           this.closeBaseModal();
-          this.loadEmployeeDetails();
+          this.loadEmployeeDetails(true);
         }
       },
       error: async (err: HttpErrorResponse) => {
@@ -434,7 +446,7 @@ export class EmployeeDetailComponent implements OnInit {
           if (res.success) {
             await this.dialogService.alert('THÀNH CÔNG', 'Bổ nhiệm chức vụ mới thành công.');
             this.closePositionModal();
-            this.loadEmployeeDetails();
+            this.loadEmployeeDetails(true);
           }
         },
         error: async (err: HttpErrorResponse) => {
@@ -475,7 +487,7 @@ export class EmployeeDetailComponent implements OnInit {
         if (res.success) {
           await this.dialogService.alert('THÀNH CÔNG', 'Cập nhật điều chỉnh mức lương thành công.');
           this.closeIncomeModal();
-          this.loadEmployeeDetails();
+          this.loadEmployeeDetails(true);
         }
       },
       error: async (err: HttpErrorResponse) => {
@@ -535,7 +547,7 @@ export class EmployeeDetailComponent implements OnInit {
           if (res.success) {
             await this.dialogService.alert('THÀNH CÔNG', 'Cập nhật danh sách kỹ năng thành công.');
             this.closeSkillsModal();
-            this.loadEmployeeDetails();
+            this.loadEmployeeDetails(true);
           }
         },
         error: async (err: HttpErrorResponse) => {
@@ -607,7 +619,7 @@ export class EmployeeDetailComponent implements OnInit {
           if (res.success) {
             await this.dialogService.alert('THÀNH CÔNG', 'Cập nhật lịch sử dự án thành công.');
             this.closeProjectsModal();
-            this.loadEmployeeDetails();
+            this.loadEmployeeDetails(true);
           }
         },
         error: async (err: HttpErrorResponse) => {
@@ -649,7 +661,7 @@ export class EmployeeDetailComponent implements OnInit {
       next: async (res) => {
         if (res.success) {
           await this.dialogService.alert('XÓA THÀNH CÔNG', 'Đã xóa chức vụ thành công.');
-          this.loadEmployeeDetails();
+          this.loadEmployeeDetails(true);
         }
       },
       error: async (err: HttpErrorResponse) => {
@@ -672,7 +684,7 @@ export class EmployeeDetailComponent implements OnInit {
       next: async (res) => {
         if (res.success) {
           await this.dialogService.alert('XÓA THÀNH CÔNG', 'Đã xóa lịch sử thu nhập thành công.');
-          this.loadEmployeeDetails();
+          this.loadEmployeeDetails(true);
         }
       },
       error: async (err: HttpErrorResponse) => {
