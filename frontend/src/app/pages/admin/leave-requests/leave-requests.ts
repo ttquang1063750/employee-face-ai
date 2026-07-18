@@ -1,31 +1,11 @@
-import {
-  Component,
-  OnInit,
-  OnDestroy,
-  signal,
-  computed,
-  ChangeDetectionStrategy,
-  inject,
-} from '@angular/core';
+import { Component, OnInit, signal, computed, ChangeDetectionStrategy, inject } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { DialogService } from '../../../core/services/dialog.service';
 import { DatePickerComponent } from '../../../core/components/date-picker/date-picker';
 import { RealtimeService } from '../../../core/services/realtime.service';
 import { ApiResponse } from '../../../core/models/api-response.model';
-
-export interface LeaveRequest {
-  id: number;
-  employee_id: number;
-  employee_name: string;
-  current_position: string | null;
-  start_date: string;
-  end_date: string;
-  reason: string;
-  status: 'pending' | 'approved' | 'rejected';
-  requested_at: string;
-  rejection_reason?: string | null;
-}
+import { LeaveRequest } from '../../../core/models/leave-request.model';
 
 type StatusFilter = 'all' | 'pending' | 'approved' | 'rejected';
 
@@ -41,11 +21,15 @@ type StatusFilter = 'all' | 'pending' | 'approved' | 'rejected';
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class LeaveRequestsComponent implements OnInit, OnDestroy {
+export class LeaveRequestsComponent implements OnInit {
   private http = inject(HttpClient);
   private dialogService = inject(DialogService);
+  private realtimeService = inject(RealtimeService);
 
-  requests = signal<LeaveRequest[]>([]);
+  // The full list is shared app-wide via RealtimeService (single poller for
+  // /api/leave-requests, also driving admin-shell's sidebar badge) rather
+  // than this page running its own second interval against the same endpoint.
+  requests = this.realtimeService.leaveRequests;
   isLoading = signal<boolean>(true);
   errorMsg = signal<string | null>(null);
   statusFilter = signal<StatusFilter>('pending');
@@ -60,7 +44,7 @@ export class LeaveRequestsComponent implements OnInit, OnDestroy {
   currentPage = signal<number>(1);
   pageSize = signal<number>(8);
 
-  pendingCount = computed(() => this.requests().filter((r) => r.status === 'pending').length);
+  pendingCount = this.realtimeService.pendingLeaveCount;
 
   filteredRequests = computed(() => {
     const filter = this.statusFilter();
@@ -101,38 +85,9 @@ export class LeaveRequestsComponent implements OnInit, OnDestroy {
   });
 
   private readonly apiUrl = 'http://localhost:8000/api';
-  private realtimeService = inject(RealtimeService);
-  private pollIntervalId: ReturnType<typeof setInterval> | null = null;
 
   ngOnInit(): void {
     this.loadRequests();
-    this.startPolling();
-  }
-
-  startPolling(): void {
-    if (this.pollIntervalId) return;
-    this.pollIntervalId = setInterval(() => {
-      this.http.get<ApiResponse<LeaveRequest[]>>(`${this.apiUrl}/leave-requests`).subscribe({
-        next: (res) => {
-          if (res.success && res.data) {
-            this.requests.set(res.data);
-            const pending = res.data.filter((r) => r.status === 'pending').length;
-            this.realtimeService.updatePendingCount(pending);
-          }
-        },
-      });
-    }, 3000);
-  }
-
-  stopPolling(): void {
-    if (this.pollIntervalId) {
-      clearInterval(this.pollIntervalId);
-      this.pollIntervalId = null;
-    }
-  }
-
-  ngOnDestroy(): void {
-    this.stopPolling();
   }
 
   loadRequests(): void {
@@ -143,9 +98,7 @@ export class LeaveRequestsComponent implements OnInit, OnDestroy {
       next: (res) => {
         this.isLoading.set(false);
         if (res.success && res.data) {
-          this.requests.set(res.data);
-          const pending = res.data.filter((r) => r.status === 'pending').length;
-          this.realtimeService.updatePendingCount(pending);
+          this.realtimeService.leaveRequests.set(res.data);
         } else {
           this.errorMsg.set(res.error || 'Không thể tải danh sách đơn xin nghỉ.');
         }

@@ -19,7 +19,7 @@ export class AdminShellComponent implements OnInit {
   pendingCount = computed(() => this.realtimeService.pendingLeaveCount());
 
   ngOnInit(): void {
-    this.realtimeService.refreshPendingCount();
+    this.realtimeService.refreshLeaveRequests();
   }
 
   logout(): void {

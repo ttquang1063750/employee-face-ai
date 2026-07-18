@@ -33,7 +33,7 @@ Quy trình: làm từng mục một, hỏi xác nhận trước khi chuyển san
 
 ## Từ audit các trang admin (mức cao)
 
-- [ ] `leave-requests.ts`: bỏ vòng polling riêng (setInterval trùng với `RealtimeService` đã tự poll cùng endpoint) — chỉ đọc `realtimeService.pendingLeaveCount()`
+- [x] `leave-requests.ts`: bỏ vòng polling riêng (setInterval trùng với `RealtimeService` đã tự poll cùng endpoint) — `RealtimeService` giờ là nguồn dữ liệu duy nhất (`leaveRequests` signal + `pendingLeaveCount` computed từ đó), trang chỉ còn 1 lần gọi API riêng cho initial load/error UX. Đồng thời import `LeaveRequest` từ `core/models/leave-request.model.ts` thay vì định nghĩa lại (gộp luôn mục ở dưới vì cùng chỗ sửa)
 - [ ] `leave-requests.ts`: bỏ import `dashboard.scss`/`employee-list.scss` để "mượn" style bảng/pagination — tách thành style/component dùng chung thay vì khớp nối chéo 3 trang
 - [ ] `employee-detail.ts`: sửa bug `workingHours` — check-in cuối ngày không có check-out bị bỏ qua âm thầm, check-in trùng lặp ghi đè nhau, không có guard chống số giờ âm khi check-out sớm hơn check-in
 - [ ] `employee-list.ts`: import `EmployeeBase` từ `core/models/employee.model.ts` thay vì định nghĩa lại
@@ -44,5 +44,5 @@ Quy trình: làm từng mục một, hỏi xác nhận trước khi chuyển san
 - [ ] Thống nhất `.hud-pagination`/error-state dùng `_hud-form.scss` ở cả 3 trang (đang tự định nghĩa lại cục bộ, dễ lệch style)
 - [ ] `employee-detail.ts`: các ngày mặc định (thêm chức vụ/lương/dự án, bộ lọc chấm công) chỉ tính 1 lần lúc tải trang — cần tính lại mỗi lần mở modal/áp dụng filter
 - [ ] `employee-detail.ts`: tách bớt full-page spinner khi reload sau khi lưu (hiện y hệt lần tải đầu, giật cục không cần thiết)
-- [ ] `leave-requests.ts`: import `LeaveRequest` từ `core/models/leave-request.model.ts` thay vì định nghĩa lại; thêm xử lý lỗi cho polling nền (hiện im lặng khi fail)
+- [x] `leave-requests.ts`: import `LeaveRequest` từ model (đã làm ở trên); xử lý lỗi polling nền giờ theo đúng 1 chính sách chung trong `RealtimeService` (im lặng bỏ qua có chủ đích, thay vì thiếu xử lý hoàn toàn như code cũ)
 - [ ] Cân nhắc tách `employee-detail.ts` (2151 dòng) thành các component nhỏ: attendance-summary, positions-timeline, income-history, skills-panel, projects-panel, base-profile-modal

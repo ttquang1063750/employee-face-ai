@@ -1,29 +1,33 @@
-import { Injectable, signal, inject, OnDestroy } from '@angular/core';
+import { Injectable, signal, computed, inject, OnDestroy } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { AuthService } from './auth.service';
 import { ApiResponse } from '../models/api-response.model';
 import { LeaveRequest } from '../models/leave-request.model';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class RealtimeService implements OnDestroy {
   private http = inject(HttpClient);
   private authService = inject(AuthService);
 
-  // Realtime signals
-  pendingLeaveCount = signal<number>(0);
+  // Single shared poll of /api/leave-requests for the whole app — pages
+  // (leave-requests list, admin-shell's sidebar badge) read from this
+  // instead of each running their own interval against the same endpoint.
+  leaveRequests = signal<LeaveRequest[]>([]);
+  pendingLeaveCount = computed(() => this.leaveRequests().filter((r) => r.status === 'pending').length);
+
   private pollIntervalId: ReturnType<typeof setInterval> | null = null;
 
   constructor() {
-    this.refreshPendingCount();
+    this.refreshLeaveRequests();
     this.startPolling();
   }
 
   startPolling(): void {
     if (this.pollIntervalId) return;
     this.pollIntervalId = setInterval(() => {
-      this.refreshPendingCount();
+      this.refreshLeaveRequests();
     }, 3000);
   }
 
@@ -34,27 +38,22 @@ export class RealtimeService implements OnDestroy {
     }
   }
 
-  refreshPendingCount(): void {
+  refreshLeaveRequests(): void {
     if (!this.authService.isAdmin()) {
-      this.pendingLeaveCount.set(0);
+      this.leaveRequests.set([]);
       return;
     }
 
     this.http.get<ApiResponse<LeaveRequest[]>>('http://localhost:8000/api/leave-requests').subscribe({
       next: (res) => {
         if (res.success && res.data) {
-          const pending = res.data.filter((r) => r.status === 'pending').length;
-          this.pendingLeaveCount.set(pending);
+          this.leaveRequests.set(res.data);
         }
       },
       error: () => {
         // Silent ignore if unauthorized or server offline
-      }
+      },
     });
-  }
-
-  updatePendingCount(count: number): void {
-    this.pendingLeaveCount.set(count);
   }
 
   ngOnDestroy(): void {
