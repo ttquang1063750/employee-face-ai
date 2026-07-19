@@ -66,10 +66,11 @@
       <div class="pag-size">
         <label for="logs-page-size">Hiển thị</label>
         <select id="logs-page-size" class="pag-size-select" [formControl]="pageSizeControl">
-          <option [ngValue]="8">8</option>
-          <option [ngValue]="16">16</option>
-          <option [ngValue]="24">24</option>
+          <option [ngValue]="5">5</option>
+          <option [ngValue]="10">10</option>
+          <option [ngValue]="20">20</option>
           <option [ngValue]="50">50</option>
+          <option [ngValue]="100">100</option>
         </select>
         <span>/ trang</span>
       </div>

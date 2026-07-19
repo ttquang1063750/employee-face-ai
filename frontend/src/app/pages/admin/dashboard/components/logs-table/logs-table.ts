@@ -33,7 +33,7 @@ export class LogsTableComponent {
   // Bridges the pageSize input()/output() pair to a real FormControl for
   // this component's own <select> — see attendance-summary.ts for the same
   // pattern with the rationale spelled out.
-  pageSizeControl = new FormControl(8, { nonNullable: true });
+  pageSizeControl = new FormControl(10, { nonNullable: true });
 
   constructor() {
     effect(() => this.pageSizeControl.setValue(this.pageSize(), { emitEvent: false }));

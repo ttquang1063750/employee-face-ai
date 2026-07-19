@@ -16,7 +16,7 @@ describe('Admin documents', () => {
   });
 
   it('filters by visibility', () => {
-    cy.get('#doc-visibility-filter').select('chung');
+    cy.selectHudOption('#doc-visibility-filter', 'Chung (Toàn bộ nhân viên)');
     cy.get('.logs-table tbody tr').should('have.length', 1);
     cy.contains('.logs-table', 'Thông báo nghỉ lễ Quốc khánh').should('be.visible');
   });
@@ -67,10 +67,10 @@ describe('Admin documents', () => {
       );
       cy.get('.modal-footer').contains('button', 'TẢI LÊN').should('be.disabled');
 
-      cy.get('#doc-employee').select('HR Admin (#1)');
+      cy.selectHudOption('#doc-employee', 'HR Admin (#1)');
       cy.get('.modal-footer').contains('button', 'TẢI LÊN').should('not.be.disabled');
 
-      cy.get('#doc-visibility').select('chung');
+      cy.selectHudOption('#doc-visibility', 'Chung (toàn bộ nhân viên nhận được)');
       cy.get('#doc-employee').should('not.exist');
       cy.get('.modal-footer').contains('button', 'TẢI LÊN').should('not.be.disabled');
     });
@@ -88,7 +88,7 @@ describe('Admin documents', () => {
       cy.intercept('GET', '**/api/documents', { fixture: 'documents.json' }).as('reload');
 
       cy.get('#doc-title').type('Hợp đồng lao động mới');
-      cy.get('#doc-employee').select('HR Admin (#1)');
+      cy.selectHudOption('#doc-employee', 'HR Admin (#1)');
       cy.get('input[type=file]').selectFile(
         { contents: Cypress.Buffer.from(TINY_PDF_BASE64, 'base64'), fileName: 'hop-dong.pdf', mimeType: 'application/pdf' },
         { force: true },
@@ -107,7 +107,7 @@ describe('Admin documents', () => {
       cy.intercept('GET', '**/api/documents', { fixture: 'documents.json' }).as('reload');
 
       cy.get('#doc-title').type('Thông báo chung mới');
-      cy.get('#doc-visibility').select('chung');
+      cy.selectHudOption('#doc-visibility', 'Chung (toàn bộ nhân viên nhận được)');
       cy.get('input[type=file]').selectFile(
         { contents: Cypress.Buffer.from(TINY_PDF_BASE64, 'base64'), fileName: 'thong-bao.pdf', mimeType: 'application/pdf' },
         { force: true },

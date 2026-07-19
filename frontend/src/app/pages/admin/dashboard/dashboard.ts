@@ -11,6 +11,7 @@ import { HttpClient } from '@angular/common/http';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { DatePickerComponent } from '../../../core/components/date-picker/date-picker';
+import { HudSelectComponent, HudSelectOption } from '../../../core/components/hud-select/hud-select';
 import { ApiResponse } from '../../../core/models/api-response.model';
 import { EmployeeBase } from '../../../core/models/employee.model';
 import { AttendanceLogEntry } from '../../../core/models/attendance-log.model';
@@ -19,7 +20,7 @@ import { todayLocalDateString, startOfMonthLocalDateString } from '../../../core
 import { triggerBlobDownload } from '../../../core/utils/download.util';
 import { environment } from '../../../../environments/environment';
 import { EmployeeService } from '../../../core/services/employee.service';
-import { StatWidgetComponent, StatWidgetFilterOption } from './components/stat-widget/stat-widget';
+import { StatWidgetComponent } from './components/stat-widget/stat-widget';
 import { HourlyChartComponent } from './components/hourly-chart/hourly-chart';
 import { MoodDonutComponent } from './components/mood-donut/mood-donut';
 import { LogsTableComponent } from './components/logs-table/logs-table';
@@ -31,6 +32,7 @@ import { DialogService } from '../../../core/services/dialog.service';
   imports: [
     ReactiveFormsModule,
     DatePickerComponent,
+    HudSelectComponent,
     StatWidgetComponent,
     HourlyChartComponent,
     MoodDonutComponent,
@@ -72,38 +74,35 @@ export class DashboardComponent implements OnInit, OnDestroy {
   // Autocomplete dropdown state
   showSuggestions = signal<boolean>(false);
 
-  // Status filter for the "LƯỢT CHẤM CÔNG" stat widget only — scoped to that
-  // one card (see totalLogsInRange below), not the logs table/charts, which
-  // stay driven by filteredLogs() alone. Applies instantly like the name
-  // search, not gated behind ÁP DỤNG (rule 10 exempts non-date-range filters).
-  // Rendered by StatWidgetComponent itself (filterOptions/filterValue/
-  // filterChange) rather than a template-bound form control, so it's a
-  // plain signal rather than a FormControl.
-  logsStatusFilter = signal<'all' | 'CHECK_IN' | 'CHECK_OUT'>('all');
-  readonly logsStatusFilterOptions: StatWidgetFilterOption[] = [
+  // Status filter (all/CHECK_IN/CHECK_OUT) — global, folded into
+  // filteredLogs() below like the date range and name search, so every
+  // consumer (stat widgets, charts, logs table, CSV export) reflects it
+  // consistently rather than each widget filtering it separately. Applies
+  // instantly like the name search, not gated behind ÁP DỤNG (rule 10
+  // exempts non-date-range filters).
+  statusControl = new FormControl<'all' | 'CHECK_IN' | 'CHECK_OUT'>('all', { nonNullable: true });
+  readonly statusOptions: HudSelectOption<'all' | 'CHECK_IN' | 'CHECK_OUT'>[] = [
     { value: 'all', label: 'Tất cả' },
     { value: 'CHECK_IN', label: 'Vào ca' },
     { value: 'CHECK_OUT', label: 'Ra ca' },
   ];
-
-  onLogsStatusFilterChange(value: string): void {
-    if (value === 'all' || value === 'CHECK_IN' || value === 'CHECK_OUT') {
-      this.logsStatusFilter.set(value);
-    }
-  }
+  private filterStatus = toSignal(this.statusControl.valueChanges, {
+    initialValue: this.statusControl.value,
+  });
 
   // Pagination for logs list
   currentPage = signal<number>(1);
-  pageSize = signal<number>(8);
+  pageSize = signal<number>(10);
 
   // Computed stats widgets (using overall logs)
   totalEmployees = computed(() => this.employees().length);
 
-  // Computed: Filtered attendance logs in selected time range / employee search scope
+  // Computed: Filtered attendance logs in selected time range / employee search / status scope
   filteredLogs = computed(() => {
     const start = this.filterStartDate();
     const end = this.filterEndDate();
     const nameQuery = this.filterEmployeeName().toLowerCase().trim();
+    const status = this.filterStatus();
     const raw = this.logs() || [];
 
     return raw.filter((log) => {
@@ -111,15 +110,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
       const logDate = log.timestamp.split(' ')[0];
       const dateInRange = !start || !end ? true : logDate >= start && logDate <= end;
       const nameMatches = !nameQuery ? true : log.employee_name.toLowerCase().includes(nameQuery);
-      return dateInRange && nameMatches;
+      const statusMatches = status === 'all' ? true : log.action === status;
+      return dateInRange && nameMatches && statusMatches;
     });
   });
 
-  totalLogsInRange = computed(() => {
-    const status = this.logsStatusFilter();
-    const logs = this.filteredLogs();
-    return status === 'all' ? logs.length : logs.filter((log) => log.action === status).length;
-  });
+  totalLogsInRange = computed(() => this.filteredLogs().length);
 
   // Computed: Unique employee name suggestions filtered by current input
   employeeSuggestions = computed(() => {

@@ -16,10 +16,7 @@
         </div>
         <div class="form-group">
           <label for="edit-emp-role">PHÂN QUYỀN HỆ THỐNG</label>
-          <select id="edit-emp-role" formControlName="role" class="hud-select">
-            <option value="staff">Nhân sự (Staff)</option>
-            <option value="admin">Quản lý (Admin)</option>
-          </select>
+          <app-hud-select [selectId]="'edit-emp-role'" [options]="roleOptions" formControlName="role"></app-hud-select>
         </div>
         <div class="form-group">
           <label for="edit-emp-username">USERNAME *</label>

@@ -1,0 +1,40 @@
+<div class="hud-select-host">
+  <button
+    type="button"
+    class="hud-select-trigger"
+    [attr.id]="selectId() || null"
+    [class.disabled]="disabled()"
+    [disabled]="disabled()"
+    [attr.aria-expanded]="isOpen()"
+    (click)="toggleOpen()">
+    <span [class.placeholder]="!selectedLabel()">{{ selectedLabel() || placeholder() }}</span>
+    <span class="select-caret" [class.open]="isOpen()">▾</span>
+  </button>
+
+  <!-- Rendered unconditionally (hidden via [hidden], not @if) — see the
+       comment on `panelRef` in hud-select.ts for why it must never be
+       attached/detached by Angular once ngAfterViewInit moves it to <body>. -->
+  <ul
+    #panelRef
+    class="hud-select-panel"
+    [hidden]="!isOpen()"
+    [style.top.px]="panelTop()"
+    [style.left.px]="panelLeft()"
+    [style.width.px]="panelWidth()">
+    @for (opt of options(); track opt.label) {
+      <li
+        class="hud-select-option"
+        role="option"
+        tabindex="0"
+        [attr.aria-selected]="opt.value === value()"
+        [class.active]="opt.value === value()"
+        (click)="selectOption(opt)"
+        (keydown.enter)="selectOption(opt)"
+        (keydown.space)="$event.preventDefault(); selectOption(opt)">
+        {{ opt.label }}
+      </li>
+    } @empty {
+      <li class="hud-select-empty">Không có lựa chọn.</li>
+    }
+  </ul>
+</div>

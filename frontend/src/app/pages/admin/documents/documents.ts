@@ -16,6 +16,7 @@ import { merge } from 'rxjs';
 import { DialogService } from '../../../core/services/dialog.service';
 import { readFileAsBase64 } from '../../../core/services/webcam-capture.service';
 import { triggerBlobDownload } from '../../../core/utils/download.util';
+import { HudSelectComponent, HudSelectOption } from '../../../core/components/hud-select/hud-select';
 import { ApiResponse } from '../../../core/models/api-response.model';
 import { EmployeeBase } from '../../../core/models/employee.model';
 import { DocumentVisibility, EmployeeDocument } from '../../../core/models/document.model';
@@ -30,7 +31,7 @@ const MAX_FILE_BYTES = 15 * 1024 * 1024;
 @Component({
   selector: 'app-documents',
   standalone: true,
-  imports: [ReactiveFormsModule, DatePipe],
+  imports: [ReactiveFormsModule, DatePipe, HudSelectComponent],
   templateUrl: './documents.html',
   styleUrl: './documents.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -54,12 +55,17 @@ export class DocumentsComponent implements OnInit {
     initialValue: this.searchQuery.value,
   });
   visibilityFilterControl = new FormControl<VisibilityFilter>('all', { nonNullable: true });
+  readonly visibilityFilterOptions: HudSelectOption<VisibilityFilter>[] = [
+    { value: 'all', label: 'Tất cả' },
+    { value: 'chung', label: 'Chung (Toàn bộ nhân viên)' },
+    { value: 'rieng', label: 'Riêng (Theo nhân viên)' },
+  ];
   private visibilityFilter = toSignal(this.visibilityFilterControl.valueChanges, {
     initialValue: this.visibilityFilterControl.value,
   });
 
   currentPage = signal<number>(1);
-  pageSizeControl = new FormControl(8, { nonNullable: true });
+  pageSizeControl = new FormControl(10, { nonNullable: true });
   private pageSize = toSignal(this.pageSizeControl.valueChanges, {
     initialValue: this.pageSizeControl.value,
   });
@@ -128,6 +134,15 @@ export class DocumentsComponent implements OnInit {
     visibility: this.fb.nonNullable.control<DocumentVisibility>('rieng'),
     employeeId: this.fb.control<number | null>(null, Validators.required),
   });
+  readonly uploadVisibilityOptions: HudSelectOption<DocumentVisibility>[] = [
+    { value: 'rieng', label: 'Riêng (chỉ 1 nhân viên nhận được)' },
+    { value: 'chung', label: 'Chung (toàn bộ nhân viên nhận được)' },
+  ];
+  // computed(), not a plain array — options must re-derive as employees() loads.
+  employeeOptions = computed<HudSelectOption<number | null>[]>(() => [
+    { value: null, label: '-- Chọn nhân viên --' },
+    ...this.employees().map((emp) => ({ value: emp.id, label: `${emp.name} (#${emp.id})` })),
+  ]);
 
   ngOnInit(): void {
     this.loadDocuments();

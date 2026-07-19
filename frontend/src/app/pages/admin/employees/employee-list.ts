@@ -19,16 +19,17 @@ import {
   usernameStatusSignal,
 } from '../../../core/services/username-check.service';
 import { PASSWORD_HINT, generateRandomPassword, passwordComplexityValidator } from '../../../core/services/credentials.util';
-import { EmployeeBase } from '../../../core/models/employee.model';
+import { EmployeeBase, EmployeeRole } from '../../../core/models/employee.model';
 import { WebcamCaptureService } from '../../../core/services/webcam-capture.service';
 import { PhotoCaptureStateService } from '../../../core/services/photo-capture-state.service';
 import { EmployeeService } from '../../../core/services/employee.service';
 import { avatarUrl } from '../../../core/utils/image.util';
+import { HudSelectComponent, HudSelectOption } from '../../../core/components/hud-select/hud-select';
 
 @Component({
   selector: 'app-employee-list',
   standalone: true,
-  imports: [RouterLink, ReactiveFormsModule],
+  imports: [RouterLink, ReactiveFormsModule, HudSelectComponent],
   templateUrl: './employee-list.html',
   styleUrl: './employee-list.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -74,7 +75,7 @@ export class EmployeeListComponent implements OnInit {
     age: [28],
     position: [''],
     income: [3000],
-    role: this.fb.nonNullable.control<'staff' | 'admin'>('staff'),
+    role: this.fb.nonNullable.control<EmployeeRole>('staff'),
     username: this.fb.nonNullable.control('', {
       validators: Validators.required,
       asyncValidators: this.usernameCheckService.usernameTakenValidator(),
@@ -90,10 +91,14 @@ export class EmployeeListComponent implements OnInit {
   usernameStatus = usernameStatusSignal(this.newEmployeeForm.controls.username);
   showNewPassword = signal<boolean>(false);
   readonly passwordHint = PASSWORD_HINT;
+  readonly roleOptions: HudSelectOption<EmployeeRole>[] = [
+    { value: 'staff', label: 'Nhân viên (Staff)' },
+    { value: 'admin', label: 'Quản lý (Admin)' },
+  ];
 
   // Pagination for employee list
   currentPage = signal<number>(1);
-  pageSize = new FormControl(8, { nonNullable: true });
+  pageSize = new FormControl(10, { nonNullable: true });
   private pageSizeValue = toSignal(this.pageSize.valueChanges, {
     initialValue: this.pageSize.value,
   });

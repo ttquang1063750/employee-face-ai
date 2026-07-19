@@ -69,14 +69,7 @@
 
           <div class="form-group">
             <label for="backend-detector">MODULE PHÁT HIỆN KHUÔN MẶT</label>
-            <select 
-              id="backend-detector" 
-              [formControl]="detector"
-              class="hud-select">
-              <option value="retinaface">RetinaFace (Độ chính xác cao nhất)</option>
-              <option value="mtcnn">MTCNN (Tốc độ xử lý nhanh)</option>
-              <option value="ssd">SSD (Tối ưu lực lượng tính toán)</option>
-            </select>
+            <app-hud-select [selectId]="'backend-detector'" [options]="detectorOptions" [formControl]="detector"></app-hud-select>
           </div>
 
           <div class="action-submit-zone">

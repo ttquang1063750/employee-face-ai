@@ -49,6 +49,20 @@ Cypress.Commands.add('mockGetUserMedia', () => {
   cy.window().then((win) => stubGetUserMedia(win));
 });
 
+// HudSelectComponent (frontend/src/app/core/components/hud-select) replaces
+// every `<select class="hud-select">` with a custom button + portal-ed
+// dropdown (its panel is moved to <body> in ngAfterViewInit — see the
+// component for why: `backdrop-filter` ancestors like `.action-card`/modal
+// cards break `position: fixed` panels rendered in place). Its panel is
+// always in the DOM (hidden via [hidden], not @if — see the component), so
+// with several hud-selects on one page (e.g. documents.html has 3) more than
+// one `.hud-select-option` with matching text can exist at once; `:visible`
+// scopes to the one panel currently open.
+Cypress.Commands.add('selectHudOption', (triggerSelector: string, optionText: string) => {
+  cy.get(triggerSelector).click();
+  cy.get('.hud-select-panel:visible').contains('.hud-select-option', optionText).click();
+});
+
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace Cypress {
@@ -59,6 +73,8 @@ declare global {
       loginAsStaff(path?: string): Chainable<void>;
       /** Stubs navigator.mediaDevices.getUserMedia with a canvas-sourced fake stream. */
       mockGetUserMedia(): Chainable<void>;
+      /** Opens a HudSelectComponent by its trigger selector and clicks the option matching `optionText`. */
+      selectHudOption(triggerSelector: string, optionText: string): Chainable<void>;
     }
   }
 }

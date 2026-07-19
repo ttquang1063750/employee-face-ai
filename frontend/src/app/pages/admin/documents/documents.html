@@ -8,11 +8,7 @@
     <div class="hud-filter-bar">
       <div class="hud-field">
         <label class="hud-label" for="doc-visibility-filter">LOẠI TÀI LIỆU</label>
-        <select id="doc-visibility-filter" class="hud-select" [formControl]="visibilityFilterControl">
-          <option value="all">Tất cả</option>
-          <option value="chung">Chung (Toàn bộ nhân viên)</option>
-          <option value="rieng">Riêng (Theo nhân viên)</option>
-        </select>
+        <app-hud-select [selectId]="'doc-visibility-filter'" [options]="visibilityFilterOptions" [formControl]="visibilityFilterControl"></app-hud-select>
       </div>
       <div class="hud-field grow-3">
         <label class="hud-label" for="doc-search-input">TÌM KIẾM</label>
@@ -82,10 +78,11 @@
             <div class="pag-size">
               <label for="doc-page-size">Hiển thị</label>
               <select id="doc-page-size" class="pag-size-select" [formControl]="pageSizeControl">
-                <option [ngValue]="8">8</option>
-                <option [ngValue]="16">16</option>
-                <option [ngValue]="24">24</option>
+                <option [ngValue]="5">5</option>
+                <option [ngValue]="10">10</option>
+                <option [ngValue]="20">20</option>
                 <option [ngValue]="50">50</option>
+                <option [ngValue]="100">100</option>
               </select>
               <span>/ trang</span>
             </div>
@@ -117,21 +114,13 @@
 
           <div class="form-group">
             <label for="doc-visibility">LOẠI TÀI LIỆU</label>
-            <select id="doc-visibility" formControlName="visibility" class="hud-select">
-              <option value="rieng">Riêng (chỉ 1 nhân viên nhận được)</option>
-              <option value="chung">Chung (toàn bộ nhân viên nhận được)</option>
-            </select>
+            <app-hud-select [selectId]="'doc-visibility'" [options]="uploadVisibilityOptions" formControlName="visibility"></app-hud-select>
           </div>
 
           @if (uploadForm.controls.visibility.value === 'rieng') {
             <div class="form-group">
               <label for="doc-employee">NHÂN VIÊN NHẬN TÀI LIỆU</label>
-              <select id="doc-employee" formControlName="employeeId" class="hud-select">
-                <option [ngValue]="null">-- Chọn nhân viên --</option>
-                @for (emp of employees(); track emp.id) {
-                  <option [ngValue]="emp.id">{{ emp.name }} (#{{ emp.id }})</option>
-                }
-              </select>
+              <app-hud-select [selectId]="'doc-employee'" [options]="employeeOptions()" formControlName="employeeId"></app-hud-select>
             </div>
           }
 

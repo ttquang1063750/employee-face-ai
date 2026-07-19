@@ -20,6 +20,13 @@
           <button class="hud-btn-outline" (click)="applyDateFilter()">ÁP DỤNG</button>
         </div>
 
+        <!-- Status filter — applies instantly like the name search below,
+             not gated behind ÁP DỤNG (rule 10 exempts non-date-range filters) -->
+        <div class="hud-field">
+          <label class="hud-label" for="dashboard-status-filter">TRẠNG THÁI</label>
+          <app-hud-select [selectId]="'dashboard-status-filter'" [options]="statusOptions" [formControl]="statusControl"></app-hud-select>
+        </div>
+
         <!-- Autocomplete employee name search -->
         <div class="hud-field grow-3">
           <label class="hud-label" for="dashboard-employee-search">TÊN NHÂN VIÊN</label>
@@ -62,9 +69,6 @@
           label="LƯỢT CHẤM CÔNG"
           [value]="totalLogsInRange()"
           footer="Lượt quét trong khoảng đã chọn"
-          [filterOptions]="logsStatusFilterOptions"
-          [filterValue]="logsStatusFilter()"
-          (filterChange)="onLogsStatusFilterChange($event)"
           [loading]="isLoading()" />
         <app-stat-widget
           icon="☺"

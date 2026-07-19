@@ -12,6 +12,7 @@ import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { ApiResponse } from '../../core/models/api-response.model';
 import { WebcamCaptureService } from '../../core/services/webcam-capture.service';
+import { HudSelectComponent, HudSelectOption } from '../../core/components/hud-select/hud-select';
 import { environment } from '../../../environments/environment';
 
 export interface AttendanceResult {
@@ -24,7 +25,7 @@ export interface AttendanceResult {
 @Component({
   selector: 'app-kiosk',
   standalone: true,
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, HudSelectComponent],
   templateUrl: './kiosk.html',
   styleUrl: './kiosk.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -39,6 +40,11 @@ export class KioskComponent implements OnInit, OnDestroy {
 
   currentAction = signal<'CHECK_IN' | 'CHECK_OUT'>('CHECK_IN');
   detector = new FormControl('retinaface', { nonNullable: true });
+  readonly detectorOptions: HudSelectOption<string>[] = [
+    { value: 'retinaface', label: 'RetinaFace (Độ chính xác cao nhất)' },
+    { value: 'mtcnn', label: 'MTCNN (Tốc độ xử lý nhanh)' },
+    { value: 'ssd', label: 'SSD (Tối ưu lực lượng tính toán)' },
+  ];
 
   isLoading = signal<boolean>(false);
   statusMsg = signal<string | null>(null);

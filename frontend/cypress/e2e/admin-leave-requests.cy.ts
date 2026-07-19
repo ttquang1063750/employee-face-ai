@@ -13,14 +13,14 @@ describe('Admin leave requests', () => {
   });
 
   it('switches to another status filter', () => {
-    cy.get('#leave-status-filter').select('rejected');
+    cy.selectHudOption('#leave-status-filter', 'Từ chối');
     cy.get('.logs-table tbody tr').should('have.length', 1);
     cy.contains('.logs-table', 'Nghỉ phép cá nhân').should('be.visible');
     cy.contains('.logs-table', 'Lý do từ chối: Dự án đang gấp').should('be.visible');
   });
 
   it('live-filters by the search box', () => {
-    cy.get('#leave-status-filter').select('all');
+    cy.selectHudOption('#leave-status-filter', 'Tất cả');
     cy.get('.logs-table tbody tr').should('have.length', 3);
     cy.get('#leave-search-input').type('Quang');
     cy.get('.logs-table tbody tr').should('have.length', 3);

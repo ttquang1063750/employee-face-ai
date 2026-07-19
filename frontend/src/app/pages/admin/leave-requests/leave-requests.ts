@@ -4,6 +4,7 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { DialogService } from '../../../core/services/dialog.service';
 import { DatePickerComponent } from '../../../core/components/date-picker/date-picker';
+import { HudSelectComponent, HudSelectOption } from '../../../core/components/hud-select/hud-select';
 import { RealtimeService } from '../../../core/services/realtime.service';
 import { ApiResponse } from '../../../core/models/api-response.model';
 import { LeaveRequest } from '../../../core/models/leave-request.model';
@@ -14,7 +15,7 @@ type StatusFilter = 'all' | 'pending' | 'approved' | 'rejected';
 @Component({
   selector: 'app-leave-requests',
   standalone: true,
-  imports: [ReactiveFormsModule, DatePickerComponent],
+  imports: [ReactiveFormsModule, DatePickerComponent, HudSelectComponent],
   templateUrl: './leave-requests.html',
   styleUrl: './leave-requests.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -34,6 +35,14 @@ export class LeaveRequestsComponent implements OnInit {
   private statusFilter = toSignal(this.statusFilterControl.valueChanges, {
     initialValue: this.statusFilterControl.value,
   });
+  // computed(), not a plain array — the "Chờ duyệt" label embeds the live
+  // pendingCount and must re-render as it changes.
+  statusOptions = computed<HudSelectOption<StatusFilter>[]>(() => [
+    { value: 'pending', label: `Chờ duyệt (${this.pendingCount()})` },
+    { value: 'approved', label: 'Đã duyệt' },
+    { value: 'rejected', label: 'Từ chối' },
+    { value: 'all', label: 'Tất cả' },
+  ]);
   // Free-text search is exempt from the explicit-Apply rule (rule 10) — it
   // live-filters, so its value is bridged into a signal for filteredRequests.
   searchQuery = new FormControl('', { nonNullable: true });
@@ -48,7 +57,7 @@ export class LeaveRequestsComponent implements OnInit {
   filterEndDate = signal<string>('');
 
   currentPage = signal<number>(1);
-  pageSizeControl = new FormControl(8, { nonNullable: true });
+  pageSizeControl = new FormControl(10, { nonNullable: true });
   private pageSize = toSignal(this.pageSizeControl.valueChanges, {
     initialValue: this.pageSizeControl.value,
   });

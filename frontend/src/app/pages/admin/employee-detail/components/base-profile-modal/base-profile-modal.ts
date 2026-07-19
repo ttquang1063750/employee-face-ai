@@ -28,12 +28,13 @@ import {
   passwordComplexityValidator,
 } from '../../../../../core/services/credentials.util';
 import { avatarUrl, onImageError } from '../../../../../core/utils/image.util';
-import { DetailedEmployee } from '../../../../../core/models/employee.model';
+import { DetailedEmployee, EmployeeRole } from '../../../../../core/models/employee.model';
+import { HudSelectComponent, HudSelectOption } from '../../../../../core/components/hud-select/hud-select';
 
 @Component({
   selector: 'app-base-profile-modal',
   standalone: true,
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, HudSelectComponent],
   templateUrl: './base-profile-modal.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [WebcamCaptureService, PhotoCaptureStateService],
@@ -68,7 +69,7 @@ export class BaseProfileModalComponent implements OnInit {
   editForm = this.fb.nonNullable.group({
     name: ['', Validators.required],
     age: [30],
-    role: this.fb.nonNullable.control<'staff' | 'admin'>('staff'),
+    role: this.fb.nonNullable.control<EmployeeRole>('staff'),
     username: ['', Validators.required],
     password: ['', passwordComplexityValidator()],
   });
@@ -77,6 +78,10 @@ export class BaseProfileModalComponent implements OnInit {
     { initialValue: this.editForm.getRawValue() },
   );
   usernameStatus = usernameStatusSignal(this.editForm.controls.username);
+  readonly roleOptions: HudSelectOption<EmployeeRole>[] = [
+    { value: 'staff', label: 'Nhân sự (Staff)' },
+    { value: 'admin', label: 'Quản lý (Admin)' },
+  ];
   showEditPassword = signal<boolean>(false);
   readonly passwordHint = PASSWORD_HINT;
 

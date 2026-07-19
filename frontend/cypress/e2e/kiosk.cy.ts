@@ -18,8 +18,8 @@ describe('Kiosk check-in', () => {
   });
 
   it('lets the user pick a different face-detector backend', () => {
-    cy.get('#backend-detector').select('mtcnn');
-    cy.get('#backend-detector').should('have.value', 'mtcnn');
+    cy.selectHudOption('#backend-detector', 'MTCNN (Tốc độ xử lý nhanh)');
+    cy.get('#backend-detector').should('contain.text', 'MTCNN (Tốc độ xử lý nhanh)');
   });
 
   it('shows the success card with employee/mood details on a successful scan', () => {

@@ -1,0 +1,115 @@
+.hud-select-host {
+  position: relative;
+  width: 100%;
+}
+
+.hud-select-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  width: 100%;
+  height: var(--input-height);
+  background: var(--color-bg-input);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--input-radius);
+  color: var(--color-text-primary);
+  font-family: var(--font-body);
+  font-size: var(--input-font-size);
+  padding: var(--input-padding-y) var(--input-padding-x);
+  outline: none;
+  cursor: pointer;
+  text-align: left;
+  transition: var(--transition-base);
+  box-shadow: var(--shadow-inset);
+
+  .placeholder {
+    color: var(--color-text-muted);
+    font-style: italic;
+    font-size: var(--text-sm);
+  }
+
+  .select-caret {
+    flex: none;
+    color: var(--color-text-muted);
+    font-size: 0.7rem;
+    transition: var(--transition-fast);
+
+    &.open {
+      transform: rotate(180deg);
+      color: var(--color-cyan);
+    }
+  }
+
+  &:hover {
+    border-color: var(--color-border-cyan-glow);
+  }
+
+  &:focus,
+  &[aria-expanded='true'] {
+    border-color: var(--color-cyan);
+    background: var(--color-bg-input-focus);
+    box-shadow: 0 0 0 3px rgba(var(--color-cyan-rgb), 0.08), var(--glow-cyan);
+  }
+
+  &.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.hud-select-panel {
+  // Fixed (viewport) coordinates, positioned via inline [style.top]/[style.left]
+  // computed from the trigger's bounding rect — same rationale as
+  // DatePickerComponent's `.date-panel`: escapes clipping by a scrollable
+  // ancestor (e.g. a modal body).
+  position: fixed;
+  z-index: 200;
+  max-height: 260px;
+  overflow-y: auto;
+  background: rgba(var(--color-bg-card-rgb), 1);
+  border: 1px solid var(--color-border-cyan);
+  border-radius: var(--radius-md);
+  list-style: none;
+  margin: 0;
+  padding: var(--space-1) 0;
+  box-shadow: var(--glow-cyan), var(--shadow-dropdown);
+  backdrop-filter: blur(12px);
+  animation: hudSelectPanelIn 0.15s ease;
+}
+
+@keyframes hudSelectPanelIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.hud-select-option {
+  padding: var(--space-3) var(--space-4);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: var(--transition-fast);
+  border-left: 2px solid transparent;
+
+  &:hover {
+    background: rgba(var(--color-cyan-rgb), 0.07);
+    color: var(--color-heading);
+    border-left-color: var(--color-cyan);
+  }
+
+  &.active {
+    background: rgba(var(--color-cyan-rgb), 0.12);
+    color: var(--color-cyan);
+    border-left-color: var(--color-cyan);
+    font-weight: 600;
+  }
+}
+
+.hud-select-empty {
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  font-style: italic;
+  text-align: center;
+}
