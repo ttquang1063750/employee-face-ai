@@ -1,5 +1,11 @@
 <div class="date-picker">
-  <button type="button" class="hud-input date-trigger" (click)="toggleOpen()" [class.disabled]="disabled()" [disabled]="disabled()">
+  <button
+    type="button"
+    class="hud-input date-trigger"
+    (click)="toggleOpen()"
+    [class.disabled]="disabled()"
+    [disabled]="disabled()"
+  >
     <span [class.placeholder]="!displayValue()">{{ displayValue() || placeholder() }}</span>
     <span class="cal-icon">📅</span>
   </button>
@@ -20,11 +26,14 @@
         @for (week of calendarWeeks(); track $index) {
           <div class="week-row">
             @for (cell of week; track cell.iso) {
-              <button type="button" class="day-cell"
+              <button
+                type="button"
+                class="day-cell"
                 [class.outside]="!cell.inCurrentMonth"
                 [class.today]="cell.isToday"
                 [class.selected]="cell.isSelected"
-                (click)="selectDay(cell)">
+                (click)="selectDay(cell)"
+              >
                 {{ cell.day }}
               </button>
             }

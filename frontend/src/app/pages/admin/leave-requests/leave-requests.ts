@@ -1,10 +1,20 @@
-import { Component, OnInit, signal, computed, ChangeDetectionStrategy, inject } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  signal,
+  computed,
+  ChangeDetectionStrategy,
+  inject,
+} from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { DialogService } from '../../../core/services/dialog.service';
 import { DatePickerComponent } from '../../../core/components/date-picker/date-picker';
-import { HudSelectComponent, HudSelectOption } from '../../../core/components/hud-select/hud-select';
+import {
+  HudSelectComponent,
+  HudSelectOption,
+} from '../../../core/components/hud-select/hud-select';
 import { RealtimeService } from '../../../core/services/realtime.service';
 import { ApiResponse } from '../../../core/models/api-response.model';
 import { LeaveRequest } from '../../../core/models/leave-request.model';
@@ -68,8 +78,12 @@ export class LeaveRequestsComponent implements OnInit {
     this.statusFilterControl.valueChanges
       .pipe(takeUntilDestroyed())
       .subscribe(() => this.currentPage.set(1));
-    this.searchQuery.valueChanges.pipe(takeUntilDestroyed()).subscribe(() => this.currentPage.set(1));
-    this.pageSizeControl.valueChanges.pipe(takeUntilDestroyed()).subscribe(() => this.currentPage.set(1));
+    this.searchQuery.valueChanges
+      .pipe(takeUntilDestroyed())
+      .subscribe(() => this.currentPage.set(1));
+    this.pageSizeControl.valueChanges
+      .pipe(takeUntilDestroyed())
+      .subscribe(() => this.currentPage.set(1));
   }
 
   filteredRequests = computed(() => {
@@ -150,7 +164,7 @@ export class LeaveRequestsComponent implements OnInit {
     this.currentPage.set(1);
   }
 
-async approve(req: LeaveRequest): Promise<void> {
+  async approve(req: LeaveRequest): Promise<void> {
     const confirmed = await this.dialogService.confirm(
       'DUYỆT ĐƠN NGHỈ',
       `Duyệt đơn xin nghỉ của ${req.employee_name} (${req.start_date} → ${req.end_date})?`,

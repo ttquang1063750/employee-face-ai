@@ -1,4 +1,10 @@
-import { HttpInterceptorFn, HttpRequest, HttpHandlerFn, HttpEvent, HttpErrorResponse } from '@angular/common/http';
+import {
+  HttpInterceptorFn,
+  HttpRequest,
+  HttpHandlerFn,
+  HttpEvent,
+  HttpErrorResponse,
+} from '@angular/common/http';
 import { inject } from '@angular/core';
 import { AuthService } from '../services/auth.service';
 import { Observable, throwError, BehaviorSubject } from 'rxjs';
@@ -10,24 +16,24 @@ const refreshTokenSubject = new BehaviorSubject<string | null>(null);
 
 export const authInterceptor: HttpInterceptorFn = (
   req: HttpRequest<unknown>,
-  next: HttpHandlerFn
+  next: HttpHandlerFn,
 ): Observable<HttpEvent<unknown>> => {
   const authService = inject(AuthService);
   const router = inject(Router);
 
-  const isPublicUrl = 
-    req.url.includes('/api/login') || 
-    req.url.includes('/api/refresh') || 
+  const isPublicUrl =
+    req.url.includes('/api/login') ||
+    req.url.includes('/api/refresh') ||
     (req.url.includes('/api/attendance') && req.method === 'POST');
 
   let authReq = req;
   const token = authService.getAccessToken();
-  
+
   if (token && !isPublicUrl) {
     authReq = req.clone({
       setHeaders: {
-        Authorization: `Bearer ${token}`
-      }
+        Authorization: `Bearer ${token}`,
+      },
     });
   }
 
@@ -37,7 +43,7 @@ export const authInterceptor: HttpInterceptorFn = (
         return handle401Error(authReq, next, authService, router);
       }
       return throwError(() => error);
-    })
+    }),
   );
 };
 
@@ -45,7 +51,7 @@ function handle401Error(
   req: HttpRequest<unknown>,
   next: HttpHandlerFn,
   authService: AuthService,
-  router: Router
+  router: Router,
 ): Observable<HttpEvent<unknown>> {
   if (!isRefreshing) {
     isRefreshing = true;
@@ -56,31 +62,35 @@ function handle401Error(
         isRefreshing = false;
         const newToken = res.tokens.access_token;
         refreshTokenSubject.next(newToken);
-        
-        return next(req.clone({
-          setHeaders: {
-            Authorization: `Bearer ${newToken}`
-          }
-        }));
+
+        return next(
+          req.clone({
+            setHeaders: {
+              Authorization: `Bearer ${newToken}`,
+            },
+          }),
+        );
       }),
       catchError((err) => {
         isRefreshing = false;
         authService.clearSession();
         router.navigate(['/login']);
         return throwError(() => err);
-      })
+      }),
     );
   } else {
     return refreshTokenSubject.pipe(
-      filter(token => token !== null),
+      filter((token) => token !== null),
       take(1),
       switchMap((token) => {
-        return next(req.clone({
-          setHeaders: {
-            Authorization: `Bearer ${token}`
-          }
-        }));
-      })
+        return next(
+          req.clone({
+            setHeaders: {
+              Authorization: `Bearer ${token}`,
+            },
+          }),
+        );
+      }),
     );
   }
 }

@@ -41,9 +41,25 @@ describe('DocumentsComponent', () => {
   describe('filteredDocuments', () => {
     beforeEach(() => {
       component.documents.set([
-        makeDoc({ id: 1, title: 'Bảng lương Tháng 7', employee_name: 'Tăng Thanh Quang', visibility: 'rieng' }),
-        makeDoc({ id: 2, title: 'Thông báo nghỉ lễ', employee_id: null, employee_name: null, visibility: 'chung' }),
-        makeDoc({ id: 3, title: 'Hợp đồng lao động', employee_name: 'HR Admin', visibility: 'rieng' }),
+        makeDoc({
+          id: 1,
+          title: 'Bảng lương Tháng 7',
+          employee_name: 'Tăng Thanh Quang',
+          visibility: 'rieng',
+        }),
+        makeDoc({
+          id: 2,
+          title: 'Thông báo nghỉ lễ',
+          employee_id: null,
+          employee_name: null,
+          visibility: 'chung',
+        }),
+        makeDoc({
+          id: 3,
+          title: 'Hợp đồng lao động',
+          employee_name: 'HR Admin',
+          visibility: 'rieng',
+        }),
       ]);
     });
 

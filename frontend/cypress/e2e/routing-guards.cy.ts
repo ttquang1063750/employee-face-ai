@@ -28,7 +28,10 @@ describe('Route guards', () => {
       onBeforeLoad(win) {
         win.localStorage.setItem('access_token', 'fake-access');
         win.localStorage.setItem('refresh_token', 'fake-refresh');
-        win.localStorage.setItem('user_session', JSON.stringify({ id: 1, name: 'HR Admin', role: 'admin' }));
+        win.localStorage.setItem(
+          'user_session',
+          JSON.stringify({ id: 1, name: 'HR Admin', role: 'admin' }),
+        );
       },
     });
     cy.location('pathname').should('eq', '/login');

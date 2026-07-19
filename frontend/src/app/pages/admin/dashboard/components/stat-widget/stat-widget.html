@@ -1,7 +1,9 @@
-<div class="widget-card"
-     [class.kind-success]="kind() === 'success'"
-     [class.kind-warning]="kind() === 'warning'"
-     [class.kind-danger]="kind() === 'danger'">
+<div
+  class="widget-card"
+  [class.kind-success]="kind() === 'success'"
+  [class.kind-warning]="kind() === 'warning'"
+  [class.kind-danger]="kind() === 'danger'"
+>
   @if (loading()) {
     <div class="widget-top-row">
       <div class="hud-skeleton skel-chip"></div>

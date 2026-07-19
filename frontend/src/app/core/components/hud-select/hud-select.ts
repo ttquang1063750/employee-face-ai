@@ -1,4 +1,17 @@
-import { Component, ElementRef, HostListener, input, viewChild, AfterViewInit, OnDestroy, ChangeDetectionStrategy, forwardRef, signal, computed, inject } from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  HostListener,
+  input,
+  viewChild,
+  AfterViewInit,
+  OnDestroy,
+  ChangeDetectionStrategy,
+  forwardRef,
+  signal,
+  computed,
+  inject,
+} from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { fromEvent, merge, Subscription } from 'rxjs';
 
@@ -19,13 +32,17 @@ export interface HudSelectOption<T> {
   templateUrl: './hud-select.html',
   styleUrl: './hud-select.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  providers: [{
-    provide: NG_VALUE_ACCESSOR,
-    useExisting: forwardRef(() => HudSelectComponent),
-    multi: true
-  }]
+  providers: [
+    {
+      provide: NG_VALUE_ACCESSOR,
+      useExisting: forwardRef(() => HudSelectComponent),
+      multi: true,
+    },
+  ],
 })
-export class HudSelectComponent<T = string> implements ControlValueAccessor, AfterViewInit, OnDestroy {
+export class HudSelectComponent<T = string>
+  implements ControlValueAccessor, AfterViewInit, OnDestroy
+{
   options = input<HudSelectOption<T>[]>([]);
   placeholder = input<string>('-- Chọn --');
   selectId = input<string>('');
@@ -93,7 +110,9 @@ export class HudSelectComponent<T = string> implements ControlValueAccessor, Aft
   }
 
   private openPanel(): void {
-    const trigger = this.elementRef.nativeElement.querySelector('.hud-select-trigger') as HTMLElement;
+    const trigger = this.elementRef.nativeElement.querySelector(
+      '.hud-select-trigger',
+    ) as HTMLElement;
     if (trigger) {
       const rect = trigger.getBoundingClientRect();
       this.panelTop.set(rect.bottom + 6);

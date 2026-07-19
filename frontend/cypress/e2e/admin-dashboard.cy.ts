@@ -54,7 +54,10 @@ describe('Admin dashboard', () => {
     );
     cy.intercept('GET', '**/api/logs', { fixture: 'logs.json' }).as('getLogsAfterDelete');
 
-    cy.get('.logs-table tbody tr').first().find('button[data-tooltip="Xóa lượt chấm công"]').click();
+    cy.get('.logs-table tbody tr')
+      .first()
+      .find('button[data-tooltip="Xóa lượt chấm công"]')
+      .click();
     cy.contains('.hud-dialog-card', 'XÁC NHẬN XÓA').should('be.visible');
     cy.get('.hud-btn-confirm').click();
 

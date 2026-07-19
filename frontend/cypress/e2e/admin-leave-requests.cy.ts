@@ -42,7 +42,10 @@ describe('Admin leave requests', () => {
 
   it('rejects a pending request with a reason via the prompt dialog', () => {
     cy.intercept('PUT', '**/api/leave-requests/1', (req) => {
-      expect(req.body).to.deep.equal({ status: 'rejected', rejection_reason: 'Chưa sắp xếp được người thay' });
+      expect(req.body).to.deep.equal({
+        status: 'rejected',
+        rejection_reason: 'Chưa sắp xếp được người thay',
+      });
       req.reply({ statusCode: 200, body: { success: true } });
     }).as('reject');
     cy.intercept('GET', '**/api/leave-requests', { fixture: 'leave-requests.json' }).as('reload');

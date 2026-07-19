@@ -16,7 +16,10 @@ import { merge } from 'rxjs';
 import { DialogService } from '../../../core/services/dialog.service';
 import { readFileAsBase64 } from '../../../core/services/webcam-capture.service';
 import { triggerBlobDownload } from '../../../core/utils/download.util';
-import { HudSelectComponent, HudSelectOption } from '../../../core/components/hud-select/hud-select';
+import {
+  HudSelectComponent,
+  HudSelectOption,
+} from '../../../core/components/hud-select/hud-select';
 import { ApiResponse } from '../../../core/models/api-response.model';
 import { EmployeeBase } from '../../../core/models/employee.model';
 import { DocumentVisibility, EmployeeDocument } from '../../../core/models/document.model';
@@ -82,16 +85,18 @@ export class DocumentsComponent implements OnInit {
     // A "chung" (broadcast) doc has no single owner, so the target-employee
     // field is only required while visibility is "rieng" — mirrors the
     // employee_id/visibility CHECK constraint enforced server-side.
-    this.uploadForm.controls.visibility.valueChanges.pipe(takeUntilDestroyed()).subscribe((visibility) => {
-      const employeeIdControl = this.uploadForm.controls.employeeId;
-      if (visibility === 'chung') {
-        employeeIdControl.clearValidators();
-        employeeIdControl.setValue(null);
-      } else {
-        employeeIdControl.setValidators(Validators.required);
-      }
-      employeeIdControl.updateValueAndValidity();
-    });
+    this.uploadForm.controls.visibility.valueChanges
+      .pipe(takeUntilDestroyed())
+      .subscribe((visibility) => {
+        const employeeIdControl = this.uploadForm.controls.employeeId;
+        if (visibility === 'chung') {
+          employeeIdControl.clearValidators();
+          employeeIdControl.setValue(null);
+        } else {
+          employeeIdControl.setValidators(Validators.required);
+        }
+        employeeIdControl.updateValueAndValidity();
+      });
   }
 
   filteredDocuments = computed(() => {
@@ -104,7 +109,8 @@ export class DocumentsComponent implements OnInit {
     }
     if (q) {
       list = list.filter(
-        (d) => d.title.toLowerCase().includes(q) || (d.employee_name || '').toLowerCase().includes(q),
+        (d) =>
+          d.title.toLowerCase().includes(q) || (d.employee_name || '').toLowerCase().includes(q),
       );
     }
     return list;
@@ -284,11 +290,13 @@ export class DocumentsComponent implements OnInit {
   }
 
   downloadDocument(doc: EmployeeDocument): void {
-    this.http.get(`${this.apiUrl}/documents/${doc.id}/download`, { responseType: 'blob' }).subscribe({
-      next: (blob) => triggerBlobDownload(blob, doc.file_name),
-      error: async () => {
-        await this.dialogService.alert('LỖI', 'Không thể tải xuống tài liệu.');
-      },
-    });
+    this.http
+      .get(`${this.apiUrl}/documents/${doc.id}/download`, { responseType: 'blob' })
+      .subscribe({
+        next: (blob) => triggerBlobDownload(blob, doc.file_name),
+        error: async () => {
+          await this.dialogService.alert('LỖI', 'Không thể tải xuống tài liệu.');
+        },
+      });
   }
 }

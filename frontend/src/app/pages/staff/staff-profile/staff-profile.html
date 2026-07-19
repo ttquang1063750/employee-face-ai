@@ -25,7 +25,8 @@
             <img
               [src]="avatarUrl(employee()?.image_path)"
               (error)="onImageError($event)"
-              alt="{{ employee()?.name }}">
+              alt="{{ employee()?.name }}"
+            />
           </div>
           <div class="info-block">
             <h2 class="name">{{ employee()?.name }}</h2>
@@ -88,10 +89,18 @@
             <div class="comp-item">
               <div class="comp-amount text-glow-green">
                 <span>{{ doc.title }}</span>
-                <button class="remove-inline-btn" (click)="downloadDocument(doc)" title="Tải xuống tài liệu này">⬇️</button>
+                <button
+                  class="remove-inline-btn"
+                  (click)="downloadDocument(doc)"
+                  title="Tải xuống tài liệu này"
+                >
+                  ⬇️
+                </button>
               </div>
               <div class="comp-details">
-                <span class="reason">{{ doc.visibility === 'chung' ? 'Toàn bộ nhân viên' : 'Riêng cho bạn' }}</span>
+                <span class="reason">{{
+                  doc.visibility === 'chung' ? 'Toàn bộ nhân viên' : 'Riêng cho bạn'
+                }}</span>
                 <span class="date">📅 {{ doc.uploaded_at | date: 'dd/MM/yyyy' }}</span>
               </div>
             </div>
@@ -103,7 +112,6 @@
 
       <!-- Attendance summary (left, ~65%) + Lifecycle sections (right, ~35%) -->
       <div class="lifecycle-layout">
-
         <!-- Attendance logs and time metrics aggregation -->
         <app-attendance-summary
           [paginatedLogs]="attendance.paginatedRawLogs()"
@@ -127,7 +135,6 @@
 
         <!-- Lifecycle side column: Positions, Compensation, Skills, Projects (read-only) -->
         <div class="lifecycle-side-col">
-
           <!-- Career positions history -->
           <div class="lifecycle-card">
             <div class="section-header-row">
@@ -141,7 +148,14 @@
                     <div class="timeline-header-row">
                       <h4 class="title text-glow-cyan">{{ pos.title }}</h4>
                     </div>
-                    <p class="dates">📅 Từ: {{ pos.start_date }} @if (pos.end_date) { - Đến: {{ pos.end_date }} } @else { - Hiện tại }</p>
+                    <p class="dates">
+                      📅 Từ: {{ pos.start_date }}
+                      @if (pos.end_date) {
+                        - Đến: {{ pos.end_date }}
+                      } @else {
+                        - Hiện tại
+                      }
+                    </p>
                   </div>
                 </div>
               }
@@ -198,14 +212,20 @@
                     <span class="role text-cyan">{{ prj.role }}</span>
                   </div>
                   <p class="desc">{{ prj.description }}</p>
-                  <p class="dates">📅 {{ prj.start_date }} @if (prj.end_date) { đến {{ prj.end_date }} } @else { (Đang tham gia) }</p>
+                  <p class="dates">
+                    📅 {{ prj.start_date }}
+                    @if (prj.end_date) {
+                      đến {{ prj.end_date }}
+                    } @else {
+                      (Đang tham gia)
+                    }
+                  </p>
                 </div>
               } @empty {
                 <p class="no-data">Chưa tham gia dự án nào.</p>
               }
             </div>
           </div>
-
         </div>
       </div>
     }
@@ -224,24 +244,62 @@
             <div class="form-group">
               <label for="staff-current-password">MẬT KHẨU HIỆN TẠI</label>
               <div class="input-with-actions">
-                <input id="staff-current-password" [type]="showCurrentPassword() ? 'text' : 'password'" formControlName="current" class="hud-input" autocomplete="current-password">
-                <button type="button" class="hud-btn-mini" data-tooltip="Hiện/ẩn mật khẩu" (click)="showCurrentPassword.set(!showCurrentPassword())">{{ showCurrentPassword() ? '🙈' : '👁' }}</button>
+                <input
+                  id="staff-current-password"
+                  [type]="showCurrentPassword() ? 'text' : 'password'"
+                  formControlName="current"
+                  class="hud-input"
+                  autocomplete="current-password"
+                />
+                <button
+                  type="button"
+                  class="hud-btn-mini"
+                  data-tooltip="Hiện/ẩn mật khẩu"
+                  (click)="showCurrentPassword.set(!showCurrentPassword())"
+                >
+                  {{ showCurrentPassword() ? '🙈' : '👁' }}
+                </button>
               </div>
             </div>
             <div class="form-group">
               <label for="staff-new-password">MẬT KHẨU MỚI</label>
               <div class="input-with-actions">
-                <input id="staff-new-password" [type]="showNewStaffPassword() ? 'text' : 'password'" formControlName="newPassword" class="hud-input" autocomplete="new-password">
-                <button type="button" class="hud-btn-mini" data-tooltip="Hiện/ẩn mật khẩu" (click)="showNewStaffPassword.set(!showNewStaffPassword())">{{ showNewStaffPassword() ? '🙈' : '👁' }}</button>
+                <input
+                  id="staff-new-password"
+                  [type]="showNewStaffPassword() ? 'text' : 'password'"
+                  formControlName="newPassword"
+                  class="hud-input"
+                  autocomplete="new-password"
+                />
+                <button
+                  type="button"
+                  class="hud-btn-mini"
+                  data-tooltip="Hiện/ẩn mật khẩu"
+                  (click)="showNewStaffPassword.set(!showNewStaffPassword())"
+                >
+                  {{ showNewStaffPassword() ? '🙈' : '👁' }}
+                </button>
               </div>
-              @if (passwordForm.controls.newPassword.value && passwordForm.controls.newPassword.hasError('passwordComplexity')) {
+              @if (
+                passwordForm.controls.newPassword.value &&
+                passwordForm.controls.newPassword.hasError('passwordComplexity')
+              ) {
                 <p class="field-hint error">✖ {{ passwordHint }}</p>
               }
             </div>
             <div class="form-group">
               <label for="staff-confirm-password">XÁC NHẬN MẬT KHẨU MỚI</label>
-              <input id="staff-confirm-password" type="password" formControlName="confirm" class="hud-input" autocomplete="new-password">
-              @if (passwordForm.controls.confirm.value && passwordForm.controls.newPassword.value !== passwordForm.controls.confirm.value) {
+              <input
+                id="staff-confirm-password"
+                type="password"
+                formControlName="confirm"
+                class="hud-input"
+                autocomplete="new-password"
+              />
+              @if (
+                passwordForm.controls.confirm.value &&
+                passwordForm.controls.newPassword.value !== passwordForm.controls.confirm.value
+              ) {
                 <p class="field-hint error">✖ Mật khẩu xác nhận không khớp.</p>
               }
             </div>
@@ -249,7 +307,9 @@
         </div>
         <div class="modal-footer">
           <button class="hud-btn-success" [disabled]="isSavingPassword()" (click)="savePassword()">
-            @if (isSavingPassword()) { <div class="loader"></div> }
+            @if (isSavingPassword()) {
+              <div class="loader"></div>
+            }
             <span>LƯU MẬT KHẨU</span>
           </button>
           <button class="hud-btn-secondary" (click)="closePasswordModal()">HỦY</button>
@@ -271,21 +331,38 @@
             <div class="camera-viewport-frame">
               @if (photoCapture.showWebcam()) {
                 <video #videoElement autoplay playsinline class="modal-video"></video>
-                <button class="camera-cap-btn" (click)="photoCapture.capturePhoto()">📸 CHỤP ẢNH</button>
+                <button class="camera-cap-btn" (click)="photoCapture.capturePhoto()">
+                  📸 CHỤP ẢNH
+                </button>
               } @else {
                 @if (photoCapture.imgBase64()) {
-                  <img [src]="photoCapture.imgBase64()" alt="Ảnh đại diện đã chụp" class="captured-preview-img">
+                  <img
+                    [src]="photoCapture.imgBase64()"
+                    alt="Ảnh đại diện đã chụp"
+                    class="captured-preview-img"
+                  />
                 } @else {
                   <img
                     [src]="avatarUrl(employee()?.image_path)"
                     (error)="onImageError($event)"
                     class="captured-preview-img"
-                    alt="{{ employee()?.name }}">
+                    alt="{{ employee()?.name }}"
+                  />
                 }
                 <div class="photo-controls">
-                  <button class="hud-btn-outline" (click)="photoCapture.startWebcam()">📸 CAMERA CHỤP TRỰC TIẾP</button>
-                  <input #fileInputElement type="file" (change)="photoCapture.handleFileUpload($event)" class="visually-hidden-input" accept="image/*">
-                  <button class="hud-btn-outline" (click)="photoCapture.triggerFileInput()">📁 TẢI LÊN FILE ẢNH</button>
+                  <button class="hud-btn-outline" (click)="photoCapture.startWebcam()">
+                    📸 CAMERA CHỤP TRỰC TIẾP
+                  </button>
+                  <input
+                    #fileInputElement
+                    type="file"
+                    (change)="photoCapture.handleFileUpload($event)"
+                    class="visually-hidden-input"
+                    accept="image/*"
+                  />
+                  <button class="hud-btn-outline" (click)="photoCapture.triggerFileInput()">
+                    📁 TẢI LÊN FILE ẢNH
+                  </button>
                 </div>
               }
             </div>
@@ -293,8 +370,14 @@
           </div>
         </div>
         <div class="modal-footer">
-          <button class="hud-btn-success" [disabled]="isSavingAvatar() || !photoCapture.imgBase64()" (click)="saveAvatar()">
-            @if (isSavingAvatar()) { <div class="loader"></div> }
+          <button
+            class="hud-btn-success"
+            [disabled]="isSavingAvatar() || !photoCapture.imgBase64()"
+            (click)="saveAvatar()"
+          >
+            @if (isSavingAvatar()) {
+              <div class="loader"></div>
+            }
             <span>LƯU ẢNH MỚI</span>
           </button>
           <button class="hud-btn-secondary" (click)="closeAvatarModal()">HỦY</button>
@@ -325,13 +408,25 @@
             </div>
             <div class="form-group">
               <label for="staff-leave-reason">LÝ DO XIN NGHỈ</label>
-              <input id="staff-leave-reason" type="text" formControlName="reason" placeholder="VD: Việc gia đình, khám sức khoẻ..." class="hud-input">
+              <input
+                id="staff-leave-reason"
+                type="text"
+                formControlName="reason"
+                placeholder="VD: Việc gia đình, khám sức khoẻ..."
+                class="hud-input"
+              />
             </div>
           </div>
         </div>
         <div class="modal-footer">
-          <button class="hud-btn-success" [disabled]="isSavingLeave()" (click)="submitLeaveRequest()">
-            @if (isSavingLeave()) { <div class="loader"></div> }
+          <button
+            class="hud-btn-success"
+            [disabled]="isSavingLeave()"
+            (click)="submitLeaveRequest()"
+          >
+            @if (isSavingLeave()) {
+              <div class="loader"></div>
+            }
             <span>GỬI ĐƠN</span>
           </button>
           <button class="hud-btn-secondary" (click)="closeLeaveModal()">HỦY</button>

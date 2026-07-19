@@ -49,7 +49,9 @@
   &[aria-expanded='true'] {
     border-color: var(--color-cyan);
     background: var(--color-bg-input-focus);
-    box-shadow: 0 0 0 3px rgba(var(--color-cyan-rgb), 0.08), var(--glow-cyan);
+    box-shadow:
+      0 0 0 3px rgba(var(--color-cyan-rgb), 0.08),
+      var(--glow-cyan);
   }
 
   &.disabled {
@@ -79,8 +81,14 @@
 }
 
 @keyframes hudSelectPanelIn {
-  from { opacity: 0; transform: translateY(-6px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .hud-select-option {

@@ -21,22 +21,21 @@
               width="24"
               [attr.height]="140 - pt.y"
               rx="4"
-              class="chart-bar" />
-            <text
-              [attr.x]="pt.x"
-              [attr.y]="pt.y - 8"
-              class="svg-value-text"
-              text-anchor="middle">{{ pt.count }}</text>
+              class="chart-bar"
+            />
+            <text [attr.x]="pt.x" [attr.y]="pt.y - 8" class="svg-value-text" text-anchor="middle">
+              {{ pt.count }}
+            </text>
           }
-          <text
-            [attr.x]="pt.x"
-            y="160"
-            class="svg-axis-text"
-            text-anchor="middle">{{ pt.hour }}</text>
+          <text [attr.x]="pt.x" y="160" class="svg-axis-text" text-anchor="middle">
+            {{ pt.hour }}
+          </text>
         }
 
         @if (!hasData()) {
-          <text x="250" y="90" class="svg-empty-text" text-anchor="middle">Chưa có dữ liệu chấm công trong khoảng thời gian này</text>
+          <text x="250" y="90" class="svg-empty-text" text-anchor="middle">
+            Chưa có dữ liệu chấm công trong khoảng thời gian này
+          </text>
         }
       </svg>
     </div>

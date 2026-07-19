@@ -103,7 +103,9 @@ describe('authInterceptor', () => {
     let errored = false;
     http.get(`${API}/employees`).subscribe({ error: () => (errored = true) });
 
-    httpMock.expectOne(`${API}/employees`).flush({ success: false }, { status: 401, statusText: 'Unauthorized' });
+    httpMock
+      .expectOne(`${API}/employees`)
+      .flush({ success: false }, { status: 401, statusText: 'Unauthorized' });
     httpMock
       .expectOne(`${API}/refresh`)
       .flush({ success: false }, { status: 401, statusText: 'Unauthorized' });
@@ -121,8 +123,12 @@ describe('authInterceptor', () => {
     http.get(`${API}/employees`).subscribe((res) => (resultA = res));
     http.get(`${API}/logs`).subscribe((res) => (resultB = res));
 
-    httpMock.expectOne(`${API}/employees`).flush({ success: false }, { status: 401, statusText: 'Unauthorized' });
-    httpMock.expectOne(`${API}/logs`).flush({ success: false }, { status: 401, statusText: 'Unauthorized' });
+    httpMock
+      .expectOne(`${API}/employees`)
+      .flush({ success: false }, { status: 401, statusText: 'Unauthorized' });
+    httpMock
+      .expectOne(`${API}/logs`)
+      .flush({ success: false }, { status: 401, statusText: 'Unauthorized' });
 
     // Only one refresh call should have been made despite two concurrent 401s.
     const refreshReq = httpMock.expectOne(`${API}/refresh`);

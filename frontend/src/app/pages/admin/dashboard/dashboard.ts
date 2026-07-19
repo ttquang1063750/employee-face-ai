@@ -11,7 +11,10 @@ import { HttpClient } from '@angular/common/http';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { DatePickerComponent } from '../../../core/components/date-picker/date-picker';
-import { HudSelectComponent, HudSelectOption } from '../../../core/components/hud-select/hud-select';
+import {
+  HudSelectComponent,
+  HudSelectOption,
+} from '../../../core/components/hud-select/hud-select';
 import { ApiResponse } from '../../../core/models/api-response.model';
 import { EmployeeBase } from '../../../core/models/employee.model';
 import { AttendanceLogEntry } from '../../../core/models/attendance-log.model';
@@ -120,9 +123,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   // Computed: Unique employee name suggestions filtered by current input
   employeeSuggestions = computed(() => {
     const q = this.filterEmployeeName().toLowerCase().trim();
-    const allNames = Array.from(
-      new Set(this.logs().map((l) => l.employee_name)),
-    ).sort();
+    const allNames = Array.from(new Set(this.logs().map((l) => l.employee_name))).sort();
     if (!q) return allNames.slice(0, 8);
     return allNames.filter((n) => n.toLowerCase().includes(q)).slice(0, 8);
   });
@@ -402,31 +403,39 @@ export class DashboardComponent implements OnInit, OnDestroy {
       ].join('\n');
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    triggerBlobDownload(blob, `bao_cao_tong_hop_${this.filterStartDate()}_to_${this.filterEndDate()}.csv`);
+    triggerBlobDownload(
+      blob,
+      `bao_cao_tong_hop_${this.filterStartDate()}_to_${this.filterEndDate()}.csv`,
+    );
   }
 
   onDeleteLog(id: number): void {
-    this.dialogService.confirm('XÁC NHẬN XÓA', 'Bạn có chắc chắn muốn xóa lượt chấm công này? Thao tác này không thể hoàn tác.').then((confirmed) => {
-      if (confirmed) {
-        this.http.delete<ApiResponse>(`${this.apiUrl}/logs/${id}`).subscribe({
-          next: (res) => {
-            if (res.success) {
-              this.http.get<ApiResponse<AttendanceLogEntry[]>>(`${this.apiUrl}/logs`).subscribe({
-                next: (logRes) => {
-                  if (logRes.success && logRes.data) {
-                    this.logs.set(logRes.data);
-                  }
-                }
-              });
-            } else {
-              this.dialogService.alert('LỖI', res.error || 'Không thể xóa lượt chấm công.');
-            }
-          },
-          error: () => {
-            this.dialogService.alert('LỖI', 'Lỗi kết nối máy chủ.');
-          }
-        });
-      }
-    });
+    this.dialogService
+      .confirm(
+        'XÁC NHẬN XÓA',
+        'Bạn có chắc chắn muốn xóa lượt chấm công này? Thao tác này không thể hoàn tác.',
+      )
+      .then((confirmed) => {
+        if (confirmed) {
+          this.http.delete<ApiResponse>(`${this.apiUrl}/logs/${id}`).subscribe({
+            next: (res) => {
+              if (res.success) {
+                this.http.get<ApiResponse<AttendanceLogEntry[]>>(`${this.apiUrl}/logs`).subscribe({
+                  next: (logRes) => {
+                    if (logRes.success && logRes.data) {
+                      this.logs.set(logRes.data);
+                    }
+                  },
+                });
+              } else {
+                this.dialogService.alert('LỖI', res.error || 'Không thể xóa lượt chấm công.');
+              }
+            },
+            error: () => {
+              this.dialogService.alert('LỖI', 'Lỗi kết nối máy chủ.');
+            },
+          });
+        }
+      });
   }
 }

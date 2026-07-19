@@ -8,7 +8,7 @@ import { HudDialogComponent } from './core/components/hud-dialog/hud-dialog';
   imports: [RouterOutlet, HudDialogComponent],
   templateUrl: './app.html',
   styleUrl: './app.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class App {
   protected readonly title = signal('frontend');

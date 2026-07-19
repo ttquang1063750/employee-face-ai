@@ -14,11 +14,16 @@
     <div class="donut-wrap">
       <svg viewBox="0 0 42 42" class="donut-chart">
         @for (seg of segments(); track seg.key) {
-          <circle cx="21" cy="21" r="15.9" fill="transparent"
+          <circle
+            cx="21"
+            cy="21"
+            r="15.9"
+            fill="transparent"
             [style.stroke]="seg.color"
             stroke-width="6"
             [attr.stroke-dasharray]="seg.value + ' ' + (100 - seg.value)"
-            [attr.stroke-dashoffset]="seg.offset" />
+            [attr.stroke-dashoffset]="seg.offset"
+          />
         }
       </svg>
       <ul class="donut-legend">
@@ -34,7 +39,14 @@
   } @else {
     <div class="donut-empty">
       <svg viewBox="0 0 42 42" class="donut-chart">
-        <circle cx="21" cy="21" r="15.9" fill="transparent" stroke="rgba(var(--color-border-rgb), 0.25)" stroke-width="6" />
+        <circle
+          cx="21"
+          cy="21"
+          r="15.9"
+          fill="transparent"
+          stroke="rgba(var(--color-border-rgb), 0.25)"
+          stroke-width="6"
+        />
       </svg>
       <p>Chưa có dữ liệu chấm công trong khoảng thời gian này</p>
     </div>

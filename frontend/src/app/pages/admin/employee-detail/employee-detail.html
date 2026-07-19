@@ -22,7 +22,8 @@
             <img
               [src]="avatarUrl(emp.image_path)"
               (error)="onImageError($event)"
-              alt="{{ emp.name }}">
+              alt="{{ emp.name }}"
+            />
           </div>
           <div class="info-block">
             <h2 class="name">{{ emp.name }}</h2>
@@ -37,9 +38,7 @@
           </div>
         </div>
 
-        <button class="hud-btn-primary" (click)="openBaseModal()">
-          ⚙️ SỬA THÔNG TIN BẢN THÂN
-        </button>
+        <button class="hud-btn-primary" (click)="openBaseModal()">⚙️ SỬA THÔNG TIN BẢN THÂN</button>
       </div>
 
       <!-- Attendance summary (left, ~65%) + Lifecycle sections (right, ~35%) -->

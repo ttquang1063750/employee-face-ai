@@ -6,9 +6,9 @@ describe('Staff profile', () => {
     cy.intercept('GET', '**/api/employees/11', { fixture: 'employee-detail-staff.json' }).as(
       'getDetail',
     );
-    cy.intercept('GET', '**/api/employees/11/leave-requests', { fixture: 'leave-requests.json' }).as(
-      'getLeaveRequests',
-    );
+    cy.intercept('GET', '**/api/employees/11/leave-requests', {
+      fixture: 'leave-requests.json',
+    }).as('getLeaveRequests');
     cy.intercept('GET', '**/api/employees/11/documents', { fixture: 'documents.json' }).as(
       'getDocuments',
     );
@@ -67,7 +67,10 @@ describe('Staff profile', () => {
 
     it('saves a valid password change', () => {
       cy.intercept('PUT', '**/api/employees/11/password', (req) => {
-        expect(req.body).to.deep.equal({ current_password: 'oldpass', new_password: 'StrongPass1!' });
+        expect(req.body).to.deep.equal({
+          current_password: 'oldpass',
+          new_password: 'StrongPass1!',
+        });
         req.reply({ statusCode: 200, body: { success: true } });
       }).as('savePassword');
 
@@ -81,14 +84,19 @@ describe('Staff profile', () => {
   });
 
   it('changes the avatar via file upload', () => {
-    cy.intercept('PUT', '**/api/employees/11/avatar', { statusCode: 200, body: { success: true } }).as(
-      'saveAvatar',
-    );
+    cy.intercept('PUT', '**/api/employees/11/avatar', {
+      statusCode: 200,
+      body: { success: true },
+    }).as('saveAvatar');
 
     cy.contains('button', 'Đổi ảnh đại diện').click();
     cy.contains('button', 'TẢI LÊN FILE ẢNH').should('be.visible');
     cy.get('input[type=file]').selectFile(
-      { contents: Cypress.Buffer.from(TINY_PNG_BASE64, 'base64'), fileName: 'avatar.png', mimeType: 'image/png' },
+      {
+        contents: Cypress.Buffer.from(TINY_PNG_BASE64, 'base64'),
+        fileName: 'avatar.png',
+        mimeType: 'image/png',
+      },
       { force: true },
     );
     cy.contains('button', 'LƯU ẢNH MỚI').should('not.be.disabled').click();

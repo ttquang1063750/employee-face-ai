@@ -15,7 +15,10 @@ import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../../core/services/auth.service';
 import { DialogService } from '../../../core/services/dialog.service';
-import { PASSWORD_HINT, passwordComplexityValidator } from '../../../core/services/credentials.util';
+import {
+  PASSWORD_HINT,
+  passwordComplexityValidator,
+} from '../../../core/services/credentials.util';
 import { DatePickerComponent } from '../../../core/components/date-picker/date-picker';
 import { DetailedEmployee } from '../../../core/models/employee.model';
 import { LeaveRequest } from '../../../core/models/leave-request.model';
@@ -233,23 +236,21 @@ export class StaffProfileComponent implements OnInit, OnDestroy {
     }
 
     this.isSavingPassword.set(true);
-    this.employeeService
-      .changePassword(employeeId, current, newPassword)
-      .subscribe({
-        next: async (res) => {
-          this.isSavingPassword.set(false);
-          if (res.success) {
-            await this.dialogService.alert('THÀNH CÔNG', 'Đổi mật khẩu thành công.');
-            this.closePasswordModal();
-          } else {
-            await this.dialogService.alert('LỖI', res.error || 'Không thể đổi mật khẩu.');
-          }
-        },
-        error: async (err: HttpErrorResponse) => {
-          this.isSavingPassword.set(false);
-          await this.dialogService.alert('LỖI', err.error?.error || 'Lỗi kết nối máy chủ.');
-        },
-      });
+    this.employeeService.changePassword(employeeId, current, newPassword).subscribe({
+      next: async (res) => {
+        this.isSavingPassword.set(false);
+        if (res.success) {
+          await this.dialogService.alert('THÀNH CÔNG', 'Đổi mật khẩu thành công.');
+          this.closePasswordModal();
+        } else {
+          await this.dialogService.alert('LỖI', res.error || 'Không thể đổi mật khẩu.');
+        }
+      },
+      error: async (err: HttpErrorResponse) => {
+        this.isSavingPassword.set(false);
+        await this.dialogService.alert('LỖI', err.error?.error || 'Lỗi kết nối máy chủ.');
+      },
+    });
   }
 
   // ===================== Change Avatar =====================
@@ -268,24 +269,22 @@ export class StaffProfileComponent implements OnInit, OnDestroy {
     if (!employeeId || !this.photoCapture.imgBase64()) return;
 
     this.isSavingAvatar.set(true);
-    this.employeeService
-      .changeAvatar(employeeId, this.photoCapture.imgBase64())
-      .subscribe({
-        next: async (res) => {
-          this.isSavingAvatar.set(false);
-          if (res.success) {
-            await this.dialogService.alert('THÀNH CÔNG', 'Cập nhật ảnh đại diện thành công.');
-            this.closeAvatarModal();
-            this.loadOwnProfile();
-          } else {
-            await this.dialogService.alert('LỖI', res.error || 'Không thể cập nhật ảnh đại diện.');
-          }
-        },
-        error: async (err: HttpErrorResponse) => {
-          this.isSavingAvatar.set(false);
-          await this.dialogService.alert('LỖI', err.error?.error || 'Lỗi kết nối máy chủ.');
-        },
-      });
+    this.employeeService.changeAvatar(employeeId, this.photoCapture.imgBase64()).subscribe({
+      next: async (res) => {
+        this.isSavingAvatar.set(false);
+        if (res.success) {
+          await this.dialogService.alert('THÀNH CÔNG', 'Cập nhật ảnh đại diện thành công.');
+          this.closeAvatarModal();
+          this.loadOwnProfile();
+        } else {
+          await this.dialogService.alert('LỖI', res.error || 'Không thể cập nhật ảnh đại diện.');
+        }
+      },
+      error: async (err: HttpErrorResponse) => {
+        this.isSavingAvatar.set(false);
+        await this.dialogService.alert('LỖI', err.error?.error || 'Lỗi kết nối máy chủ.');
+      },
+    });
   }
 
   // ===================== Leave Requests =====================
@@ -368,12 +367,14 @@ export class StaffProfileComponent implements OnInit, OnDestroy {
   }
 
   downloadDocument(doc: EmployeeDocument): void {
-    this.http.get(`${this.apiUrl}/documents/${doc.id}/download`, { responseType: 'blob' }).subscribe({
-      next: (blob) => triggerBlobDownload(blob, doc.file_name),
-      error: async () => {
-        await this.dialogService.alert('LỖI', 'Không thể tải xuống tài liệu.');
-      },
-    });
+    this.http
+      .get(`${this.apiUrl}/documents/${doc.id}/download`, { responseType: 'blob' })
+      .subscribe({
+        next: (blob) => triggerBlobDownload(blob, doc.file_name),
+        error: async () => {
+          await this.dialogService.alert('LỖI', 'Không thể tải xuống tài liệu.');
+        },
+      });
   }
 
   leaveStatusLabel(status: string): string {

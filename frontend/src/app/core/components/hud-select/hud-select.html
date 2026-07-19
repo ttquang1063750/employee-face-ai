@@ -6,7 +6,8 @@
     [class.disabled]="disabled()"
     [disabled]="disabled()"
     [attr.aria-expanded]="isOpen()"
-    (click)="toggleOpen()">
+    (click)="toggleOpen()"
+  >
     <span [class.placeholder]="!selectedLabel()">{{ selectedLabel() || placeholder() }}</span>
     <span class="select-caret" [class.open]="isOpen()">▾</span>
   </button>
@@ -20,7 +21,8 @@
     [hidden]="!isOpen()"
     [style.top.px]="panelTop()"
     [style.left.px]="panelLeft()"
-    [style.width.px]="panelWidth()">
+    [style.width.px]="panelWidth()"
+  >
     @for (opt of options(); track opt.label) {
       <li
         class="hud-select-option"
@@ -30,7 +32,8 @@
         [class.active]="opt.value === value()"
         (click)="selectOption(opt)"
         (keydown.enter)="selectOption(opt)"
-        (keydown.space)="$event.preventDefault(); selectOption(opt)">
+        (keydown.space)="$event.preventDefault(); selectOption(opt)"
+      >
         {{ opt.label }}
       </li>
     } @empty {

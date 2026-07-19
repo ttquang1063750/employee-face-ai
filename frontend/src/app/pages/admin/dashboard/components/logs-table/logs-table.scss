@@ -59,7 +59,8 @@
   text-align: left;
   font-family: 'Inter', sans-serif;
 
-  th, td {
+  th,
+  td {
     padding: 0.85rem var(--space-4);
     border-bottom: 1px solid rgba(var(--color-border-rgb), 0.45);
   }

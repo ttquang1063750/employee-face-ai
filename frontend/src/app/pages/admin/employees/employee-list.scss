@@ -21,7 +21,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  
+
   .title {
     font-size: 1.15rem;
     font-weight: 700;
@@ -91,7 +91,8 @@
   text-align: left;
   font-family: 'Inter', sans-serif;
 
-  th, td {
+  th,
+  td {
     padding: var(--space-4);
     border-bottom: 1px solid rgba(var(--color-border-rgb), 0.2);
     vertical-align: middle;
@@ -216,7 +217,10 @@
 /* ================= MODERN MODAL CSS ================= */
 .modal-backdrop {
   position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   background-color: rgba(var(--color-bg-input-rgb), 0.85);
   backdrop-filter: blur(8px);
   z-index: 100;
@@ -241,8 +245,14 @@
 }
 
 @keyframes modalScale {
-  from { opacity: 0; transform: scale(0.96); }
-  to { opacity: 1; transform: scale(1); }
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 .modal-header {
@@ -267,7 +277,9 @@
     font-size: 1.2rem;
     cursor: pointer;
     transition: color 0.2s;
-    &:hover { color: var(--color-red); }
+    &:hover {
+      color: var(--color-red);
+    }
   }
 }
 
@@ -368,7 +380,10 @@
   font-weight: 600;
   cursor: pointer;
   border-radius: var(--radius-sm);
-  &:hover { background: rgba(var(--color-heading-rgb), 0.05); color: var(--color-heading); }
+  &:hover {
+    background: rgba(var(--color-heading-rgb), 0.05);
+    color: var(--color-heading);
+  }
 }
 
 .loader {
@@ -385,7 +400,12 @@
 }
 
 @keyframes slideDown {
-  from { opacity: 0; transform: translateY(-5px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
-

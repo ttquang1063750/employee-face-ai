@@ -28,7 +28,10 @@
   &[disabled] {
     opacity: 0.5;
     cursor: not-allowed;
-    &:hover { box-shadow: none; background: transparent; }
+    &:hover {
+      box-shadow: none;
+      background: transparent;
+    }
   }
 }
 
@@ -95,7 +98,9 @@
     opacity: 0;
     transform: translateY(-4px);
     pointer-events: none;
-    transition: opacity 0.15s ease, transform 0.15s ease;
+    transition:
+      opacity 0.15s ease,
+      transform 0.15s ease;
     z-index: 20;
   }
 

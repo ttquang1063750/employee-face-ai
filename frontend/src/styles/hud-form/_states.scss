@@ -22,8 +22,12 @@
 }
 
 @keyframes hud-skeleton-shimmer {
-  0% { background-position: 100% 50%; }
-  100% { background-position: 0 50%; }
+  0% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0 50%;
+  }
 }
 
 // ─── Error State Text & Retry Button ─────────────────────────
@@ -86,7 +90,9 @@
 }
 
 @keyframes hud-spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 // ─── Error State Container ───────────────────────────────────

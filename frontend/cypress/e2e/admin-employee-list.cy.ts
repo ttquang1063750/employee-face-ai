@@ -71,7 +71,11 @@ describe('Admin employee list', () => {
       cy.get('#new-emp-skills').type('Angular: Thành thạo core');
 
       cy.get('input[type=file]').selectFile(
-        { contents: Cypress.Buffer.from(TINY_PNG_BASE64, 'base64'), fileName: 'avatar.png', mimeType: 'image/png' },
+        {
+          contents: Cypress.Buffer.from(TINY_PNG_BASE64, 'base64'),
+          fileName: 'avatar.png',
+          mimeType: 'image/png',
+        },
         { force: true },
       );
 

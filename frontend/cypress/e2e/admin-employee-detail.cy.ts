@@ -47,7 +47,10 @@ describe('Admin employee detail', () => {
 
   it('adds a new skill through the skills panel', () => {
     cy.intercept('PUT', '**/api/employees/1/skills', (req) => {
-      expect(req.body).to.deep.include({ skill_name: 'Docker', description: 'Container hóa dịch vụ' });
+      expect(req.body).to.deep.include({
+        skill_name: 'Docker',
+        description: 'Container hóa dịch vụ',
+      });
       req.reply({ statusCode: 200, body: { success: true } });
     }).as('saveSkills');
 
@@ -62,9 +65,10 @@ describe('Admin employee detail', () => {
   });
 
   it('adds a new project through the projects panel', () => {
-    cy.intercept('PUT', '**/api/employees/1/projects', { statusCode: 200, body: { success: true } }).as(
-      'saveProjects',
-    );
+    cy.intercept('PUT', '**/api/employees/1/projects', {
+      statusCode: 200,
+      body: { success: true },
+    }).as('saveProjects');
 
     cy.get('[data-tooltip="QUẢN LÝ DỰ ÁN"]').click();
     cy.get('#new-proj-name').type('Internal HR Bot');

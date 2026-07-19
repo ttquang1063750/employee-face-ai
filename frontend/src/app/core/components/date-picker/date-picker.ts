@@ -1,4 +1,15 @@
-import { Component, ElementRef, HostListener, input, OnDestroy, ChangeDetectionStrategy, forwardRef, signal, computed, inject } from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  HostListener,
+  input,
+  OnDestroy,
+  ChangeDetectionStrategy,
+  forwardRef,
+  signal,
+  computed,
+  inject,
+} from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { fromEvent, merge, Subscription } from 'rxjs';
 import { toLocalDateString } from '../../utils/date.util';
@@ -18,11 +29,13 @@ interface CalendarCell {
   templateUrl: './date-picker.html',
   styleUrl: './date-picker.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  providers: [{
-    provide: NG_VALUE_ACCESSOR,
-    useExisting: forwardRef(() => DatePickerComponent),
-    multi: true
-  }]
+  providers: [
+    {
+      provide: NG_VALUE_ACCESSOR,
+      useExisting: forwardRef(() => DatePickerComponent),
+      multi: true,
+    },
+  ],
 })
 export class DatePickerComponent implements ControlValueAccessor, OnDestroy {
   placeholder = input<string>('Chọn ngày');
@@ -140,7 +153,10 @@ export class DatePickerComponent implements ControlValueAccessor, OnDestroy {
   prevMonth(): void {
     let m = this.viewMonth() - 1;
     let y = this.viewYear();
-    if (m < 0) { m = 11; y--; }
+    if (m < 0) {
+      m = 11;
+      y--;
+    }
     this.viewMonth.set(m);
     this.viewYear.set(y);
   }
@@ -148,7 +164,10 @@ export class DatePickerComponent implements ControlValueAccessor, OnDestroy {
   nextMonth(): void {
     let m = this.viewMonth() + 1;
     let y = this.viewYear();
-    if (m > 11) { m = 0; y++; }
+    if (m > 11) {
+      m = 0;
+      y++;
+    }
     this.viewMonth.set(m);
     this.viewYear.set(y);
   }
@@ -178,13 +197,19 @@ export class DatePickerComponent implements ControlValueAccessor, OnDestroy {
     this.closePanel();
   }
 
-  private buildCell(year: number, month: number, day: number, inCurrentMonth: boolean): CalendarCell {
+  private buildCell(
+    year: number,
+    month: number,
+    day: number,
+    inCurrentMonth: boolean,
+  ): CalendarCell {
     const date = new Date(year, month, day);
     const iso = toLocalDateString(date);
     const today = new Date();
-    const isToday = date.getFullYear() === today.getFullYear()
-      && date.getMonth() === today.getMonth()
-      && date.getDate() === today.getDate();
+    const isToday =
+      date.getFullYear() === today.getFullYear() &&
+      date.getMonth() === today.getMonth() &&
+      date.getDate() === today.getDate();
     return { day: date.getDate(), iso, inCurrentMonth, isToday, isSelected: iso === this.value() };
   }
 

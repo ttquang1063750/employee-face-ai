@@ -36,17 +36,41 @@
   color: var(--color-text-muted);
 }
 
-.widget-card.kind-success .widget-chip { background: rgba(var(--color-cyan-rgb), 0.16); color: var(--color-cyan); }
-.widget-card.kind-warning .widget-chip { background: rgba(var(--color-orange-rgb), 0.16); color: var(--color-orange); }
-.widget-card.kind-danger .widget-chip { background: rgba(var(--color-red-rgb), 0.16); color: var(--color-red); }
+.widget-card.kind-success .widget-chip {
+  background: rgba(var(--color-cyan-rgb), 0.16);
+  color: var(--color-cyan);
+}
+.widget-card.kind-warning .widget-chip {
+  background: rgba(var(--color-orange-rgb), 0.16);
+  color: var(--color-orange);
+}
+.widget-card.kind-danger .widget-chip {
+  background: rgba(var(--color-red-rgb), 0.16);
+  color: var(--color-red);
+}
 
-.widget-card.kind-success .widget-value { color: var(--color-cyan); }
-.widget-card.kind-warning .widget-value { color: var(--color-orange); }
-.widget-card.kind-danger .widget-value { color: var(--color-red); }
+.widget-card.kind-success .widget-value {
+  color: var(--color-cyan);
+}
+.widget-card.kind-warning .widget-value {
+  color: var(--color-orange);
+}
+.widget-card.kind-danger .widget-value {
+  color: var(--color-red);
+}
 
-.widget-card.kind-warning .widget-status { background: rgba(var(--color-orange-rgb), 0.16); color: var(--color-orange); }
-.widget-card.kind-danger .widget-status { background: rgba(var(--color-red-rgb), 0.16); color: var(--color-red); }
-.widget-card.kind-success .widget-status { background: rgba(var(--color-cyan-rgb), 0.16); color: var(--color-cyan); }
+.widget-card.kind-warning .widget-status {
+  background: rgba(var(--color-orange-rgb), 0.16);
+  color: var(--color-orange);
+}
+.widget-card.kind-danger .widget-status {
+  background: rgba(var(--color-red-rgb), 0.16);
+  color: var(--color-red);
+}
+.widget-card.kind-success .widget-status {
+  background: rgba(var(--color-cyan-rgb), 0.16);
+  color: var(--color-cyan);
+}
 
 .widget-label {
   font-size: 0.75rem;

@@ -8,19 +8,29 @@
       <div class="form-fields">
         <div class="form-group">
           <label for="edit-emp-name">HỌ VÀ TÊN</label>
-          <input id="edit-emp-name" type="text" formControlName="name" class="hud-input">
+          <input id="edit-emp-name" type="text" formControlName="name" class="hud-input" />
         </div>
         <div class="form-group">
           <label for="edit-emp-age">TUỔI</label>
-          <input id="edit-emp-age" type="number" formControlName="age" class="hud-input">
+          <input id="edit-emp-age" type="number" formControlName="age" class="hud-input" />
         </div>
         <div class="form-group">
           <label for="edit-emp-role">PHÂN QUYỀN HỆ THỐNG</label>
-          <app-hud-select [selectId]="'edit-emp-role'" [options]="roleOptions" formControlName="role"></app-hud-select>
+          <app-hud-select
+            [selectId]="'edit-emp-role'"
+            [options]="roleOptions"
+            formControlName="role"
+          ></app-hud-select>
         </div>
         <div class="form-group">
           <label for="edit-emp-username">USERNAME *</label>
-          <input id="edit-emp-username" type="text" formControlName="username" autocomplete="off" class="hud-input">
+          <input
+            id="edit-emp-username"
+            type="text"
+            formControlName="username"
+            autocomplete="off"
+            class="hud-input"
+          />
           @if (usernameStatus() === 'checking') {
             <p class="field-hint">⏳ Đang kiểm tra username...</p>
           } @else if (usernameStatus() === 'taken') {
@@ -32,11 +42,34 @@
         <div class="form-group">
           <label for="edit-emp-password">MẬT KHẨU MỚI (Để trống nếu giữ nguyên)</label>
           <div class="input-with-actions">
-            <input id="edit-emp-password" [type]="showEditPassword() ? 'text' : 'password'" formControlName="password" class="hud-input" autocomplete="new-password">
-            <button type="button" class="hud-btn-mini" data-tooltip="Hiện/ẩn mật khẩu" (click)="showEditPassword.set(!showEditPassword())">{{ showEditPassword() ? '🙈' : '👁' }}</button>
-            <button type="button" class="hud-btn-mini" data-tooltip="Tạo mật khẩu ngẫu nhiên" (click)="generatePassword()">🎲</button>
+            <input
+              id="edit-emp-password"
+              [type]="showEditPassword() ? 'text' : 'password'"
+              formControlName="password"
+              class="hud-input"
+              autocomplete="new-password"
+            />
+            <button
+              type="button"
+              class="hud-btn-mini"
+              data-tooltip="Hiện/ẩn mật khẩu"
+              (click)="showEditPassword.set(!showEditPassword())"
+            >
+              {{ showEditPassword() ? '🙈' : '👁' }}
+            </button>
+            <button
+              type="button"
+              class="hud-btn-mini"
+              data-tooltip="Tạo mật khẩu ngẫu nhiên"
+              (click)="generatePassword()"
+            >
+              🎲
+            </button>
           </div>
-          @if (editForm.controls.password.value && editForm.controls.password.hasError('passwordComplexity')) {
+          @if (
+            editForm.controls.password.value &&
+            editForm.controls.password.hasError('passwordComplexity')
+          ) {
             <p class="field-hint error">✖ {{ passwordHint }}</p>
           }
         </div>
@@ -48,21 +81,38 @@
           <div class="camera-viewport-frame">
             @if (photoCapture.showWebcam()) {
               <video #videoElement autoplay playsinline class="modal-video"></video>
-              <button class="camera-cap-btn" (click)="photoCapture.capturePhoto()">📸 CHỤP ẢNH MẪU</button>
+              <button class="camera-cap-btn" (click)="photoCapture.capturePhoto()">
+                📸 CHỤP ẢNH MẪU
+              </button>
             } @else {
               @if (photoCapture.imgBase64()) {
-                <img [src]="photoCapture.imgBase64()" alt="Ảnh chân dung đã chụp" class="captured-preview-img">
+                <img
+                  [src]="photoCapture.imgBase64()"
+                  alt="Ảnh chân dung đã chụp"
+                  class="captured-preview-img"
+                />
               } @else {
                 <img
                   [src]="avatarUrl(employee().image_path)"
                   (error)="onImageError($event)"
                   class="captured-preview-img"
-                  alt="{{ employee().name }}">
+                  alt="{{ employee().name }}"
+                />
               }
               <div class="photo-controls">
-                <button class="hud-btn-outline" (click)="photoCapture.startWebcam()">📸 CAMERA CHỤP TRỰC TIẾP</button>
-                <input #fileInputElement type="file" (change)="photoCapture.handleFileUpload($event)" class="visually-hidden-input" accept="image/*">
-                <button class="hud-btn-outline" (click)="photoCapture.triggerFileInput()">📁 TẢI LÊN FILE ẢNH</button>
+                <button class="hud-btn-outline" (click)="photoCapture.startWebcam()">
+                  📸 CAMERA CHỤP TRỰC TIẾP
+                </button>
+                <input
+                  #fileInputElement
+                  type="file"
+                  (change)="photoCapture.handleFileUpload($event)"
+                  class="visually-hidden-input"
+                  accept="image/*"
+                />
+                <button class="hud-btn-outline" (click)="photoCapture.triggerFileInput()">
+                  📁 TẢI LÊN FILE ẢNH
+                </button>
               </div>
             }
           </div>
@@ -72,7 +122,9 @@
     </div>
     <div class="modal-footer">
       <button class="hud-btn-success" [disabled]="isSaving() || !canSave()" (click)="save()">
-        @if (isSaving()) { <div class="loader"></div> }
+        @if (isSaving()) {
+          <div class="loader"></div>
+        }
         <span>LƯU THAY ĐỔI</span>
       </button>
       <button class="hud-btn-secondary" (click)="close()">HỦY</button>

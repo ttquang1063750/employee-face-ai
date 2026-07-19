@@ -9,7 +9,7 @@ import { RealtimeService } from '../../services/realtime.service';
   imports: [RouterLink, RouterLinkActive, RouterOutlet],
   templateUrl: './admin-shell.html',
   styleUrl: './admin-shell.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AdminShellComponent implements OnInit {
   private authService = inject(AuthService);

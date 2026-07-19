@@ -82,24 +82,22 @@ export class ProjectsPanelComponent {
   save(): void {
     this.isSaving.set(true);
 
-    this.employeeService
-      .updateProjects(this.employeeId(), this.projectsListToEdit())
-      .subscribe({
-        next: async (res) => {
-          this.isSaving.set(false);
-          if (res.success) {
-            await this.dialogService.alert('THÀNH CÔNG', 'Cập nhật lịch sử dự án thành công.');
-            this.closeModal();
-            this.changed.emit();
-          }
-        },
-        error: async (err: HttpErrorResponse) => {
-          this.isSaving.set(false);
-          await this.dialogService.alert(
-            'LỖI CẬP NHẬT',
-            'Lỗi cập nhật lịch sử dự án: ' + (err.error?.error || err.message),
-          );
-        },
-      });
+    this.employeeService.updateProjects(this.employeeId(), this.projectsListToEdit()).subscribe({
+      next: async (res) => {
+        this.isSaving.set(false);
+        if (res.success) {
+          await this.dialogService.alert('THÀNH CÔNG', 'Cập nhật lịch sử dự án thành công.');
+          this.closeModal();
+          this.changed.emit();
+        }
+      },
+      error: async (err: HttpErrorResponse) => {
+        this.isSaving.set(false);
+        await this.dialogService.alert(
+          'LỖI CẬP NHẬT',
+          'Lỗi cập nhật lịch sử dự án: ' + (err.error?.error || err.message),
+        );
+      },
+    });
   }
 }

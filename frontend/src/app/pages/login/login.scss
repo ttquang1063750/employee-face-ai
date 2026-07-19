@@ -37,8 +37,14 @@
 }
 
 @keyframes boxLoad {
-  from { opacity: 0; transform: scale(0.95); }
-  to { opacity: 1; transform: scale(1); }
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 .hud-header {
@@ -81,10 +87,30 @@
   border: 2px solid var(--color-cyan);
   pointer-events: none;
 
-  &.top-left { top: -1px; left: -1px; border-right: none; border-bottom: none; }
-  &.top-right { top: -1px; right: -1px; border-left: none; border-bottom: none; }
-  &.bottom-left { bottom: -1px; left: -1px; border-right: none; border-top: none; }
-  &.bottom-right { bottom: -1px; right: -1px; border-left: none; border-top: none; }
+  &.top-left {
+    top: -1px;
+    left: -1px;
+    border-right: none;
+    border-bottom: none;
+  }
+  &.top-right {
+    top: -1px;
+    right: -1px;
+    border-left: none;
+    border-bottom: none;
+  }
+  &.bottom-left {
+    bottom: -1px;
+    left: -1px;
+    border-right: none;
+    border-top: none;
+  }
+  &.bottom-right {
+    bottom: -1px;
+    right: -1px;
+    border-left: none;
+    border-top: none;
+  }
 }
 
 .login-form {
@@ -168,7 +194,9 @@
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .alert-box {
@@ -187,8 +215,14 @@
 }
 
 @keyframes alertIn {
-  from { opacity: 0; transform: translateY(-5px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .hud-footer {

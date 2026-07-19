@@ -10,7 +10,7 @@ export interface DialogOptions {
 }
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class DialogService {
   dialogState = signal<DialogState | null>(null);
@@ -25,12 +25,17 @@ export class DialogService {
         resolve: () => {
           this.dialogState.set(null);
           resolve();
-        }
+        },
       });
     });
   }
 
-  confirm(title: string, message: string, confirmText = 'XÁC NHẬN', cancelText = 'HỦY'): Promise<boolean> {
+  confirm(
+    title: string,
+    message: string,
+    confirmText = 'XÁC NHẬN',
+    cancelText = 'HỦY',
+  ): Promise<boolean> {
     return new Promise<boolean>((resolve) => {
       this.dialogState.set({
         title,
@@ -41,12 +46,18 @@ export class DialogService {
         resolve: (result: boolean) => {
           this.dialogState.set(null);
           resolve(result);
-        }
+        },
       });
     });
   }
 
-  prompt(title: string, message: string, placeholder = '', confirmText = 'XÁC NHẬN', cancelText = 'HỦY'): Promise<string | null> {
+  prompt(
+    title: string,
+    message: string,
+    placeholder = '',
+    confirmText = 'XÁC NHẬN',
+    cancelText = 'HỦY',
+  ): Promise<string | null> {
     return new Promise<string | null>((resolve) => {
       this.dialogState.set({
         title,
@@ -58,9 +69,8 @@ export class DialogService {
         resolve: (result: string | null) => {
           this.dialogState.set(null);
           resolve(result);
-        }
+        },
       });
     });
   }
 }
-

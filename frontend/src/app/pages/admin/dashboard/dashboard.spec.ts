@@ -295,7 +295,12 @@ describe('DashboardComponent', () => {
 
       httpMock
         .expectOne(`${environment.apiBaseUrl}/employees`)
-        .flush({ success: true, data: [{ id: 1, name: 'Alice', age: 30, image_path: '', role: 'staff', current_position: '' }] });
+        .flush({
+          success: true,
+          data: [
+            { id: 1, name: 'Alice', age: 30, image_path: '', role: 'staff', current_position: '' },
+          ],
+        });
       httpMock.expectOne(`${environment.apiBaseUrl}/logs`).flush({ success: true, data: [] });
 
       expect(component.isLoading()).toBe(false);
@@ -306,10 +311,9 @@ describe('DashboardComponent', () => {
     it('sets an error message when the employees request fails', () => {
       component.loadDashboardData();
 
-      httpMock.expectOne(`${environment.apiBaseUrl}/employees`).flush(
-        { success: false },
-        { status: 500, statusText: 'Server Error' },
-      );
+      httpMock
+        .expectOne(`${environment.apiBaseUrl}/employees`)
+        .flush({ success: false }, { status: 500, statusText: 'Server Error' });
 
       expect(component.isLoading()).toBe(false);
       expect(component.errorMsg()).toBe('Không thể kết nối đến máy chủ API.');

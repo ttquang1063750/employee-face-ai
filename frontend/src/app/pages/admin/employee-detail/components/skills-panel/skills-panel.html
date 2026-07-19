@@ -48,20 +48,40 @@
             <div class="form-fields">
               <div class="form-group">
                 <label for="new-skill-name">TÊN KỸ NĂNG</label>
-                <input id="new-skill-name" type="text" formControlName="name" placeholder="Ví dụ: Angular, Python, AWS" class="hud-input">
+                <input
+                  id="new-skill-name"
+                  type="text"
+                  formControlName="name"
+                  placeholder="Ví dụ: Angular, Python, AWS"
+                  class="hud-input"
+                />
               </div>
               <div class="form-group">
                 <label for="new-skill-desc">MÔ TẢ KỸ NĂNG / MỨC ĐỘ THÀNH THẠO</label>
-                <textarea id="new-skill-desc" formControlName="desc" placeholder="Mô tả chi tiết" rows="2" class="hud-textarea"></textarea>
+                <textarea
+                  id="new-skill-desc"
+                  formControlName="desc"
+                  placeholder="Mô tả chi tiết"
+                  rows="2"
+                  class="hud-textarea"
+                ></textarea>
               </div>
-              <button class="hud-btn-outline" [disabled]="!newSkillForm.controls.name.value.trim()" (click)="addSkillToList()">THÊM VÀO DANH SÁCH</button>
+              <button
+                class="hud-btn-outline"
+                [disabled]="!newSkillForm.controls.name.value.trim()"
+                (click)="addSkillToList()"
+              >
+                THÊM VÀO DANH SÁCH
+              </button>
             </div>
           </div>
         </div>
       </div>
       <div class="modal-footer">
         <button class="hud-btn-success" [disabled]="isSaving()" (click)="save()">
-          @if (isSaving()) { <div class="loader"></div> }
+          @if (isSaving()) {
+            <div class="loader"></div>
+          }
           <span>LƯU HỒ SƠ KỸ NĂNG</span>
         </button>
         <button class="hud-btn-secondary" (click)="closeModal()">HỦY</button>

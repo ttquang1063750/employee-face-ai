@@ -1,7 +1,12 @@
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
-import { provideRouter, Router, ActivatedRouteSnapshot, RouterStateSnapshot } from '@angular/router';
+import {
+  provideRouter,
+  Router,
+  ActivatedRouteSnapshot,
+  RouterStateSnapshot,
+} from '@angular/router';
 import { authGuard } from './auth.guard';
 
 function runGuard(url: string) {
@@ -40,12 +45,16 @@ describe('authGuard', () => {
     localStorage.setItem('user_session', JSON.stringify({ id: 2, name: 'Staff', role: 'staff' }));
 
     expect(runGuard('/admin/dashboard')).toBe(false);
-    expect(navigateSpy).toHaveBeenCalledWith(['/login'], { queryParams: { returnUrl: '/admin/dashboard' } });
+    expect(navigateSpy).toHaveBeenCalledWith(['/login'], {
+      queryParams: { returnUrl: '/admin/dashboard' },
+    });
   });
 
   it('rejects when there is no access token at all', () => {
     expect(runGuard('/admin/dashboard')).toBe(false);
-    expect(navigateSpy).toHaveBeenCalledWith(['/login'], { queryParams: { returnUrl: '/admin/dashboard' } });
+    expect(navigateSpy).toHaveBeenCalledWith(['/login'], {
+      queryParams: { returnUrl: '/admin/dashboard' },
+    });
   });
 
   it('clears the session on rejection', () => {

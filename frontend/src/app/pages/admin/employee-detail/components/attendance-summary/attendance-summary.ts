@@ -5,6 +5,7 @@ import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { DatePickerComponent } from '../../../../../core/components/date-picker/date-picker';
 import { AttendanceLog } from '../../../../../core/models/employee.model';
 import { AuditPhotoButtonComponent } from '../../../../../core/components/audit-photo-button/audit-photo-button';
+import { translateMood } from '../../../../../core/utils/mood.util';
 
 @Component({
   selector: 'app-attendance-summary',
@@ -57,4 +58,6 @@ export class AttendanceSummaryComponent {
       .pipe(takeUntilDestroyed())
       .subscribe((value) => this.pageSizeChange.emit(value));
   }
+
+  protected readonly translateMood = translateMood;
 }

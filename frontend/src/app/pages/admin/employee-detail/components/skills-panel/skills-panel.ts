@@ -62,24 +62,22 @@ export class SkillsPanelComponent {
   save(): void {
     this.isSaving.set(true);
 
-    this.employeeService
-      .updateSkills(this.employeeId(), this.skillsListToEdit())
-      .subscribe({
-        next: async (res) => {
-          this.isSaving.set(false);
-          if (res.success) {
-            await this.dialogService.alert('THÀNH CÔNG', 'Cập nhật danh sách kỹ năng thành công.');
-            this.closeModal();
-            this.changed.emit();
-          }
-        },
-        error: async (err: HttpErrorResponse) => {
-          this.isSaving.set(false);
-          await this.dialogService.alert(
-            'LỖI CẬP NHẬT',
-            'Lỗi cập nhật kỹ năng: ' + (err.error?.error || err.message),
-          );
-        },
-      });
+    this.employeeService.updateSkills(this.employeeId(), this.skillsListToEdit()).subscribe({
+      next: async (res) => {
+        this.isSaving.set(false);
+        if (res.success) {
+          await this.dialogService.alert('THÀNH CÔNG', 'Cập nhật danh sách kỹ năng thành công.');
+          this.closeModal();
+          this.changed.emit();
+        }
+      },
+      error: async (err: HttpErrorResponse) => {
+        this.isSaving.set(false);
+        await this.dialogService.alert(
+          'LỖI CẬP NHẬT',
+          'Lỗi cập nhật kỹ năng: ' + (err.error?.error || err.message),
+        );
+      },
+    });
   }
 }

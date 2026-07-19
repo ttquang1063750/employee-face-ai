@@ -16,7 +16,9 @@ export class RealtimeService implements OnDestroy {
   // (leave-requests list, admin-shell's sidebar badge) read from this
   // instead of each running their own interval against the same endpoint.
   leaveRequests = signal<LeaveRequest[]>([]);
-  pendingLeaveCount = computed(() => this.leaveRequests().filter((r) => r.status === 'pending').length);
+  pendingLeaveCount = computed(
+    () => this.leaveRequests().filter((r) => r.status === 'pending').length,
+  );
 
   private pollIntervalId: ReturnType<typeof setInterval> | null = null;
 
@@ -45,16 +47,18 @@ export class RealtimeService implements OnDestroy {
       return;
     }
 
-    this.http.get<ApiResponse<LeaveRequest[]>>(`${environment.apiBaseUrl}/leave-requests`).subscribe({
-      next: (res) => {
-        if (res.success && res.data) {
-          this.leaveRequests.set(res.data);
-        }
-      },
-      error: () => {
-        // Silent ignore if unauthorized or server offline
-      },
-    });
+    this.http
+      .get<ApiResponse<LeaveRequest[]>>(`${environment.apiBaseUrl}/leave-requests`)
+      .subscribe({
+        next: (res) => {
+          if (res.success && res.data) {
+            this.leaveRequests.set(res.data);
+          }
+        },
+        error: () => {
+          // Silent ignore if unauthorized or server offline
+        },
+      });
   }
 
   ngOnDestroy(): void {

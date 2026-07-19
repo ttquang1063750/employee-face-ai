@@ -24,7 +24,11 @@
              not gated behind ÁP DỤNG (rule 10 exempts non-date-range filters) -->
         <div class="hud-field">
           <label class="hud-label" for="dashboard-status-filter">TRẠNG THÁI</label>
-          <app-hud-select [selectId]="'dashboard-status-filter'" [options]="statusOptions" [formControl]="statusControl"></app-hud-select>
+          <app-hud-select
+            [selectId]="'dashboard-status-filter'"
+            [options]="statusOptions"
+            [formControl]="statusControl"
+          ></app-hud-select>
         </div>
 
         <!-- Autocomplete employee name search -->
@@ -40,7 +44,8 @@
                 (blur)="closeSuggestions()"
                 placeholder="Tìm kiếm tên nhân viên..."
                 class="hud-search-input"
-                autocomplete="off">
+                autocomplete="off"
+              />
             </div>
             @if (showSuggestions() && employeeSuggestions().length > 0) {
               <ul class="hud-autocomplete-list">
@@ -63,13 +68,15 @@
           label="TỔNG NHÂN SỰ"
           [value]="totalEmployees()"
           footer="Active Accounts"
-          [loading]="isLoading()" />
+          [loading]="isLoading()"
+        />
         <app-stat-widget
           icon="✓"
           label="LƯỢT CHẤM CÔNG"
           [value]="totalLogsInRange()"
           footer="Lượt quét trong khoảng đã chọn"
-          [loading]="isLoading()" />
+          [loading]="isLoading()"
+        />
         <app-stat-widget
           icon="☺"
           label="CHỈ SỐ HẠNH PHÚC"
@@ -77,7 +84,8 @@
           footer="Cảm xúc tích cực · mục tiêu ≥ 60%"
           [statusLabel]="happinessStatusLabel()"
           [kind]="happinessLevel()"
-          [loading]="isLoading()" />
+          [loading]="isLoading()"
+        />
       </div>
 
       <!-- 2. Charts Section -->
@@ -85,11 +93,13 @@
         <app-hourly-chart
           [points]="hourlyTimeline().points"
           [hasData]="hasHourlyData()"
-          [loading]="isLoading()" />
+          [loading]="isLoading()"
+        />
         <app-mood-donut
           [segments]="moodDonut()"
           [hasData]="hasMoodData()"
-          [loading]="isLoading()" />
+          [loading]="isLoading()"
+        />
       </div>
 
       <!-- 3. Logs Audit Grid -->
@@ -104,7 +114,8 @@
         (nextPage)="nextPage()"
         (pageSizeChange)="onPageSizeChange($event)"
         (deleteLog)="onDeleteLog($event)"
-        (exportCsv)="exportCSV()" />
+        (exportCsv)="exportCSV()"
+      />
     }
   </div>
 </div>

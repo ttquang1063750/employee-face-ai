@@ -1,8 +1,12 @@
 @if (dialogService.dialogState(); as state) {
   <div class="hud-dialog-backdrop">
-    <div class="hud-dialog-card animate-scale-in" [class.alert]="state.type === 'alert'" [class.confirm]="state.type === 'confirm'">
+    <div
+      class="hud-dialog-card animate-scale-in"
+      [class.alert]="state.type === 'alert'"
+      [class.confirm]="state.type === 'confirm'"
+    >
       <div class="dialog-glow"></div>
-      
+
       <!-- Top Scanner lines simulation -->
       <div class="scanner-laser"></div>
 
@@ -10,11 +14,11 @@
         <span class="header-icon">⚠️</span>
         <h3>{{ state.title }}</h3>
       </div>
-      
+
       <div class="dialog-body">
         <p>{{ state.message }}</p>
       </div>
-      
+
       @if (state.type === 'prompt') {
         <div class="dialog-prompt-field">
           <input
@@ -23,16 +27,22 @@
             [placeholder]="state.placeholder || ''"
             class="hud-input"
             autocomplete="off"
-           >
+          />
         </div>
       }
 
       <div class="dialog-footer">
         @if (state.type === 'confirm' || state.type === 'prompt') {
-          <button class="hud-btn-cancel" (click)="onCancel()">{{ state.cancelText || 'HỦY' }}</button>
-          <button class="hud-btn-confirm" (click)="onConfirm()">{{ state.confirmText || 'XÁC NHẬN' }}</button>
+          <button class="hud-btn-cancel" (click)="onCancel()">
+            {{ state.cancelText || 'HỦY' }}
+          </button>
+          <button class="hud-btn-confirm" (click)="onConfirm()">
+            {{ state.confirmText || 'XÁC NHẬN' }}
+          </button>
         } @else {
-          <button class="hud-btn-confirm alert-mode" (click)="onConfirm()">{{ state.confirmText || 'OK' }}</button>
+          <button class="hud-btn-confirm alert-mode" (click)="onConfirm()">
+            {{ state.confirmText || 'OK' }}
+          </button>
         }
       </div>
     </div>

@@ -23,7 +23,9 @@
   &::before {
     content: '';
     position: absolute;
-    top: 0; left: 0; right: 0;
+    top: 0;
+    left: 0;
+    right: 0;
     height: 1px;
     background: linear-gradient(90deg, transparent, var(--color-cyan), transparent);
     opacity: 0.35;
@@ -45,8 +47,12 @@
   flex: 1;
   min-width: 140px;
 
-  &.grow-2 { flex: 2; }
-  &.grow-3 { flex: 3; }
+  &.grow-2 {
+    flex: 2;
+  }
+  &.grow-3 {
+    flex: 3;
+  }
 }
 
 // ─── Filter Apply Field ──────────────────────────────────────

@@ -1,4 +1,11 @@
-import { Component, OnInit, signal, computed, ChangeDetectionStrategy, inject } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  signal,
+  computed,
+  ChangeDetectionStrategy,
+  inject,
+} from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { ApiResponse } from '../../../core/models/api-response.model';
@@ -117,21 +124,26 @@ export class EmployeeDetailComponent implements OnInit {
   }
 
   onDeleteLog(id: number): void {
-    this.dialogService.confirm('XÁC NHẬN XÓA', 'Bạn có chắc chắn muốn xóa lượt chấm công này? Thao tác này không thể hoàn tác.').then((confirmed) => {
-      if (confirmed) {
-        this.http.delete<ApiResponse>(`${this.apiUrl}/logs/${id}`).subscribe({
-          next: (res) => {
-            if (res.success) {
-              this.loadEmployeeDetails(true);
-            } else {
-              this.dialogService.alert('LỖI', res.error || 'Không thể xóa lượt chấm công.');
-            }
-          },
-          error: () => {
-            this.dialogService.alert('LỖI', 'Lỗi kết nối máy chủ.');
-          }
-        });
-      }
-    });
+    this.dialogService
+      .confirm(
+        'XÁC NHẬN XÓA',
+        'Bạn có chắc chắn muốn xóa lượt chấm công này? Thao tác này không thể hoàn tác.',
+      )
+      .then((confirmed) => {
+        if (confirmed) {
+          this.http.delete<ApiResponse>(`${this.apiUrl}/logs/${id}`).subscribe({
+            next: (res) => {
+              if (res.success) {
+                this.loadEmployeeDetails(true);
+              } else {
+                this.dialogService.alert('LỖI', res.error || 'Không thể xóa lượt chấm công.');
+              }
+            },
+            error: () => {
+              this.dialogService.alert('LỖI', 'Lỗi kết nối máy chủ.');
+            },
+          });
+        }
+      });
   }
 }

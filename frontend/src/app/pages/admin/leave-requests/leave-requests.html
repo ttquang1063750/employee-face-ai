@@ -7,7 +7,11 @@
     <div class="hud-filter-bar">
       <div class="hud-field">
         <label class="hud-label" for="leave-status-filter">LỌC TRẠNG THÁI</label>
-        <app-hud-select [selectId]="'leave-status-filter'" [options]="statusOptions()" [formControl]="statusFilterControl"></app-hud-select>
+        <app-hud-select
+          [selectId]="'leave-status-filter'"
+          [options]="statusOptions()"
+          [formControl]="statusFilterControl"
+        ></app-hud-select>
       </div>
       <div class="hud-field">
         <span class="hud-label">TỪ NGÀY</span>
@@ -33,7 +37,8 @@
           type="text"
           [formControl]="searchQuery"
           placeholder="Tìm theo tên hoặc vị trí nhân viên..."
-          class="hud-input">
+          class="hud-input"
+        />
       </div>
     </div>
 
@@ -76,19 +81,23 @@
                   <td>
                     <div>{{ req.reason }}</div>
                     @if (req.status === 'rejected' && req.rejection_reason) {
-                      <div class="rejection-reason">
-                        Lý do từ chối: {{ req.rejection_reason }}
-                      </div>
+                      <div class="rejection-reason">Lý do từ chối: {{ req.rejection_reason }}</div>
                     }
                   </td>
                   <td>
-                    <span class="leave-status-badge" [class]="req.status">{{ leaveStatusLabel(req.status) }}</span>
+                    <span class="leave-status-badge" [class]="req.status">{{
+                      leaveStatusLabel(req.status)
+                    }}</span>
                   </td>
                   <td>
                     @if (req.status === 'pending') {
                       <div class="review-actions">
-                        <button class="action-btn approve-btn" (click)="approve(req)">✔ Duyệt</button>
-                        <button class="action-btn delete-btn" (click)="reject(req)">✖ Từ chối</button>
+                        <button class="action-btn approve-btn" (click)="approve(req)">
+                          ✔ Duyệt
+                        </button>
+                        <button class="action-btn delete-btn" (click)="reject(req)">
+                          ✖ Từ chối
+                        </button>
                       </div>
                     } @else {
                       <span class="reviewed-dash">—</span>
@@ -118,9 +127,17 @@
               <span>/ trang</span>
             </div>
             <div class="pag-controls">
-              <button class="pag-btn" [disabled]="currentPage() === 1" (click)="prevPage()">◀ TRƯỚC</button>
+              <button class="pag-btn" [disabled]="currentPage() === 1" (click)="prevPage()">
+                ◀ TRƯỚC
+              </button>
               <span class="pag-info">TRANG {{ currentPage() }} / {{ totalPages() }}</span>
-              <button class="pag-btn" [disabled]="currentPage() === totalPages()" (click)="nextPage()">SAU ▶</button>
+              <button
+                class="pag-btn"
+                [disabled]="currentPage() === totalPages()"
+                (click)="nextPage()"
+              >
+                SAU ▶
+              </button>
             </div>
           </div>
         }

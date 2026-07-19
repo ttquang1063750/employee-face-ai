@@ -10,9 +10,22 @@
         <div class="timeline-content">
           <div class="timeline-header-row">
             <h4 class="title text-glow-cyan">{{ pos.title }}</h4>
-            <button class="remove-inline-btn" (click)="deletePosition(pos.id)" title="Xóa mốc chức vụ này">✖</button>
+            <button
+              class="remove-inline-btn"
+              (click)="deletePosition(pos.id)"
+              title="Xóa mốc chức vụ này"
+            >
+              ✖
+            </button>
           </div>
-          <p class="dates">📅 Từ: {{ pos.start_date }} @if (pos.end_date) { - Đến: {{ pos.end_date }} } @else { - Hiện tại }</p>
+          <p class="dates">
+            📅 Từ: {{ pos.start_date }}
+            @if (pos.end_date) {
+              - Đến: {{ pos.end_date }}
+            } @else {
+              - Hiện tại
+            }
+          </p>
         </div>
       </div>
     }
@@ -30,18 +43,33 @@
         <div class="form-fields">
           <div class="form-group">
             <label for="new-pos-title">CHỨC DANH MỚI</label>
-            <input id="new-pos-title" type="text" formControlName="title" placeholder="Ví dụ: Team Leader, Senior Manager" class="hud-input">
+            <input
+              id="new-pos-title"
+              type="text"
+              formControlName="title"
+              placeholder="Ví dụ: Team Leader, Senior Manager"
+              class="hud-input"
+            />
           </div>
           <div class="form-group">
             <span>NGÀY HIỆU LỰC BỔ NHIỆM</span>
             <app-date-picker formControlName="startDate"></app-date-picker>
           </div>
-          <p class="warning-alert">ℹ️ Ghi chú: Hệ thống sẽ tự động chuyển chức danh hiện tại của nhân sự này sang trạng thái kết thúc vào ngày bổ nhiệm.</p>
+          <p class="warning-alert">
+            ℹ️ Ghi chú: Hệ thống sẽ tự động chuyển chức danh hiện tại của nhân sự này sang trạng
+            thái kết thúc vào ngày bổ nhiệm.
+          </p>
         </div>
       </div>
       <div class="modal-footer">
-        <button class="hud-btn-success" [disabled]="isSaving() || !newPositionForm.controls.title.value.trim()" (click)="save()">
-          @if (isSaving()) { <div class="loader"></div> }
+        <button
+          class="hud-btn-success"
+          [disabled]="isSaving() || !newPositionForm.controls.title.value.trim()"
+          (click)="save()"
+        >
+          @if (isSaving()) {
+            <div class="loader"></div>
+          }
           <span>GHI NHẬN BỔ NHIỆM</span>
         </button>
         <button class="hud-btn-secondary" (click)="closeModal()">HỦY</button>

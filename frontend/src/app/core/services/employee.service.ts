@@ -100,7 +100,11 @@ export class EmployeeService {
     return this.http.delete<ApiResponse>(`${this.baseUrl}/${id}`);
   }
 
-  changePassword(id: number, currentPassword: string, newPassword: string): Observable<ApiResponse> {
+  changePassword(
+    id: number,
+    currentPassword: string,
+    newPassword: string,
+  ): Observable<ApiResponse> {
     return this.http.put<ApiResponse>(`${this.baseUrl}/${id}/password`, {
       current_password: currentPassword,
       new_password: newPassword,

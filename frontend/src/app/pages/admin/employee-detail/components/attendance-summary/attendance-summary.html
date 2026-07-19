@@ -26,7 +26,10 @@
       <span class="stats-label">SỐ GIỜ CÔNG TỔNG CỘNG</span>
       <span class="stats-value text-glow-cyan">{{ workingHours() }} giờ</span>
       @if (hasIncompleteAttendance()) {
-        <span class="stats-note" data-tooltip="Có ngày chấm công vào (CHECK-IN) nhưng chưa có chấm công ra (CHECK-OUT) — số giờ trên chưa tính đủ cho (các) ngày đó.">
+        <span
+          class="stats-note"
+          data-tooltip="Có ngày chấm công vào (CHECK-IN) nhưng chưa có chấm công ra (CHECK-OUT) — số giờ trên chưa tính đủ cho (các) ngày đó."
+        >
           ⚠️ Chưa tính đủ
         </span>
       }
@@ -50,27 +53,40 @@
       <tbody>
         @for (log of paginatedLogs(); track log.id) {
           <tr>
-            <td class="text-cyan">{{ log.timestamp | date:'HH:mm:ss - dd/MM/yyyy' }}</td>
+            <td class="text-cyan">{{ log.timestamp | date: 'HH:mm:ss - dd/MM/yyyy' }}</td>
             <td>
-              <span class="action-tag" [class.check-in]="log.action === 'CHECK_IN'" [class.check-out]="log.action === 'CHECK_OUT'">
+              <span
+                class="action-tag"
+                [class.check-in]="log.action === 'CHECK_IN'"
+                [class.check-out]="log.action === 'CHECK_OUT'"
+              >
                 {{ log.action === 'CHECK_IN' ? 'VÀO CA' : 'RA CA' }}
               </span>
             </td>
             <td>
-              <span class="mood-badge">{{ log.mood }}</span>
+              <span class="mood-badge">{{ translateMood(log.mood) }}</span>
             </td>
             <td>
               <app-audit-photo-button [imagePath]="log.captured_image_path" />
             </td>
             @if (showDeleteButton()) {
               <td class="action-col-cell">
-                <button type="button" class="hud-btn-mini danger" data-tooltip="Xóa lượt chấm công" (click)="deleteLog.emit(log.id)">🗑️</button>
+                <button
+                  type="button"
+                  class="hud-btn-mini danger"
+                  data-tooltip="Xóa lượt chấm công"
+                  (click)="deleteLog.emit(log.id)"
+                >
+                  🗑️
+                </button>
               </td>
             }
           </tr>
         } @empty {
           <tr>
-            <td [attr.colspan]="showDeleteButton() ? 5 : 4" class="no-data">Không có lịch sử chấm công trong khoảng thời gian đã chọn.</td>
+            <td [attr.colspan]="showDeleteButton() ? 5 : 4" class="no-data">
+              Không có lịch sử chấm công trong khoảng thời gian đã chọn.
+            </td>
           </tr>
         }
       </tbody>
@@ -92,9 +108,17 @@
         <span>/ trang</span>
       </div>
       <div class="pag-controls">
-        <button class="pag-btn" [disabled]="currentPage() === 1" (click)="prevPage.emit()">◀ TRƯỚC</button>
+        <button class="pag-btn" [disabled]="currentPage() === 1" (click)="prevPage.emit()">
+          ◀ TRƯỚC
+        </button>
         <span class="pag-info">TRANG {{ currentPage() }} / {{ totalPages() }}</span>
-        <button class="pag-btn" [disabled]="currentPage() === totalPages()" (click)="nextPage.emit()">SAU ▶</button>
+        <button
+          class="pag-btn"
+          [disabled]="currentPage() === totalPages()"
+          (click)="nextPage.emit()"
+        >
+          SAU ▶
+        </button>
       </div>
     </div>
   }

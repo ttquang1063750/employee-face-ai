@@ -29,7 +29,9 @@
     cursor: pointer;
     opacity: 0.7;
 
-    &:hover { opacity: 1; }
+    &:hover {
+      opacity: 1;
+    }
   }
 
   &::placeholder {
@@ -45,7 +47,9 @@
   &:focus {
     border-color: var(--color-cyan);
     background: var(--color-bg-input-focus);
-    box-shadow: 0 0 0 3px rgba(var(--color-cyan-rgb), 0.08), var(--glow-cyan);
+    box-shadow:
+      0 0 0 3px rgba(var(--color-cyan-rgb), 0.08),
+      var(--glow-cyan);
   }
 }
 
@@ -113,8 +117,14 @@
     animation: acDropIn 0.15s ease;
 
     @keyframes acDropIn {
-      from { opacity: 0; transform: translateY(-6px); }
-      to   { opacity: 1; transform: translateY(0); }
+      from {
+        opacity: 0;
+        transform: translateY(-6px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
   }
 
@@ -145,7 +155,8 @@
       font-weight: 600;
     }
 
-    &:hover, &.active {
+    &:hover,
+    &.active {
       background: rgba(var(--color-cyan-rgb), 0.07);
       color: var(--color-heading);
       border-left-color: var(--color-cyan);
@@ -169,8 +180,12 @@
   color: var(--color-text-muted);
   margin-top: 0.3rem;
 
-  &.error { color: var(--color-red); }
-  &.success { color: var(--color-green); }
+  &.error {
+    color: var(--color-red);
+  }
+  &.success {
+    color: var(--color-green);
+  }
 }
 
 // ─── Input With Inline Action Buttons ─────────────────────────
@@ -185,5 +200,8 @@
   align-items: center;
   gap: var(--space-2);
 
-  .hud-input { flex: 1; min-width: 0; }
+  .hud-input {
+    flex: 1;
+    min-width: 0;
+  }
 }

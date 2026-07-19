@@ -1,7 +1,7 @@
 <div class="kiosk-container">
   <header class="kiosk-header">
     <div class="header-logo">
-      <img class="kiosk-logo-img" src="logo.svg" alt="Employee Face AI Logo">
+      <img class="kiosk-logo-img" src="logo.svg" alt="Employee Face AI Logo" />
       <div class="logo-text">
         <h1>EMPLOYEE FACE AI</h1>
         <p>Cổng Biometric Chấm Công & Tâm Lý Nhân Sự</p>
@@ -18,7 +18,7 @@
           <div class="corner t-r"></div>
           <div class="corner b-l"></div>
           <div class="corner b-r"></div>
-          
+
           <div class="camera-wrapper">
             <video #videoElement autoplay playsinline class="webcam-feed"></video>
             <canvas #canvasElement class="visually-hidden-input"></canvas>
@@ -31,7 +31,7 @@
                  freeze the captured frame over the video (plus a brief flash)
                  so it's obvious the photo is taken and holding still isn't needed. -->
             @if (capturedFrame()) {
-              <img [src]="capturedFrame()" alt="Ảnh vừa chụp" class="captured-freeze-frame">
+              <img [src]="capturedFrame()" alt="Ảnh vừa chụp" class="captured-freeze-frame" />
               <div class="freeze-frame-label">📸 ĐÃ CHỤP ẢNH — KHÔNG CẦN GIỮ YÊN NỮA</div>
             }
 
@@ -46,22 +46,24 @@
       <div class="action-card">
         <div class="card-inner">
           <h2 class="panel-title">HỆ THỐNG GHI NHẬN</h2>
-          
+
           <div class="action-selector">
-            <button 
-              type="button" 
-              class="action-btn check-in-btn" 
+            <button
+              type="button"
+              class="action-btn check-in-btn"
               [class.active]="currentAction() === 'CHECK_IN'"
-              (click)="selectAction('CHECK_IN')">
+              (click)="selectAction('CHECK_IN')"
+            >
               <span class="btn-title">CHECK IN</span>
               <span class="btn-desc">Bắt đầu ca làm việc</span>
             </button>
-            
-            <button 
-              type="button" 
-              class="action-btn check-out-btn" 
+
+            <button
+              type="button"
+              class="action-btn check-out-btn"
               [class.active]="currentAction() === 'CHECK_OUT'"
-              (click)="selectAction('CHECK_OUT')">
+              (click)="selectAction('CHECK_OUT')"
+            >
               <span class="btn-title">CHECK OUT</span>
               <span class="btn-desc">Kết thúc ca làm việc</span>
             </button>
@@ -69,15 +71,20 @@
 
           <div class="form-group">
             <label for="backend-detector">MODULE PHÁT HIỆN KHUÔN MẶT</label>
-            <app-hud-select [selectId]="'backend-detector'" [options]="detectorOptions" [formControl]="detector"></app-hud-select>
+            <app-hud-select
+              [selectId]="'backend-detector'"
+              [options]="detectorOptions"
+              [formControl]="detector"
+            ></app-hud-select>
           </div>
 
           <div class="action-submit-zone">
-            <button 
-              class="scan-trigger-btn" 
+            <button
+              class="scan-trigger-btn"
               [class.loading]="isLoading()"
               [disabled]="isLoading()"
-              (click)="submitAttendance()">
+              (click)="submitAttendance()"
+            >
               @if (isLoading()) {
                 <div class="radial-spinner"></div>
                 <span>ĐANG QUÉT SINH TRẮC HỌC...</span>

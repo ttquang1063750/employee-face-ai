@@ -54,7 +54,10 @@
   border-radius: var(--radius-sm);
   cursor: pointer;
   box-shadow: 0 0 10px rgba(var(--color-cyan-rgb), 0.2);
-  &:hover { background: var(--color-cyan); color: var(--color-black); }
+  &:hover {
+    background: var(--color-cyan);
+    color: var(--color-black);
+  }
 }
 
 .captured-preview-img {

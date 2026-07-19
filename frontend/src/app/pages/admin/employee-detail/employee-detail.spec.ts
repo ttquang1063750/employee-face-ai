@@ -112,7 +112,10 @@ describe('EmployeeDetailComponent', () => {
   describe('filteredRawLogs / date range', () => {
     it('returns every log when no date range is applied', () => {
       component.employee.set(
-        makeEmployee([log('CHECK_IN', '2026-01-05T08:00:00'), log('CHECK_IN', '2026-02-10T08:00:00')]),
+        makeEmployee([
+          log('CHECK_IN', '2026-01-05T08:00:00'),
+          log('CHECK_IN', '2026-02-10T08:00:00'),
+        ]),
       );
 
       expect(component.attendance.filteredRawLogs()).toHaveLength(2);
@@ -120,7 +123,10 @@ describe('EmployeeDetailComponent', () => {
 
     it('filters logs outside the applied date range', () => {
       component.employee.set(
-        makeEmployee([log('CHECK_IN', '2026-01-05T08:00:00'), log('CHECK_IN', '2026-02-10T08:00:00')]),
+        makeEmployee([
+          log('CHECK_IN', '2026-01-05T08:00:00'),
+          log('CHECK_IN', '2026-02-10T08:00:00'),
+        ]),
       );
       component.attendance.filterStartDate.set('2026-01-01');
       component.attendance.filterEndDate.set('2026-01-31');

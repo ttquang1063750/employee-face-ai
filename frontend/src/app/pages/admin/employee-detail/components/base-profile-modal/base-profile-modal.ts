@@ -21,7 +21,10 @@ import {
 } from '../../../../../core/services/username-check.service';
 import { WebcamCaptureService } from '../../../../../core/services/webcam-capture.service';
 import { PhotoCaptureStateService } from '../../../../../core/services/photo-capture-state.service';
-import { EmployeeService, UpdateEmployeePayload } from '../../../../../core/services/employee.service';
+import {
+  EmployeeService,
+  UpdateEmployeePayload,
+} from '../../../../../core/services/employee.service';
 import {
   PASSWORD_HINT,
   generateRandomPassword,
@@ -29,7 +32,10 @@ import {
 } from '../../../../../core/services/credentials.util';
 import { avatarUrl, onImageError } from '../../../../../core/utils/image.util';
 import { DetailedEmployee, EmployeeRole } from '../../../../../core/models/employee.model';
-import { HudSelectComponent, HudSelectOption } from '../../../../../core/components/hud-select/hud-select';
+import {
+  HudSelectComponent,
+  HudSelectOption,
+} from '../../../../../core/components/hud-select/hud-select';
 
 @Component({
   selector: 'app-base-profile-modal',

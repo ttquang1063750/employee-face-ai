@@ -18,13 +18,20 @@ import {
   UsernameCheckService,
   usernameStatusSignal,
 } from '../../../core/services/username-check.service';
-import { PASSWORD_HINT, generateRandomPassword, passwordComplexityValidator } from '../../../core/services/credentials.util';
+import {
+  PASSWORD_HINT,
+  generateRandomPassword,
+  passwordComplexityValidator,
+} from '../../../core/services/credentials.util';
 import { EmployeeBase, EmployeeRole } from '../../../core/models/employee.model';
 import { WebcamCaptureService } from '../../../core/services/webcam-capture.service';
 import { PhotoCaptureStateService } from '../../../core/services/photo-capture-state.service';
 import { EmployeeService } from '../../../core/services/employee.service';
 import { avatarUrl } from '../../../core/utils/image.util';
-import { HudSelectComponent, HudSelectOption } from '../../../core/components/hud-select/hud-select';
+import {
+  HudSelectComponent,
+  HudSelectOption,
+} from '../../../core/components/hud-select/hud-select';
 
 @Component({
   selector: 'app-employee-list',
@@ -53,7 +60,9 @@ export class EmployeeListComponent implements OnInit {
       canvasElement: this.canvasElement,
       fileInputElement: this.fileInputElement,
     });
-    this.searchQuery.valueChanges.pipe(takeUntilDestroyed()).subscribe(() => this.currentPage.set(1));
+    this.searchQuery.valueChanges
+      .pipe(takeUntilDestroyed())
+      .subscribe(() => this.currentPage.set(1));
     this.pageSize.valueChanges.pipe(takeUntilDestroyed()).subscribe(() => this.currentPage.set(1));
   }
 

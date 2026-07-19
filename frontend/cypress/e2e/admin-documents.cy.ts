@@ -62,7 +62,11 @@ describe('Admin documents', () => {
     it('requires an employee when visibility is "Riêng" (the default), and clears that requirement for "Chung"', () => {
       cy.get('#doc-title').type('Hợp đồng lao động mới');
       cy.get('input[type=file]').selectFile(
-        { contents: Cypress.Buffer.from(TINY_PDF_BASE64, 'base64'), fileName: 'hop-dong.pdf', mimeType: 'application/pdf' },
+        {
+          contents: Cypress.Buffer.from(TINY_PDF_BASE64, 'base64'),
+          fileName: 'hop-dong.pdf',
+          mimeType: 'application/pdf',
+        },
         { force: true },
       );
       cy.get('.modal-footer').contains('button', 'TẢI LÊN').should('be.disabled');
@@ -90,7 +94,11 @@ describe('Admin documents', () => {
       cy.get('#doc-title').type('Hợp đồng lao động mới');
       cy.selectHudOption('#doc-employee', 'HR Admin (#1)');
       cy.get('input[type=file]').selectFile(
-        { contents: Cypress.Buffer.from(TINY_PDF_BASE64, 'base64'), fileName: 'hop-dong.pdf', mimeType: 'application/pdf' },
+        {
+          contents: Cypress.Buffer.from(TINY_PDF_BASE64, 'base64'),
+          fileName: 'hop-dong.pdf',
+          mimeType: 'application/pdf',
+        },
         { force: true },
       );
       cy.get('.modal-footer').contains('button', 'TẢI LÊN').click();
@@ -109,7 +117,11 @@ describe('Admin documents', () => {
       cy.get('#doc-title').type('Thông báo chung mới');
       cy.selectHudOption('#doc-visibility', 'Chung (toàn bộ nhân viên nhận được)');
       cy.get('input[type=file]').selectFile(
-        { contents: Cypress.Buffer.from(TINY_PDF_BASE64, 'base64'), fileName: 'thong-bao.pdf', mimeType: 'application/pdf' },
+        {
+          contents: Cypress.Buffer.from(TINY_PDF_BASE64, 'base64'),
+          fileName: 'thong-bao.pdf',
+          mimeType: 'application/pdf',
+        },
         { force: true },
       );
       cy.get('.modal-footer').contains('button', 'TẢI LÊN').click();

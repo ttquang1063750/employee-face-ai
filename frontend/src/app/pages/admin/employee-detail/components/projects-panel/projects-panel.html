@@ -11,7 +11,14 @@
           <span class="role text-cyan">{{ prj.role }}</span>
         </div>
         <p class="desc">{{ prj.description }}</p>
-        <p class="dates">📅 {{ prj.start_date }} @if (prj.end_date) { đến {{ prj.end_date }} } @else { (Đang tham gia) }</p>
+        <p class="dates">
+          📅 {{ prj.start_date }}
+          @if (prj.end_date) {
+            đến {{ prj.end_date }}
+          } @else {
+            (Đang tham gia)
+          }
+        </p>
       </div>
     } @empty {
       <p class="no-data">Chưa tham gia dự án nào.</p>
@@ -36,11 +43,20 @@
                 <div class="editor-project-card">
                   <div class="card-header-row">
                     <span class="proj-name">{{ prj.project_name }}</span>
-                    <button class="remove-badge-btn" (click)="removeProjectFromList(idx)">✖ XÓA</button>
+                    <button class="remove-badge-btn" (click)="removeProjectFromList(idx)">
+                      ✖ XÓA
+                    </button>
                   </div>
                   <div class="card-sub-header">
                     <span class="proj-role">{{ prj.role }}</span>
-                    <span class="proj-dates">{{ prj.start_date }} @if (prj.end_date) { đến {{ prj.end_date }} } @else { (Đang chạy) }</span>
+                    <span class="proj-dates"
+                      >{{ prj.start_date }}
+                      @if (prj.end_date) {
+                        đến {{ prj.end_date }}
+                      } @else {
+                        (Đang chạy)
+                      }
+                    </span>
                   </div>
                   <p class="proj-desc">{{ prj.description }}</p>
                 </div>
@@ -56,12 +72,24 @@
             <div class="form-fields">
               <div class="form-group">
                 <label for="new-proj-name">TÊN DỰ ÁN</label>
-                <input id="new-proj-name" type="text" formControlName="name" placeholder="Ví dụ: ERP Portal, AI Kiosk" class="hud-input">
+                <input
+                  id="new-proj-name"
+                  type="text"
+                  formControlName="name"
+                  placeholder="Ví dụ: ERP Portal, AI Kiosk"
+                  class="hud-input"
+                />
               </div>
               <div class="form-row">
                 <div class="form-group">
                   <label for="new-proj-role">VAI TRÒ</label>
-                  <input id="new-proj-role" type="text" formControlName="role" placeholder="Ví dụ: Tech Lead, FE Dev" class="hud-input">
+                  <input
+                    id="new-proj-role"
+                    type="text"
+                    formControlName="role"
+                    placeholder="Ví dụ: Tech Lead, FE Dev"
+                    class="hud-input"
+                  />
                 </div>
                 <div class="form-group">
                   <span>NGÀY BẮT ĐẦU</span>
@@ -74,16 +102,30 @@
               </div>
               <div class="form-group">
                 <label for="new-proj-desc">MÔ TẢ CHI TIẾT NHIỆM VỤ DỰ ÁN</label>
-                <textarea id="new-proj-desc" formControlName="desc" placeholder="Nhiệm vụ cụ thể" rows="2" class="hud-textarea"></textarea>
+                <textarea
+                  id="new-proj-desc"
+                  formControlName="desc"
+                  placeholder="Nhiệm vụ cụ thể"
+                  rows="2"
+                  class="hud-textarea"
+                ></textarea>
               </div>
-              <button class="hud-btn-outline" [disabled]="!newProjectForm.controls.name.value.trim()" (click)="addProjectToList()">THÊM DỰ ÁN VÀO DANH SÁCH</button>
+              <button
+                class="hud-btn-outline"
+                [disabled]="!newProjectForm.controls.name.value.trim()"
+                (click)="addProjectToList()"
+              >
+                THÊM DỰ ÁN VÀO DANH SÁCH
+              </button>
             </div>
           </div>
         </div>
       </div>
       <div class="modal-footer">
         <button class="hud-btn-success" [disabled]="isSaving()" (click)="save()">
-          @if (isSaving()) { <div class="loader"></div> }
+          @if (isSaving()) {
+            <div class="loader"></div>
+          }
           <span>LƯU LỊCH SỬ DỰ ÁN</span>
         </button>
         <button class="hud-btn-secondary" (click)="closeModal()">HỦY</button>

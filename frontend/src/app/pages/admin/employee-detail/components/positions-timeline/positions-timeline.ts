@@ -56,25 +56,23 @@ export class PositionsTimelineComponent {
       start_date: startDate,
     };
 
-    this.employeeService
-      .addPosition(this.employeeId(), payload)
-      .subscribe({
-        next: async (res) => {
-          this.isSaving.set(false);
-          if (res.success) {
-            await this.dialogService.alert('THÀNH CÔNG', 'Bổ nhiệm chức vụ mới thành công.');
-            this.closeModal();
-            this.changed.emit();
-          }
-        },
-        error: async (err: HttpErrorResponse) => {
-          this.isSaving.set(false);
-          await this.dialogService.alert(
-            'LỖI BỔ NHIỆM',
-            'Lỗi ghi nhận bổ nhiệm: ' + (err.error?.error || err.message),
-          );
-        },
-      });
+    this.employeeService.addPosition(this.employeeId(), payload).subscribe({
+      next: async (res) => {
+        this.isSaving.set(false);
+        if (res.success) {
+          await this.dialogService.alert('THÀNH CÔNG', 'Bổ nhiệm chức vụ mới thành công.');
+          this.closeModal();
+          this.changed.emit();
+        }
+      },
+      error: async (err: HttpErrorResponse) => {
+        this.isSaving.set(false);
+        await this.dialogService.alert(
+          'LỖI BỔ NHIỆM',
+          'Lỗi ghi nhận bổ nhiệm: ' + (err.error?.error || err.message),
+        );
+      },
+    });
   }
 
   async deletePosition(id: number): Promise<void> {

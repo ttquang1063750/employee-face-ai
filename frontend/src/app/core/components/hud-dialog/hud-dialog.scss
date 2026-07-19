@@ -1,6 +1,9 @@
 .hud-dialog-backdrop {
   position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   background-color: rgba(var(--color-bg-deep-rgb), 0.2);
   backdrop-filter: blur(3px);
   z-index: 9999; /* Float above all other modals */
@@ -35,13 +38,18 @@
 
 .dialog-glow {
   position: absolute;
-  top: 0; left: 0; right: 0; height: 1px;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
   background: linear-gradient(90deg, transparent, var(--color-cyan), transparent);
 }
 
 .scanner-laser {
   position: absolute;
-  top: 0; left: 0; right: 0;
+  top: 0;
+  left: 0;
+  right: 0;
   height: 2px;
   background: var(--color-cyan);
   opacity: 0.7;
@@ -51,9 +59,15 @@
 }
 
 @keyframes scanning {
-  0% { top: 0; }
-  50% { top: 100%; }
-  100% { top: 0; }
+  0% {
+    top: 0;
+  }
+  50% {
+    top: 100%;
+  }
+  100% {
+    top: 0;
+  }
 }
 
 .dialog-header {
@@ -148,13 +162,19 @@
 }
 
 @keyframes scaleIn {
-  from { opacity: 0; transform: scale(0.95); }
-  to { opacity: 1; transform: scale(1); }
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 .dialog-prompt-field {
   padding: 0 var(--space-6) var(--space-6) var(--space-6);
-  
+
   .hud-input {
     width: 100%;
     background: var(--color-bg-input);
