@@ -23,7 +23,7 @@
         <div class="profile-summary">
           <div class="avatar-frame">
             <img
-              [src]="'http://localhost:8000/' + employee()?.image_path"
+              [src]="avatarUrl(employee()?.image_path)"
               (error)="onImageError($event)"
               alt="{{ employee()?.name }}">
           </div>
@@ -254,7 +254,7 @@
                   <img [src]="photoCapture.imgBase64()" alt="Ảnh đại diện đã chụp" class="captured-preview-img">
                 } @else {
                   <img
-                    [src]="'http://localhost:8000/' + employee()?.image_path"
+                    [src]="avatarUrl(employee()?.image_path)"
                     (error)="onImageError($event)"
                     class="captured-preview-img"
                     alt="{{ employee()?.name }}">

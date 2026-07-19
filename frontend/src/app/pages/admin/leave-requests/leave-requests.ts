@@ -7,6 +7,7 @@ import { DatePickerComponent } from '../../../core/components/date-picker/date-p
 import { RealtimeService } from '../../../core/services/realtime.service';
 import { ApiResponse } from '../../../core/models/api-response.model';
 import { LeaveRequest } from '../../../core/models/leave-request.model';
+import { API_BASE_URL } from '../../../core/config/api.config';
 
 type StatusFilter = 'all' | 'pending' | 'approved' | 'rejected';
 
@@ -100,7 +101,7 @@ export class LeaveRequestsComponent implements OnInit {
     return this.filteredRequests().slice(start, start + this.pageSize());
   });
 
-  private readonly apiUrl = 'http://localhost:8000/api';
+  private readonly apiUrl = API_BASE_URL;
 
   ngOnInit(): void {
     this.loadRequests();

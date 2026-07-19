@@ -26,9 +26,10 @@ import {
   generateRandomPassword,
   passwordComplexityValidator,
 } from '../../../../../core/services/credentials.util';
-import { onImageError } from '../../../../../core/utils/image.util';
+import { avatarUrl, onImageError } from '../../../../../core/utils/image.util';
 import { ApiResponse } from '../../../../../core/models/api-response.model';
 import { DetailedEmployee, Skill, Project } from '../../../../../core/models/employee.model';
+import { API_BASE_URL } from '../../../../../core/config/api.config';
 
 @Component({
   selector: 'app-base-profile-modal',
@@ -43,7 +44,7 @@ export class BaseProfileModalComponent implements OnInit {
   private dialogService = inject(DialogService);
   private usernameCheckService = inject(UsernameCheckService);
   private fb = inject(FormBuilder);
-  private readonly apiUrl = 'http://localhost:8000/api';
+  private readonly apiUrl = API_BASE_URL;
 
   employee = input.required<DetailedEmployee>();
 
@@ -84,6 +85,7 @@ export class BaseProfileModalComponent implements OnInit {
   isSaving = signal<boolean>(false);
 
   protected readonly onImageError = onImageError;
+  protected readonly avatarUrl = avatarUrl;
 
   canSave = computed(() => {
     const { username } = this.editFormValue();

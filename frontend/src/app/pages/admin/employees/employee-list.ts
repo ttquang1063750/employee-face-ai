@@ -23,6 +23,8 @@ import { ApiResponse } from '../../../core/models/api-response.model';
 import { EmployeeBase } from '../../../core/models/employee.model';
 import { WebcamCaptureService } from '../../../core/services/webcam-capture.service';
 import { PhotoCaptureStateService } from '../../../core/services/photo-capture-state.service';
+import { avatarUrl } from '../../../core/utils/image.util';
+import { API_BASE_URL } from '../../../core/config/api.config';
 
 @Component({
   selector: 'app-employee-list',
@@ -137,7 +139,8 @@ export class EmployeeListComponent implements OnInit {
     );
   });
 
-  private readonly apiUrl = 'http://localhost:8000/api';
+  private readonly apiUrl = API_BASE_URL;
+  protected readonly avatarUrl = avatarUrl;
 
   ngOnInit(): void {
     this.loadEmployees();

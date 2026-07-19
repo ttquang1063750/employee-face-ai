@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { AuthService } from './auth.service';
 import { ApiResponse } from '../models/api-response.model';
 import { LeaveRequest } from '../models/leave-request.model';
+import { API_BASE_URL } from '../config/api.config';
 
 @Injectable({
   providedIn: 'root',
@@ -44,7 +45,7 @@ export class RealtimeService implements OnDestroy {
       return;
     }
 
-    this.http.get<ApiResponse<LeaveRequest[]>>('http://localhost:8000/api/leave-requests').subscribe({
+    this.http.get<ApiResponse<LeaveRequest[]>>(`${API_BASE_URL}/leave-requests`).subscribe({
       next: (res) => {
         if (res.success && res.data) {
           this.leaveRequests.set(res.data);

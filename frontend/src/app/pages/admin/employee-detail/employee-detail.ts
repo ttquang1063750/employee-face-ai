@@ -3,7 +3,8 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { ApiResponse } from '../../../core/models/api-response.model';
 import { DetailedEmployee } from '../../../core/models/employee.model';
-import { onImageError } from '../../../core/utils/image.util';
+import { avatarUrl, onImageError } from '../../../core/utils/image.util';
+import { API_BASE_URL } from '../../../core/config/api.config';
 import { AttendanceSummaryStateService } from '../../../core/services/attendance-summary-state.service';
 import { AttendanceSummaryComponent } from './components/attendance-summary/attendance-summary';
 import { PositionsTimelineComponent } from './components/positions-timeline/positions-timeline';
@@ -41,12 +42,13 @@ export class EmployeeDetailComponent implements OnInit {
   showBaseModal = signal<boolean>(false);
 
   protected readonly onImageError = onImageError;
+  protected readonly avatarUrl = avatarUrl;
 
   readonly attendance = inject(AttendanceSummaryStateService);
   private readonly rawLogs = computed(() => this.employee()?.raw_logs || []);
 
   private employeeId: number | null = null;
-  private readonly apiUrl = 'http://localhost:8000/api';
+  private readonly apiUrl = API_BASE_URL;
 
   constructor() {
     this.attendance.configure(this.rawLogs);

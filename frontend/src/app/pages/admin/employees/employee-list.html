@@ -49,7 +49,7 @@
                 <td>
                   <div class="profile-pic-frame">
                     <img
-                      [src]="'http://localhost:8000/' + emp.image_path"
+                      [src]="avatarUrl(emp.image_path)"
                       (error)="onImageError($event)"
                       alt="{{ emp.name }}"
                       class="profile-pic">

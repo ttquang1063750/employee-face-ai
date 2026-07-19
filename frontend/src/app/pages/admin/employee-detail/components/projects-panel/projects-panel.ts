@@ -6,6 +6,7 @@ import { DialogService } from '../../../../../core/services/dialog.service';
 import { ApiResponse } from '../../../../../core/models/api-response.model';
 import { Project } from '../../../../../core/models/employee.model';
 import { todayLocalDateString } from '../../../../../core/utils/date.util';
+import { API_BASE_URL } from '../../../../../core/config/api.config';
 
 @Component({
   selector: 'app-projects-panel',
@@ -18,7 +19,7 @@ export class ProjectsPanelComponent {
   private http = inject(HttpClient);
   private dialogService = inject(DialogService);
   private fb = inject(FormBuilder);
-  private readonly apiUrl = 'http://localhost:8000/api';
+  private readonly apiUrl = API_BASE_URL;
 
   projects = input.required<Project[]>();
   employeeId = input.required<number>();

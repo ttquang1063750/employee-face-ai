@@ -4,6 +4,7 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { DialogService } from '../../../../../core/services/dialog.service';
 import { ApiResponse } from '../../../../../core/models/api-response.model';
 import { Skill } from '../../../../../core/models/employee.model';
+import { API_BASE_URL } from '../../../../../core/config/api.config';
 
 @Component({
   selector: 'app-skills-panel',
@@ -16,7 +17,7 @@ export class SkillsPanelComponent {
   private http = inject(HttpClient);
   private dialogService = inject(DialogService);
   private fb = inject(FormBuilder);
-  private readonly apiUrl = 'http://localhost:8000/api';
+  private readonly apiUrl = API_BASE_URL;
 
   skills = input.required<Skill[]>();
   employeeId = input.required<number>();

@@ -24,6 +24,8 @@ import { WebcamCaptureService } from '../../../core/services/webcam-capture.serv
 import { PhotoCaptureStateService } from '../../../core/services/photo-capture-state.service';
 import { AttendanceSummaryStateService } from '../../../core/services/attendance-summary-state.service';
 import { AttendanceSummaryComponent } from '../../admin/employee-detail/components/attendance-summary/attendance-summary';
+import { avatarUrl } from '../../../core/utils/image.util';
+import { API_BASE_URL } from '../../../core/config/api.config';
 
 @Component({
   selector: 'app-staff-profile',
@@ -80,7 +82,8 @@ export class StaffProfileComponent implements OnInit, OnDestroy {
   readonly attendance = inject(AttendanceSummaryStateService);
   private readonly rawLogs = computed(() => this.employee()?.raw_logs || []);
 
-  private readonly apiUrl = 'http://localhost:8000/api';
+  private readonly apiUrl = API_BASE_URL;
+  protected readonly avatarUrl = avatarUrl;
   private pollIntervalId: ReturnType<typeof setInterval> | null = null;
 
   constructor() {

@@ -1,5 +1,6 @@
 import { Component, OnDestroy, ChangeDetectionStrategy, signal, input, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { SERVER_BASE_URL } from '../../config/api.config';
 
 /**
  * Views a check-in/check-out audit photo (`logs/*.jpg`, admin-only) on
@@ -17,7 +18,7 @@ import { HttpClient } from '@angular/common/http';
 })
 export class AuditPhotoButtonComponent implements OnDestroy {
   private http = inject(HttpClient);
-  private readonly baseUrl = 'http://localhost:8000';
+  private readonly baseUrl = SERVER_BASE_URL;
 
   imagePath = input<string | undefined>();
 

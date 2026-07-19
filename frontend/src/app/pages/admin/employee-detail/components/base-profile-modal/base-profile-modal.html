@@ -57,7 +57,7 @@
                 <img [src]="photoCapture.imgBase64()" alt="Ảnh chân dung đã chụp" class="captured-preview-img">
               } @else {
                 <img
-                  [src]="'http://localhost:8000/' + employee().image_path"
+                  [src]="avatarUrl(employee().image_path)"
                   (error)="onImageError($event)"
                   class="captured-preview-img"
                   alt="{{ employee().name }}">

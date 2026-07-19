@@ -3,6 +3,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { DashboardComponent } from './dashboard';
 import { AttendanceLogEntry } from '../../../core/models/attendance-log.model';
+import { API_BASE_URL } from '../../../core/config/api.config';
 
 function makeLog(overrides: Partial<AttendanceLogEntry>): AttendanceLogEntry {
   return {
@@ -293,9 +294,9 @@ describe('DashboardComponent', () => {
       component.loadDashboardData();
 
       httpMock
-        .expectOne('http://localhost:8000/api/employees')
+        .expectOne(`${API_BASE_URL}/employees`)
         .flush({ success: true, data: [{ id: 1, name: 'Alice', age: 30, image_path: '', role: 'staff', current_position: '' }] });
-      httpMock.expectOne('http://localhost:8000/api/logs').flush({ success: true, data: [] });
+      httpMock.expectOne(`${API_BASE_URL}/logs`).flush({ success: true, data: [] });
 
       expect(component.isLoading()).toBe(false);
       expect(component.errorMsg()).toBeNull();
@@ -305,7 +306,7 @@ describe('DashboardComponent', () => {
     it('sets an error message when the employees request fails', () => {
       component.loadDashboardData();
 
-      httpMock.expectOne('http://localhost:8000/api/employees').flush(
+      httpMock.expectOne(`${API_BASE_URL}/employees`).flush(
         { success: false },
         { status: 500, statusText: 'Server Error' },
       );
