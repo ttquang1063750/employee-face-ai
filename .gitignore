@@ -22,7 +22,7 @@ env/
 .env.*.local
 
 # Logs
-logs/
+/logs/
 *.log
 
 # ─── DeepFace / AI Models ───────────────────────────────────
@@ -34,10 +34,17 @@ logs/
 *.pth
 
 # Employee reference photos (sensitive personal data) & AI model cache
-database/
+# (anchored to repo root — an unanchored `database/`/`documents/` also
+# matched frontend/src/app/pages/admin/documents/, silently untracking that
+# entire Angular feature folder; verify with `git status --ignored` after
+# touching these lines)
+/database/
 
 # Captured audit photos (runtime data)
-logs/
+/logs/
+
+# Uploaded HR documents (sensitive — payroll/contracts, runtime data)
+/documents/
 
 # ─── Angular Frontend ───────────────────────────────────────
 frontend/node_modules/
@@ -45,9 +52,10 @@ frontend/dist/
 frontend/.angular/cache/
 frontend/.angular/
 
-# Cypress run artifacts (videos/screenshots from failed/recorded runs)
+# Cypress run artifacts (videos/screenshots/downloads from failed/recorded runs)
 frontend/cypress/videos/
 frontend/cypress/screenshots/
+frontend/cypress/downloads/
 
 # ─── IDE / Editor ───────────────────────────────────────────
 .idea/
