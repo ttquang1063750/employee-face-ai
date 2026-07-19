@@ -42,7 +42,9 @@
           <th>Hành động</th>
           <th>Cảm xúc</th>
           <th>Ảnh</th>
-          <th style="width: 80px; text-align: center;">Hành động</th>
+          @if (showDeleteButton()) {
+            <th class="action-col-header">Hành động</th>
+          }
         </tr>
       </thead>
       <tbody>
@@ -60,13 +62,15 @@
             <td>
               <app-audit-photo-button [imagePath]="log.captured_image_path" />
             </td>
-            <td style="text-align: center;">
-              <button type="button" class="hud-btn-mini" style="border-color: rgba(var(--color-red-rgb), 0.4); color: var(--color-red);" data-tooltip="Xóa lượt chấm công" (click)="deleteLog.emit(log.id)">🗑️</button>
-            </td>
+            @if (showDeleteButton()) {
+              <td class="action-col-cell">
+                <button type="button" class="hud-btn-mini danger" data-tooltip="Xóa lượt chấm công" (click)="deleteLog.emit(log.id)">🗑️</button>
+              </td>
+            }
           </tr>
         } @empty {
           <tr>
-            <td colspan="5" class="no-data">Không có lịch sử chấm công trong khoảng thời gian đã chọn.</td>
+            <td [attr.colspan]="showDeleteButton() ? 5 : 4" class="no-data">Không có lịch sử chấm công trong khoảng thời gian đã chọn.</td>
           </tr>
         }
       </tbody>
@@ -76,9 +80,21 @@
   <!-- Pagination Controls -->
   @if (totalCount() > 0) {
     <div class="hud-pagination">
-      <button class="pag-btn" [disabled]="currentPage() === 1" (click)="prevPage.emit()">◀ TRƯỚC</button>
-      <span class="pag-info">TRANG {{ currentPage() }} / {{ totalPages() }}</span>
-      <button class="pag-btn" [disabled]="currentPage() === totalPages()" (click)="nextPage.emit()">SAU ▶</button>
+      <div class="pag-size">
+        <label for="attendance-page-size">Hiển thị</label>
+        <select id="attendance-page-size" class="pag-size-select" [ngModel]="pageSize()" (ngModelChange)="pageSizeChange.emit(+$event)">
+          <option [value]="5">5</option>
+          <option [value]="10">10</option>
+          <option [value]="20">20</option>
+          <option [value]="50">50</option>
+        </select>
+        <span>/ trang</span>
+      </div>
+      <div class="pag-controls">
+        <button class="pag-btn" [disabled]="currentPage() === 1" (click)="prevPage.emit()">◀ TRƯỚC</button>
+        <span class="pag-info">TRANG {{ currentPage() }} / {{ totalPages() }}</span>
+        <button class="pag-btn" [disabled]="currentPage() === totalPages()" (click)="nextPage.emit()">SAU ▶</button>
+      </div>
     </div>
   }
 </div>

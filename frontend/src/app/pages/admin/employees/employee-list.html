@@ -203,12 +203,12 @@
                   }
                   <div class="photo-controls">
                     <button class="hud-btn-outline" (click)="startWebcam()">📸 CAMERA CHỤP TRỰC TIẾP</button>
-                    <input #fileInputElement type="file" (change)="handleFileUpload($event)" style="display:none;" accept="image/*">
+                    <input #fileInputElement type="file" (change)="handleFileUpload($event)" class="visually-hidden-input" accept="image/*">
                     <button class="hud-btn-outline" (click)="triggerFileInput()">📁 TẢI LÊN FILE ẢNH</button>
                   </div>
                 }
               </div>
-              <canvas #canvasElement style="display:none;"></canvas>
+              <canvas #canvasElement class="visually-hidden-input"></canvas>
             </div>
           </div>
         </div>

@@ -22,6 +22,8 @@ export class AttendanceSummaryComponent {
   totalPages = input.required<number>();
   filterStartDateInput = input.required<string>();
   filterEndDateInput = input.required<string>();
+  pageSize = input.required<number>();
+  showDeleteButton = input<boolean>(true);
 
   filterStartDateInputChange = output<string>();
   filterEndDateInputChange = output<string>();
@@ -29,4 +31,5 @@ export class AttendanceSummaryComponent {
   prevPage = output<void>();
   nextPage = output<void>();
   deleteLog = output<number>();
+  pageSizeChange = output<number>();
 }

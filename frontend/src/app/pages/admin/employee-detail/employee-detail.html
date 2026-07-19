@@ -54,12 +54,14 @@
           [totalPages]="totalPages()"
           [filterStartDateInput]="filterStartDateInput()"
           [filterEndDateInput]="filterEndDateInput()"
+          [pageSize]="pageSize()"
           (filterStartDateInputChange)="filterStartDateInput.set($event)"
           (filterEndDateInputChange)="filterEndDateInput.set($event)"
           (applyFilter)="applyDateFilter()"
           (prevPage)="prevPage()"
           (nextPage)="nextPage()"
           (deleteLog)="onDeleteLog($event)"
+          (pageSizeChange)="onPageSizeChange($event)"
         />
 
         <!-- Lifecycle side column: Positions, Compensation, Skills, Projects -->

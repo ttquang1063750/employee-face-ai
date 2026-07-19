@@ -13,7 +13,7 @@
           <th>TRẠNG THÁI</th>
           <th>CẢM XÚC (MOOD)</th>
           <th>ẢNH</th>
-          <th style="width: 80px; text-align: center;">HÀNH ĐỘNG</th>
+          <th class="action-col-header">HÀNH ĐỘNG</th>
         </tr>
       </thead>
       <tbody>
@@ -46,8 +46,8 @@
               <td>
                 <app-audit-photo-button [imagePath]="log.captured_image_path" />
               </td>
-              <td style="text-align: center;">
-                <button type="button" class="hud-btn-mini" style="border-color: rgba(var(--color-red-rgb), 0.4); color: var(--color-red);" data-tooltip="Xóa lượt chấm công" (click)="deleteLog.emit(log.id)">🗑️</button>
+              <td class="action-col-cell">
+                <button type="button" class="hud-btn-mini danger" data-tooltip="Xóa lượt chấm công" (click)="deleteLog.emit(log.id)">🗑️</button>
               </td>
             </tr>
           } @empty {

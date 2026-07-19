@@ -23,11 +23,11 @@
         <app-date-picker [ngModel]="filterEndDateInput()" (ngModelChange)="filterEndDateInput.set($event)"></app-date-picker>
       </div>
       <div class="hud-field filter-apply-field">
-        <span class="hud-label" style="opacity: 0;">LỌC</span>
-        <div style="display: flex; gap: var(--space-2);">
+        <span class="hud-label hud-label-spacer">LỌC</span>
+        <div class="filter-actions-row">
           <button class="hud-btn-outline" (click)="applyDateFilter()">ÁP DỤNG</button>
           @if (filterStartDate() || filterEndDate()) {
-            <button class="hud-btn-outline" style="border-color: var(--color-border-dim); color: var(--color-text-secondary);" (click)="clearDateFilter()">XÓA</button>
+            <button class="hud-btn-outline muted" (click)="clearDateFilter()">XÓA</button>
           }
         </div>
       </div>
@@ -82,7 +82,7 @@
                   <td>
                     <div>{{ req.reason }}</div>
                     @if (req.status === 'rejected' && req.rejection_reason) {
-                      <div class="rejection-reason" style="margin-top: var(--space-2); color: var(--color-red); font-size: var(--text-xs); font-style: italic;">
+                      <div class="rejection-reason">
                         Lý do từ chối: {{ req.rejection_reason }}
                       </div>
                     }

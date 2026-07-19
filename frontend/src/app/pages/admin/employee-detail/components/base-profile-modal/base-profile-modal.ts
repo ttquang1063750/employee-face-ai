@@ -48,6 +48,7 @@ export class BaseProfileModalComponent implements OnInit {
 
   videoElement = viewChild<ElementRef<HTMLVideoElement>>('videoElement');
   canvasElement = viewChild<ElementRef<HTMLCanvasElement>>('canvasElement');
+  fileInputElement = viewChild<ElementRef<HTMLInputElement>>('fileInputElement');
 
   editName = signal<string>('');
   editAge = signal<number>(30);
@@ -119,8 +120,7 @@ export class BaseProfileModalComponent implements OnInit {
   }
 
   triggerFileInput(): void {
-    const fileInput = document.getElementById('employee-detail-file-input') as HTMLInputElement;
-    if (fileInput) fileInput.click();
+    this.fileInputElement()?.nativeElement.click();
   }
 
   async handleFileUpload(event: Event): Promise<void> {

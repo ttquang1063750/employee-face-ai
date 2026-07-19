@@ -1,5 +1,6 @@
 import { Component, ElementRef, HostListener, input, OnDestroy, ChangeDetectionStrategy, forwardRef, signal, computed, inject } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
+import { fromEvent, merge, Subscription } from 'rxjs';
 import { toLocalDateString } from '../../utils/date.util';
 
 interface CalendarCell {
@@ -38,7 +39,7 @@ export class DatePickerComponent implements ControlValueAccessor, OnDestroy {
   // be clipped by a scrollable ancestor (e.g. a modal body with overflow-y:auto).
   panelTop = signal<number>(0);
   panelLeft = signal<number>(0);
-  private readonly onScrollOrResize = () => this.isOpen.set(false);
+  private scrollOrResizeSub: Subscription | null = null;
 
   readonly weekdayLabels = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
   readonly monthLabel = computed(() => `Tháng ${this.viewMonth() + 1} / ${this.viewYear()}`);
@@ -124,14 +125,16 @@ export class DatePickerComponent implements ControlValueAccessor, OnDestroy {
     this.isOpen.set(true);
     // Scroll (of any ancestor, capture phase) or resize invalidates the
     // computed position, so just close rather than tracking it live.
-    window.addEventListener('scroll', this.onScrollOrResize, true);
-    window.addEventListener('resize', this.onScrollOrResize);
+    this.scrollOrResizeSub = merge(
+      fromEvent(window, 'scroll', { capture: true }),
+      fromEvent(window, 'resize'),
+    ).subscribe(() => this.closePanel());
   }
 
   private closePanel(): void {
     this.isOpen.set(false);
-    window.removeEventListener('scroll', this.onScrollOrResize, true);
-    window.removeEventListener('resize', this.onScrollOrResize);
+    this.scrollOrResizeSub?.unsubscribe();
+    this.scrollOrResizeSub = null;
   }
 
   prevMonth(): void {
@@ -193,7 +196,6 @@ export class DatePickerComponent implements ControlValueAccessor, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    window.removeEventListener('scroll', this.onScrollOrResize, true);
-    window.removeEventListener('resize', this.onScrollOrResize);
+    this.scrollOrResizeSub?.unsubscribe();
   }
 }

@@ -657,3 +657,54 @@
   border-radius: var(--radius-sm);
 }
 
+// ─── Shared layout/style utilities (avoid inline `style="..."` in templates) ──────────────
+
+// Native <input type="file">/<canvas> elements kept off-screen and triggered
+// programmatically (via a viewChild ref) rather than shown directly.
+.visually-hidden-input {
+  display: none;
+}
+
+// Trailing icon-button "action" column shared by attendance/log tables
+// (attendance-summary, logs-table).
+.action-col-header {
+  width: 80px;
+  text-align: center;
+}
+
+.action-col-cell {
+  text-align: center;
+}
+
+// Danger variant of .hud-btn-mini for destructive row actions (delete).
+.hud-btn-mini.danger {
+  border-color: rgba(var(--color-red-rgb), 0.4);
+  color: var(--color-red);
+}
+
+// Muted variant of .hud-btn-outline for secondary/clear actions.
+.hud-btn-outline.muted {
+  border-color: var(--color-border-dim);
+  color: var(--color-text-secondary);
+}
+
+// Groups multiple buttons together within a single .hud-field.
+.filter-actions-row {
+  display: flex;
+  gap: var(--space-2);
+}
+
+// Invisible label used purely to keep a button's .hud-field aligned with its
+// sibling fields in a filter bar grid (needs the same label-height spacer).
+.hud-label-spacer {
+  opacity: 0;
+}
+
+// Rejection reason note shown under a leave request's original reason.
+.rejection-reason {
+  margin-top: var(--space-2);
+  color: var(--color-red);
+  font-size: var(--text-xs);
+  font-style: italic;
+}
+

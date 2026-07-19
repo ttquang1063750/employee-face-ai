@@ -175,10 +175,66 @@ When writing code or modifications, you must strictly follow these rules:
 21. **CSS Values Must Come From Design Tokens**: Never hardcode a color or a magic-number size (px/rem for spacing, radius, font-size, etc.) directly inside a component's SCSS. Reuse the CSS custom properties defined in `frontend/src/styles/_design-tokens.scss` (colors, spacing scale, typography scale) and the shared HUD primitives in `_hud-form.scss`. If a genuinely new value is needed, add it as a token in `_design-tokens.scss` first and reference it from there — don't inline a raw literal in component styles.
 22. **No Duplicated Code**: Before writing logic, markup, or styles that resemble something already used elsewhere (a debounce timer, an HTTP error-handling pattern, a modal skeleton, a label+input pair, a webcam-capture flow), check `src/app/core/services/`, `src/app/core/models/`, `src/app/core/components/`, and `_hud-form.scss` first and reuse or extend it instead of copy-pasting the same block into a third file. If the same pattern is about to appear a third time, extract it into a shared service/util/component.
 23. **No `@Input`/`@Output`/`@ViewChild`/`@ContentChild` Decorators**: Use the signal-based equivalents instead — `input()`/`input.required()`, `output()`, `viewChild()`/`viewChild.required()`, `contentChild()` — consistent with the existing codebase (see `viewChild<ElementRef<...>>('videoElement')` in `employee-list.ts`, `employee-detail.ts`, `kiosk.ts`, `staff-profile.ts`). Never add the classic decorator forms to new or edited components.
-24. **Clean Code Is Part of "Done"**: A task is not complete just because the feature works — before reporting any task as finished, run the relevant linters with zero errors: backend changes require `ruff check . && ruff format --check .` to pass clean; frontend changes require `cd frontend && npm run lint` and `npx tsc --noEmit -p tsconfig.app.json` to both pass clean. Fix any errors surfaced before declaring the task done, even if they're in a file you didn't directly intend to touch.
+24. **Clean Code Is Part of "Done"**: A task is not complete just because the feature works — before reporting any task as finished, run the relevant linters with zero errors: backend changes require `ruff check . && ruff format --check .` to pass clean; frontend changes require `cd frontend && npm run lint` and `npx tsc --noEmit -p tsconfig.app.json` to both pass clean. Fix any errors surfaced before declaring the task done, even if they're in a file you didn't directly intend to touch. For any frontend template/component change, also run `./scripts/check-agent-rules.sh` (see Dev Commands Reference) — it greps for the mechanically-checkable violations of rules 19/20/28/29/30 (inline styles, `any`, imperative DOM interaction, stray Promise construction) that ESLint doesn't already catch.
 25. **No Cross-Component Style Dependencies**: A component's `@Component.styleUrl`/`styleUrls` must only ever point at that component's own `.scss` file(s) — never at another component's `.scss` file, no matter how convenient that seems in the moment. If two or more components genuinely need the same styles, that need is the signal to extract those styles into a shared **global** partial (`frontend/src/styles/_hud-form.scss` for generic reusable HUD/form primitives, `frontend/src/styles/_employee-profile.scss` for the employee-profile "detail card" family — profile header, `.lifecycle-card`/`.timeline*`/`.comp-*`/`.skills-grid`/`.projects-timeline`, shared modal/form-editor CSS — both forwarded globally from `styles.scss`, see the Frontend Application section above), or a brand-new similarly-scoped partial if neither fits. Before adding a new `styleUrl`/`styleUrls` entry, run `grep -rn "styleUrls" frontend/src/app --include="*.ts"` — every match in the codebase should be a single-element array or absent entirely (i.e. a component only ever referencing its own file); a match with more than one entry, or an entry that isn't `./<own-component-name>.scss`, means this rule has been violated and needs fixing before the change is considered done.
 26. **Keep `detector_backend` Consistent**: Registration's duplicate-face check (`find_duplicate_face`) and manual check-in (`handle_attendance`) must default to the same `DEFAULT_DETECTOR_BACKEND` (currently `"retinaface"`) in `server.py`. DeepFace keys its embeddings cache (`database/*.pkl`) by detector backend, so letting the two flows default to different backends would force DeepFace to build and maintain two separate embedding caches for the exact same reference photos — doubling embedding computation for no benefit. The check-in endpoint still accepts an optional `detector_backend` override from the request body (the kiosk UI lets an admin pick a different detector to troubleshoot a specific scan) — that's a fine explicit opt-in; just don't change the *default* independently between the two flows.
 27. **Kiosk Check-In Must Follow the Employee's Own Last Scan**: `handle_attendance` in `server.py` rejects a `CHECK_IN` if `db.get_last_attendance_action_today(employee_id)` is already `CHECK_IN` ("already checked in, check out first"), and rejects a `CHECK_OUT` unless the last action *today* was `CHECK_IN` ("haven't checked in, can't check out") — otherwise the kiosk UI's manual CHECK_IN/CHECK_OUT toggle has no server-side backstop and anyone can tap the same button repeatedly, corrupting the attendance record. This check is scoped to **today only**, not all-time: there is no admin UI to edit or delete a stray `attendance_logs` row, so an all-time check would permanently lock an employee out of checking in again after a single forgotten check-out — scoping to today lets each day's state machine reset instead. Multiple check-in/check-out cycles in one day (e.g. leaving for lunch) are valid and already supported by this scoping — don't tighten it to "one pair per day." Run the state check *before* the (comparatively expensive) `DeepFace.analyze` emotion call, not after, so a rejected scan doesn't pay for wasted inference.
+28. **No Inline `style="..."` in Templates**: Never write a raw `style="..."` attribute (or `[style.x]`/`[ngStyle]`) in a `.html` template — this includes "just hiding an element" (`style="display:none;"`) and "just this one button needs a different border color" cases; those are exactly what a reusable class is for. Add a class instead: to the component's own `.scss` if it's genuinely one-off, or to the shared global partials (`_hud-form.scss`/`_employee-profile.scss`, see rule 25) if it's shared across components — which it usually is, since the same handful of ad-hoc styles (a hidden file-input/canvas, a centered 80px action column, a danger-colored mini button, a muted outline button) kept getting re-typed as inline styles across `attendance-summary`, `logs-table`, `employee-list`, `kiosk`, `base-profile-modal`, `staff-profile`, and `leave-requests` before this rule existed. Reuse (or extend) the utilities already in `_hud-form.scss` before adding new ones: `.visually-hidden-input` (hidden file input/canvas), `.action-col-header`/`.action-col-cell` (centered icon-button table column), `.hud-btn-mini.danger`/`.hud-btn-outline.muted` (colored button variants), `.filter-actions-row` (button group in a filter bar), `.hud-label-spacer` (invisible alignment label), `.rejection-reason` (leave-request rejection note). All CSS values inside any new class must still come from design tokens per rule 21.
+29. **Prefer Angular Bindings Over Imperative DOM Interaction**: Don't reach for `document.getElementById`/`document.querySelector` to find an element you already have a template reference to, and don't wire behavior with raw `.addEventListener(...)`/`.removeEventListener(...)` pairs when Angular has a declarative equivalent.
+    - To programmatically trigger a hidden native control (e.g. clicking a hidden `<input type="file">` from a visible "upload" button), get it via `viewChild<ElementRef<...>>('templateRefName')` and call `.nativeElement.click()` — never `document.getElementById(...)`. See `triggerFileInput()` in `employee-list.ts`/`base-profile-modal.ts`/`staff-profile.ts`.
+    - For a global listener with no template to attach to (`window: scroll`/`resize`), use RxJS `fromEvent` + an explicit `Subscription` (unsubscribed in `ngOnDestroy` and whenever the listener is no longer needed), not raw `addEventListener`/`removeEventListener` — see `DatePickerComponent`'s `openPanel()`/`closePanel()`.
+    - `@HostListener` (e.g. `@HostListener('document:click', ...)`) remains fine — it *is* Angular's own binding mechanism for document/window-level events, not an exception to this rule.
+    - Reading layout geometry (`elementRef.nativeElement.querySelector(...)` + `getBoundingClientRect()` to position a floating panel, as `DatePickerComponent` also does) is not an "interaction" and isn't covered by this rule — there's no Angular binding for measuring layout.
+30. **Prefer RxJS Over Promises**: New asynchronous code should be modeled as an Observable/RxJS pipeline, not a hand-rolled Promise chain. Promises remain acceptable only in two established, narrow cases — don't extend the pattern beyond them:
+    - Wrapping a native browser API that is itself Promise-based with no Observable equivalent, e.g. `navigator.mediaDevices.getUserMedia` (`WebcamCaptureService.start()`) or the callback-based `FileReader` (`readFileAsBase64()`), both in `webcam-capture.service.ts`.
+    - The `DialogService` confirm/alert/prompt API (rule 7) — its Promise-based design is intentional so call sites can `await` a user's modal choice inline. Components may `async`/`await` that one call, but must still use `HttpClient` + RxJS `.subscribe()` for the actual data fetching in the same method — don't wrap an HTTP call in `new Promise(...)` or convert an `Observable` to a `Promise` (`firstValueFrom`/`.toPromise()`) just to `await` it instead of subscribing.
+
+---
+
+## ✅ Agent Pre-Completion Checklist
+
+Quick reference for wrapping up **any** change in this repo — run through this before saying a task is done, not just when something "feels" frontend-y (it covers every change that touches `frontend/src/app`).
+
+### 1. Run the automated check
+
+```bash
+./scripts/check-agent-rules.sh
+```
+
+It greps for the rules a linter doesn't already catch:
+- Inline `style="..."` in templates (rule 28)
+- `any` usage (rules 19/20 — ESLint should already catch this, this is a backstop)
+- Imperative DOM interaction: `document.getElementById`/`querySelector`, raw `addEventListener` (rule 29)
+- Stray `new Promise(...)` construction outside the two sanctioned exceptions (rule 30)
+
+A non-zero exit means fix it before moving on — don't rationalize an exception unless it's the same shape as an already-documented one (`DatePickerComponent`'s scroll/resize `fromEvent`, `WebcamCaptureService`/`readFileAsBase64`, `DialogService`).
+
+### 2. Run the standard linters/build (rule 24)
+
+```bash
+cd frontend
+npx tsc --noEmit -p tsconfig.app.json
+npm run lint
+npm test -- --watch=false
+npm run build
+```
+
+Backend changes: `ruff check . && ruff format --check .` from the repo root.
+
+### 3. Manual checks the script *can't* do
+
+These need judgment, not grep — go through them deliberately:
+
+- **No duplicated code (rule 22)**: about to write a debounce timer, HTTP error handler, modal skeleton, or label+input pair? Check `src/app/core/services/`, `core/models/`, `core/components/`, and `_hud-form.scss`/`_employee-profile.scss` first.
+- **Component split pattern**: splitting a page into child components? Match either the "dumb/presentational" pattern (`dashboard/components/*`) or the "self-contained" pattern (`employee-detail/components/*` minus `attendance-summary`) — see the Frontend Application section above. Don't invent a third shape.
+- **CSS values from design tokens (rule 21)**: any new color/spacing/radius/font-size in a `.scss` file must reference a `_design-tokens.scss` variable, not a raw literal.
+- **No cross-component `styleUrl` (rule 25)**: `grep -rn "styleUrls" frontend/src/app --include="*.ts"` — every match should be a single-element array pointing at that component's own file.
+- **Signals, not decorators (rule 23)**: new/edited components use `input()`/`output()`/`viewChild()`, never `@Input`/`@Output`/`@ViewChild`.
+- **Template-driven forms only**: no `ReactiveFormsModule`/`FormGroup`/`FormControl` — every form is `[ngModel]`/`(ngModelChange)` backed by a signal.
+
+### 4. If you find a new recurring pattern
+
+If you're about to inline a style, reach for `document.querySelector`, or wrap something in a `new Promise(...)` for the second or third time across files, that's the signal to add a shared utility (class in `_hud-form.scss`, a `viewChild` pattern, an RxJS helper) instead — and update rules 28/29/30 above and this checklist with the new canonical example, the same way `.visually-hidden-input`/`.action-col-header`/`.hud-btn-mini.danger` etc. were added.
 
 ---
 
@@ -228,6 +284,10 @@ When writing code or modifications, you must strictly follow these rules:
   ```bash
   cd frontend
   npm run lint
+  ```
+- **Run the agent pre-completion self-check** (rules 19/20/28/29/30 — inline styles, `any`, imperative DOM interaction, stray Promises; see the Agent Pre-Completion Checklist section above):
+  ```bash
+  ./scripts/check-agent-rules.sh
   ```
 
 > Looking for the public-facing project intro instead of agent/dev internals? See [README.md](README.md).

@@ -22,11 +22,12 @@ import { DetailedEmployee, AttendanceLog } from '../../../core/models/employee.m
 import { LeaveRequest } from '../../../core/models/leave-request.model';
 import { WebcamCaptureService, readFileAsBase64 } from '../../../core/services/webcam-capture.service';
 import { todayLocalDateString, startOfMonthLocalDateString } from '../../../core/utils/date.util';
+import { AttendanceSummaryComponent } from '../../admin/employee-detail/components/attendance-summary/attendance-summary';
 
 @Component({
   selector: 'app-staff-profile',
   standalone: true,
-  imports: [FormsModule, CommonModule, DatePickerComponent],
+  imports: [FormsModule, CommonModule, DatePickerComponent, AttendanceSummaryComponent],
   templateUrl: './staff-profile.html',
   styleUrl: './staff-profile.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -41,6 +42,7 @@ export class StaffProfileComponent implements OnInit, OnDestroy {
 
   videoElement = viewChild<ElementRef<HTMLVideoElement>>('videoElement');
   canvasElement = viewChild<ElementRef<HTMLCanvasElement>>('canvasElement');
+  fileInputElement = viewChild<ElementRef<HTMLInputElement>>('fileInputElement');
 
   employee = signal<DetailedEmployee | null>(null);
   isLoading = signal<boolean>(true);
@@ -122,8 +124,10 @@ export class StaffProfileComponent implements OnInit, OnDestroy {
     return uniqueDates.size;
   });
 
-  // Computed: Aggregate working hours via pairing algorithm
-  workingHours = computed(() => {
+  // Computed: Aggregate working hours via a CHECK_IN/CHECK_OUT pairing
+  // algorithm, single-pass so workingHours and hasIncompleteAttendance never
+  // disagree about which days had an open (unpaired) session.
+  private dailyAttendanceSummary = computed(() => {
     const logs = this.filteredRawLogs();
     const logsByDate: Record<string, AttendanceLog[]> = {};
 
@@ -136,6 +140,8 @@ export class StaffProfileComponent implements OnInit, OnDestroy {
     });
 
     let totalHours = 0;
+    let hasIncomplete = false;
+
     Object.keys(logsByDate).forEach((date) => {
       // Sort day logs chronologically (oldest first)
       const dayLogs = logsByDate[date].sort(
@@ -145,18 +151,32 @@ export class StaffProfileComponent implements OnInit, OnDestroy {
       let lastCheckInTime: number | null = null;
       dayLogs.forEach((log) => {
         if (log.action === 'CHECK_IN') {
-          lastCheckInTime = new Date(log.timestamp).getTime();
+          if (lastCheckInTime === null) {
+            lastCheckInTime = new Date(log.timestamp).getTime();
+          }
         } else if (log.action === 'CHECK_OUT' && lastCheckInTime !== null) {
           const checkOutTime = new Date(log.timestamp).getTime();
-          const diffMs = checkOutTime - lastCheckInTime;
-          const diffHrs = diffMs / (1000 * 60 * 60);
-          totalHours += diffHrs;
+          const diffHrs = (checkOutTime - lastCheckInTime) / (1000 * 60 * 60);
+          if (diffHrs > 0) {
+            totalHours += diffHrs;
+          }
           lastCheckInTime = null; // Reset pairing
         }
       });
+
+      if (lastCheckInTime !== null) {
+        hasIncomplete = true;
+      }
     });
-    return parseFloat(totalHours.toFixed(1));
+
+    return { totalHours: parseFloat(totalHours.toFixed(1)), hasIncomplete };
   });
+
+  workingHours = computed(() => this.dailyAttendanceSummary().totalHours);
+
+  // True when at least one day in the filtered range has an unpaired
+  // CHECK_IN, meaning workingHours() under-counts that day.
+  hasIncompleteAttendance = computed(() => this.dailyAttendanceSummary().hasIncomplete);
 
   private readonly apiUrl = 'http://localhost:8000/api';
   private pollIntervalId: ReturnType<typeof setInterval> | null = null;
@@ -257,6 +277,11 @@ export class StaffProfileComponent implements OnInit, OnDestroy {
     if (this.currentPage() < this.totalPages()) {
       this.currentPage.update((p) => p + 1);
     }
+  }
+
+  onPageSizeChange(size: number): void {
+    this.pageSize.set(size);
+    this.currentPage.set(1);
   }
 
   onImageError(event: Event): void {
@@ -375,8 +400,7 @@ export class StaffProfileComponent implements OnInit, OnDestroy {
   }
 
   triggerFileInput(): void {
-    const fileInput = document.getElementById('staff-avatar-file-input') as HTMLInputElement;
-    if (fileInput) fileInput.click();
+    this.fileInputElement()?.nativeElement.click();
   }
 
   async handleFileUpload(event: Event): Promise<void> {

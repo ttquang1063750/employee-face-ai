@@ -245,10 +245,15 @@ export class EmployeeDetailComponent implements OnInit {
     }
   }
 
+  onPageSizeChange(size: number): void {
+    this.pageSize.set(size);
+    this.currentPage.set(1);
+  }
+
   onDeleteLog(id: number): void {
     this.dialogService.confirm('XÁC NHẬN XÓA', 'Bạn có chắc chắn muốn xóa lượt chấm công này? Thao tác này không thể hoàn tác.').then((confirmed) => {
       if (confirmed) {
-        this.http.delete<ApiResponse<any>>(`${this.apiUrl}/logs/${id}`).subscribe({
+        this.http.delete<ApiResponse>(`${this.apiUrl}/logs/${id}`).subscribe({
           next: (res) => {
             if (res.success) {
               this.loadEmployeeDetails(true);
