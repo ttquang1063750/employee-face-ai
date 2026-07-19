@@ -9,6 +9,8 @@
     "test": "ng test",
     "test:coverage": "ng test --coverage --coverage-include=\"src/app/**/*.ts\" --coverage-exclude=\"src/app/**/*.spec.ts\" --coverage-exclude=\"src/app/**/*.model.ts\"",
     "lint": "ng lint",
+    "prettier:write": "prettier --write \"src/**/*.{ts,html,scss}\" \"cypress/**/*.ts\"",
+    "prettier:check": "prettier --check \"src/**/*.{ts,html,scss}\" \"cypress/**/*.ts\"",
     "e2e": "cypress open",
     "e2e:run": "cypress run"
   },
