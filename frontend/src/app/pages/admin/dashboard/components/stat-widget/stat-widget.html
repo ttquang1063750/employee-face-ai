@@ -13,7 +13,15 @@
   } @else {
     <div class="widget-top-row">
       <div class="widget-chip">{{ icon() }}</div>
-      <span class="widget-status">{{ statusLabel() }}</span>
+      @if (filterOptions().length > 0) {
+        <select class="pag-size-select" [value]="filterValue()" (change)="onFilterChange($event)">
+          @for (opt of filterOptions(); track opt.value) {
+            <option [value]="opt.value">{{ opt.label }}</option>
+          }
+        </select>
+      } @else if (statusLabel()) {
+        <span class="widget-status">{{ statusLabel() }}</span>
+      }
     </div>
     <div class="widget-label">{{ label() }}</div>
     <div class="widget-value">{{ value() }}</div>

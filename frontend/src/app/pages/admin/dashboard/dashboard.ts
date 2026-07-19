@@ -19,7 +19,7 @@ import { todayLocalDateString, startOfMonthLocalDateString } from '../../../core
 import { triggerBlobDownload } from '../../../core/utils/download.util';
 import { environment } from '../../../../environments/environment';
 import { EmployeeService } from '../../../core/services/employee.service';
-import { StatWidgetComponent } from './components/stat-widget/stat-widget';
+import { StatWidgetComponent, StatWidgetFilterOption } from './components/stat-widget/stat-widget';
 import { HourlyChartComponent } from './components/hourly-chart/hourly-chart';
 import { MoodDonutComponent } from './components/mood-donut/mood-donut';
 import { LogsTableComponent } from './components/logs-table/logs-table';
@@ -72,6 +72,26 @@ export class DashboardComponent implements OnInit, OnDestroy {
   // Autocomplete dropdown state
   showSuggestions = signal<boolean>(false);
 
+  // Status filter for the "LƯỢT CHẤM CÔNG" stat widget only — scoped to that
+  // one card (see totalLogsInRange below), not the logs table/charts, which
+  // stay driven by filteredLogs() alone. Applies instantly like the name
+  // search, not gated behind ÁP DỤNG (rule 10 exempts non-date-range filters).
+  // Rendered by StatWidgetComponent itself (filterOptions/filterValue/
+  // filterChange) rather than a template-bound form control, so it's a
+  // plain signal rather than a FormControl.
+  logsStatusFilter = signal<'all' | 'CHECK_IN' | 'CHECK_OUT'>('all');
+  readonly logsStatusFilterOptions: StatWidgetFilterOption[] = [
+    { value: 'all', label: 'Tất cả' },
+    { value: 'CHECK_IN', label: 'Vào ca' },
+    { value: 'CHECK_OUT', label: 'Ra ca' },
+  ];
+
+  onLogsStatusFilterChange(value: string): void {
+    if (value === 'all' || value === 'CHECK_IN' || value === 'CHECK_OUT') {
+      this.logsStatusFilter.set(value);
+    }
+  }
+
   // Pagination for logs list
   currentPage = signal<number>(1);
   pageSize = signal<number>(8);
@@ -95,7 +115,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
     });
   });
 
-  totalLogsInRange = computed(() => this.filteredLogs().length);
+  totalLogsInRange = computed(() => {
+    const status = this.logsStatusFilter();
+    const logs = this.filteredLogs();
+    return status === 'all' ? logs.length : logs.filter((log) => log.action === status).length;
+  });
 
   // Computed: Unique employee name suggestions filtered by current input
   employeeSuggestions = computed(() => {

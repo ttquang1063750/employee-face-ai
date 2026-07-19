@@ -62,6 +62,9 @@
           label="LƯỢT CHẤM CÔNG"
           [value]="totalLogsInRange()"
           footer="Lượt quét trong khoảng đã chọn"
+          [filterOptions]="logsStatusFilterOptions"
+          [filterValue]="logsStatusFilter()"
+          (filterChange)="onLogsStatusFilterChange($event)"
           [loading]="isLoading()" />
         <app-stat-widget
           icon="☺"
