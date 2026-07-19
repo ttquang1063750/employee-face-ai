@@ -62,6 +62,38 @@ def migrate_legacy_passwords(conn):
         cur.close()
 
 
+def migrate_upload_paths(conn):
+    """One-time upgrade: every uploaded/captured file used to live under its
+    own top-level folder (`database/`, `logs/`, `documents/`); they're now
+    all nested under a single `uploads/` root (see AGENTS.md's Unified
+    Uploads Root rule) so runtime data isn't scattered across the repo root.
+    Safe to run on every startup — a path already under `uploads/` is left
+    alone, so this is a no-op once every row has been migrated once."""
+    cur = conn.cursor()
+    try:
+        migrated = 0
+        cur.execute(
+            "UPDATE employees SET image_path = 'uploads/' || image_path "
+            "WHERE image_path IS NOT NULL AND image_path NOT LIKE 'uploads/%';"
+        )
+        migrated += cur.rowcount
+        cur.execute(
+            "UPDATE attendance_logs SET captured_image_path = 'uploads/' || captured_image_path "
+            "WHERE captured_image_path IS NOT NULL AND captured_image_path NOT LIKE 'uploads/%';"
+        )
+        migrated += cur.rowcount
+        cur.execute(
+            "UPDATE employee_documents SET file_path = 'uploads/' || file_path "
+            "WHERE file_path IS NOT NULL AND file_path != '' AND file_path NOT LIKE 'uploads/%';"
+        )
+        migrated += cur.rowcount
+        if migrated:
+            conn.commit()
+            print(f"Migrated {migrated} file path(s) to the unified uploads/ root.", flush=True)
+    finally:
+        cur.close()
+
+
 def get_connection():
     retries = 5
     while retries > 0:
@@ -205,6 +237,7 @@ def init_db():
         conn.commit()
 
         migrate_legacy_passwords(conn)
+        migrate_upload_paths(conn)
 
     except Exception as e:
         conn.rollback()
@@ -232,7 +265,7 @@ def seed_mock_data(conn):
             INSERT INTO employees (name, age, image_path, role, password)
             VALUES (%s, %s, %s, %s, %s) RETURNING id;
         """,
-            ("HR Admin", 36, "database/1.jpg", "admin", "admin"),
+            ("HR Admin", 36, "uploads/database/1.jpg", "admin", "admin"),
         )
         admin_id = cur.fetchone()[0]
 
@@ -273,7 +306,7 @@ def seed_mock_data(conn):
             INSERT INTO employees (name, age, image_path, role, password)
             VALUES (%s, %s, %s, %s, %s) RETURNING id;
         """,
-            ("Nguyễn Văn Trỗi", 29, "database/2.jpg", "staff", None),
+            ("Nguyễn Văn Trỗi", 29, "uploads/database/2.jpg", "staff", None),
         )
         dev_id = cur.fetchone()[0]
 
@@ -371,7 +404,7 @@ def seed_mock_data(conn):
             INSERT INTO employees (name, age, image_path, role, password)
             VALUES (%s, %s, %s, %s, %s) RETURNING id;
         """,
-            ("Trần Thị Hương", 26, "database/3.jpg", "staff", None),
+            ("Trần Thị Hương", 26, "uploads/database/3.jpg", "staff", None),
         )
         jane_id = cur.fetchone()[0]
 

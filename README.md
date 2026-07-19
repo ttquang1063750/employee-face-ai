@@ -25,7 +25,7 @@ graph TD
     Client[Angular 21 Web Client] -- Port 4200 --> API[Python http.server Backend]
     API -- Port 8000 --> DB[(PostgreSQL Container)]
     API -- Native calls --> DF[DeepFace models - CPU only]
-    API -- Disk I/O --> FS[(Local storage: database/ photos & logs/)]
+    API -- Disk I/O --> FS[(Local storage: uploads/database, uploads/logs, uploads/documents)]
 ```
 
 | Layer | Stack |
@@ -84,7 +84,7 @@ npm test
 ├── db.py              # PostgreSQL schema, queries, session management
 ├── docker-compose.yml # Postgres container definition
 ├── start.sh           # One-command dev launcher
-├── database/          # Employee reference photos (database/{id}.jpg)
+├── uploads/           # Runtime data: database/ (employee photos), logs/ (audit photos), documents/ (HR docs)
 └── frontend/          # Angular application (kiosk, login, admin, staff)
 ```
 

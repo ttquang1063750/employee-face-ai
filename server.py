@@ -24,7 +24,7 @@ import db
 PASSWORD_PATTERN = re.compile(r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$")
 
 # DeepFace.find()/analyze() read and rewrite a shared embeddings cache (.pkl)
-# under database/ — with ThreadingHTTPServer handling requests concurrently,
+# under uploads/database/ — with ThreadingHTTPServer handling requests concurrently,
 # two overlapping DeepFace calls could race on that same cache file. Serialize
 # just the DeepFace calls (not the rest of each request) with this lock.
 DEEPFACE_LOCK = threading.Lock()
@@ -77,7 +77,7 @@ def reset_login_attempts(key):
         login_attempts.pop(key, None)
 
 
-# DeepFace keys its embeddings cache (database/*.pkl) by detector_backend, so
+# DeepFace keys its embeddings cache (uploads/database/*.pkl) by detector_backend, so
 # using a different backend for registration's face checks than for check-in
 # silently doubles cache/compute cost — every photo gets embedded once per
 # backend ever used against it. Registration's has_detectable_face/
@@ -87,15 +87,24 @@ def reset_login_attempts(key):
 # affecting this shared default.
 DEFAULT_DETECTOR_BACKEND = "retinaface"
 
-# Check-in/check-out audit photos (logs/*.jpg) are served to admins only
-# (see serve_audit_image) — they're forensic evidence, not a public asset
-# like a reference photo — and accumulate one file per scan forever
+# Every uploaded/captured file lives under one uploads/ root (see AGENTS.md's
+# Unified Uploads Root rule), each kind in its own subfolder rather than
+# scattered as separate top-level directories.
+UPLOADS_ROOT = "uploads"
+DATABASE_DIR = os.path.join(UPLOADS_ROOT, "database")  # employee reference photos + DeepFace's embedding cache
+
+# Check-in/check-out audit photos (uploads/logs/*.jpg) are served to admins
+# only (see serve_audit_image) — they're forensic evidence, not a public
+# asset like a reference photo — and accumulate one file per scan forever
 # otherwise. Prune anything older than LOG_RETENTION_DAYS once a day; this
 # only removes the on-disk JPEG, never the attendance_logs DB row or its
 # timestamp/mood metadata, so the audit trail's history stays intact.
-LOGS_DIR = "logs"
+LOGS_DIR = os.path.join(UPLOADS_ROOT, "logs")
 LOG_RETENTION_DAYS = 90
 LOG_CLEANUP_INTERVAL_SECONDS = 24 * 60 * 60
+
+os.makedirs(DATABASE_DIR, exist_ok=True)
+os.makedirs(LOGS_DIR, exist_ok=True)
 
 
 def cleanup_old_audit_logs():
@@ -145,7 +154,7 @@ MAX_IMAGE_BYTES = 8 * 1024 * 1024  # 8 MB
 # cap rather than sharing MAX_IMAGE_BYTES.
 MAX_DOCUMENT_BYTES = 15 * 1024 * 1024  # 15 MB
 
-DOCUMENTS_DIR = "documents"
+DOCUMENTS_DIR = os.path.join(UPLOADS_ROOT, "documents")
 os.makedirs(DOCUMENTS_DIR, exist_ok=True)
 DOCUMENT_CONTENT_TYPES = {
     ".pdf": "application/pdf",
@@ -235,9 +244,9 @@ class EmployeeFaceAIRequestHandler(BaseHTTPRequestHandler):
             self.handle_get_employee_documents()
         elif self.path.startswith("/api/employees/"):
             self.handle_get_employee_detail()
-        elif self.path.startswith("/database/"):
+        elif self.path.startswith("/uploads/database/"):
             self.serve_database_image()
-        elif self.path.startswith("/logs/"):
+        elif self.path.startswith("/uploads/logs/"):
             self.serve_audit_image()
         # Serve the single page index.html for static hosting fallback
         elif self.path == "/" or self.path == "/index.html":
@@ -339,7 +348,7 @@ class EmployeeFaceAIRequestHandler(BaseHTTPRequestHandler):
             self.send_error(404, "File Not Found")
 
     def serve_database_image(self):
-        self._serve_local_file("database", self.path[len("/database/") :])
+        self._serve_local_file(DATABASE_DIR, self.path[len("/uploads/database/") :])
 
     def serve_audit_image(self):
         # Audit photos are forensic evidence of a specific person's face at a
@@ -352,7 +361,7 @@ class EmployeeFaceAIRequestHandler(BaseHTTPRequestHandler):
             self.send_error(401, "Unauthorized")
             return
 
-        relative_path = self.path[len("/logs/") :]
+        relative_path = self.path[len("/uploads/logs/") :]
         if user["role"] != "admin":
             stem = os.path.splitext(os.path.basename(relative_path))[0]
             try:
@@ -510,11 +519,11 @@ class EmployeeFaceAIRequestHandler(BaseHTTPRequestHandler):
 
     def find_duplicate_face(self, img_base64, exclude_id=None):
         """Returns (name, employee_id) if img_base64 already matches an existing
-        employee's reference photo in database/ (other than exclude_id, used when
-        an employee re-uploads/recaptures their own photo), else None. Never
-        raises — any DeepFace failure (no face detected, empty database/, etc.)
-        is treated as "no duplicate found" so it never blocks registration/edits
-        on unrelated errors."""
+        employee's reference photo in uploads/database/ (other than exclude_id,
+        used when an employee re-uploads/recaptures their own photo), else
+        None. Never raises — any DeepFace failure (no face detected, empty
+        uploads/database/, etc.) is treated as "no duplicate found" so it
+        never blocks registration/edits on unrelated errors."""
         if not db.get_all_employees():
             return None
 
@@ -528,7 +537,7 @@ class EmployeeFaceAIRequestHandler(BaseHTTPRequestHandler):
             with DEEPFACE_LOCK:
                 dfs = DeepFace.find(
                     img_path=temp_img_path,
-                    db_path="database",
+                    db_path=DATABASE_DIR,
                     detector_backend=DEFAULT_DETECTOR_BACKEND,
                     enforce_detection=False,
                     silent=True,
@@ -637,11 +646,11 @@ class EmployeeFaceAIRequestHandler(BaseHTTPRequestHandler):
                 return
 
             # Register base profile
-            temp_path = "database/temp.jpg"
+            temp_path = os.path.join(DATABASE_DIR, "temp.jpg")
             employee_id = db.register_employee(name, age, temp_path, role, password, username)
 
             # Final filepath
-            final_filepath = f"database/{employee_id}.jpg"
+            final_filepath = os.path.join(DATABASE_DIR, f"{employee_id}.jpg")
             if save_base64_image(img_base64, final_filepath):
                 # Update image path
                 conn = db.get_connection()
@@ -753,7 +762,7 @@ class EmployeeFaceAIRequestHandler(BaseHTTPRequestHandler):
 
             # 1b. Update reference avatar photo, if a new one was captured/uploaded
             if img_base64:
-                final_filepath = f"database/{employee_id}.jpg"
+                final_filepath = os.path.join(DATABASE_DIR, f"{employee_id}.jpg")
                 if save_base64_image(img_base64, final_filepath):
                     conn = db.get_connection()
                     cur = conn.cursor()
@@ -885,7 +894,7 @@ class EmployeeFaceAIRequestHandler(BaseHTTPRequestHandler):
                 )
                 return
 
-            final_filepath = f"database/{employee_id}.jpg"
+            final_filepath = os.path.join(DATABASE_DIR, f"{employee_id}.jpg")
             if save_base64_image(img_base64, final_filepath):
                 db.update_employee_avatar(employee_id, final_filepath)
                 self.send_json_response(200, {"success": True, "message": "Cập nhật ảnh đại diện thành công."})
@@ -965,7 +974,7 @@ class EmployeeFaceAIRequestHandler(BaseHTTPRequestHandler):
             with DEEPFACE_LOCK:
                 dfs = DeepFace.find(
                     img_path=temp_img_path,
-                    db_path="database",
+                    db_path=DATABASE_DIR,
                     detector_backend=detector_backend,
                     enforce_detection=True,
                 )

@@ -22,7 +22,6 @@ env/
 .env.*.local
 
 # Logs
-/logs/
 *.log
 
 # ─── DeepFace / AI Models ───────────────────────────────────
@@ -33,18 +32,13 @@ env/
 *.pt
 *.pth
 
-# Employee reference photos (sensitive personal data) & AI model cache
-# (anchored to repo root — an unanchored `database/`/`documents/` also
-# matched frontend/src/app/pages/admin/documents/, silently untracking that
-# entire Angular feature folder; verify with `git status --ignored` after
-# touching these lines)
-/database/
-
-# Captured audit photos (runtime data)
-/logs/
-
-# Uploaded HR documents (sensitive — payroll/contracts, runtime data)
-/documents/
+# Every uploaded/captured file (employee reference photos + AI model cache,
+# audit photos, HR documents — sensitive personal data / runtime data) lives
+# under this one root now instead of separate top-level folders (see
+# AGENTS.md's Unified Uploads Root rule). Anchored to repo root — an
+# unanchored `uploads/` could in principle match a future frontend folder of
+# the same name; verify with `git status --ignored` after touching this line.
+/uploads/
 
 # ─── Angular Frontend ───────────────────────────────────────
 frontend/node_modules/
