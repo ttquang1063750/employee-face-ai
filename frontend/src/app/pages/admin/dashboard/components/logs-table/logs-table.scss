@@ -84,6 +84,17 @@
     font-weight: 600;
   }
 
+  .log-name-link {
+    color: var(--color-text-primary);
+    text-decoration: none;
+    transition: var(--transition-fast);
+
+    &:hover {
+      color: var(--color-cyan);
+      text-decoration: underline;
+    }
+  }
+
   tr:last-child td {
     border-bottom: none;
   }

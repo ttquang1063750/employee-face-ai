@@ -75,4 +75,6 @@
 
 .action-col-cell {
   text-align: center;
+  display: flex;
+  gap: var(--space-2);
 }

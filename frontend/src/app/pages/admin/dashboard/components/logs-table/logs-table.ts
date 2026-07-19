@@ -1,6 +1,7 @@
 import { Component, ChangeDetectionStrategy, effect, input, output } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { translateMood } from '../../../../../core/utils/mood.util';
 import { AttendanceLogEntry } from '../../../../../core/models/attendance-log.model';
 import { AuditPhotoButtonComponent } from '../../../../../core/components/audit-photo-button/audit-photo-button';
@@ -8,7 +9,7 @@ import { AuditPhotoButtonComponent } from '../../../../../core/components/audit-
 @Component({
   selector: 'app-logs-table',
   standalone: true,
-  imports: [ReactiveFormsModule, AuditPhotoButtonComponent],
+  imports: [ReactiveFormsModule, RouterLink, AuditPhotoButtonComponent],
   templateUrl: './logs-table.html',
   styleUrl: './logs-table.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

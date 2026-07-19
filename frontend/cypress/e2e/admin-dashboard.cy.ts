@@ -17,6 +17,15 @@ describe('Admin dashboard', () => {
     cy.contains('.logs-table', 'HR Admin').should('be.visible');
   });
 
+  it('navigates to the employee detail page when a log row name is clicked', () => {
+    cy.intercept('GET', '**/api/employees/11', { fixture: 'employee-detail-staff.json' }).as(
+      'getDetail',
+    );
+    cy.contains('.logs-table .log-name-link', 'Tăng Thanh Quang').click();
+    cy.url().should('include', '/admin/employees/11');
+    cy.wait('@getDetail');
+  });
+
   it('does not refilter until ÁP DỤNG is clicked, and clicking it does not error', () => {
     cy.get('.logs-table tbody tr').should('have.length', 4);
 

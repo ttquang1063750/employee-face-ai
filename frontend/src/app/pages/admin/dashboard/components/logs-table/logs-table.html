@@ -32,7 +32,9 @@
           @for (log of logs(); track log.id) {
             <tr>
               <td class="log-time">{{ log.timestamp }}</td>
-              <td class="log-name">{{ log.employee_name }}</td>
+              <td class="log-name">
+                <a class="log-name-link" [routerLink]="['/admin/employees', log.employee_id]">{{ log.employee_name }}</a>
+              </td>
               <td>
                 @if (log.action === 'CHECK_IN') {
                   <span class="hud-badge badge-in">Check-in</span>
