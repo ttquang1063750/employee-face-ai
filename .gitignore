@@ -45,6 +45,10 @@ frontend/dist/
 frontend/.angular/cache/
 frontend/.angular/
 
+# Cypress run artifacts (videos/screenshots from failed/recorded runs)
+frontend/cypress/videos/
+frontend/cypress/screenshots/
+
 # ─── IDE / Editor ───────────────────────────────────────────
 .idea/
 .vscode/

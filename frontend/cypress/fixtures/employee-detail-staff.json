@@ -1,0 +1,38 @@
+{
+  "success": true,
+  "data": {
+    "id": 11,
+    "name": "Tăng Thanh Quang",
+    "age": 40,
+    "image_path": "database/11.jpg",
+    "role": "staff",
+    "username": "quang.tt",
+    "current_position": "JS Developer",
+    "positions": [
+      { "id": 2, "title": "JS Developer", "start_date": "2024-03-01", "end_date": null }
+    ],
+    "skills": [
+      { "skill_name": "Angular", "description": "Thành thạo core" },
+      { "skill_name": "Python", "description": "Có kinh nghiệm viết REST API" }
+    ],
+    "projects": [
+      {
+        "project_name": "Employee Face AI",
+        "role": "Lead Developer",
+        "description": "Xây dựng UI chấm công bằng Angular",
+        "start_date": "2024-03-01",
+        "end_date": null
+      }
+    ],
+    "income_history": [
+      { "id": 2, "amount": 3200, "effective_date": "2024-03-01", "change_reason": "Initial Offer" }
+    ],
+    "raw_logs": [
+      { "id": 201, "timestamp": "2026-07-15T08:02:00", "action": "CHECK_IN", "mood": "happy", "captured_image_path": "logs/201.jpg" },
+      { "id": 202, "timestamp": "2026-07-15T17:00:00", "action": "CHECK_OUT", "mood": "neutral", "captured_image_path": "logs/202.jpg" }
+    ],
+    "monthly_logs_summary": [
+      { "month": "2026-07", "check_ins": 1, "check_outs": 1 }
+    ]
+  }
+}

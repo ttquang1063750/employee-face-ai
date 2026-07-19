@@ -1,5 +1,4 @@
-import { Injectable, Signal, computed, inject } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { Injectable, Signal, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { AbstractControl, AsyncValidatorFn } from '@angular/forms';
 import { Observable, map, merge, of, switchMap, timer } from 'rxjs';
@@ -50,22 +49,23 @@ export class UsernameCheckService {
 // and base-profile-modal's edit form so neither hand-rolls its own status
 // tracking on top of the async validator.
 export function usernameStatusSignal(usernameControl: AbstractControl): Signal<UsernameStatus> {
-  // Tracks both value AND status changes as one trigger — a computed() only
-  // reruns when a signal dependency it actually read last time changes, so
-  // a branch that returns before touching this signal (e.g. an early
-  // "empty value" return) would otherwise permanently freeze the memo the
-  // first time it runs on an empty control.
-  const changes = toSignal(merge(usernameControl.valueChanges, usernameControl.statusChanges), {
-    initialValue: null,
-  });
-
-  return computed<UsernameStatus>(() => {
-    changes();
+  const deriveStatus = (): UsernameStatus => {
     const value = ((usernameControl.value as string) ?? '').trim();
     if (!value) return 'idle';
     if (usernameControl.pending) return 'checking';
     if (usernameControl.valid) return 'available';
     if (usernameControl.hasError('usernameTaken')) return 'taken';
     return 'idle';
-  });
+  };
+
+  const status = signal<UsernameStatus>(deriveStatus());
+  // A plain subscription rather than toSignal()+computed(): the control's
+  // status can flip PENDING -> VALID well after this control is constructed
+  // (a real 450ms-debounced HTTP round trip), and this must keep receiving
+  // every emission for the lifetime of the control, not just the first one.
+  merge(usernameControl.valueChanges, usernameControl.statusChanges).subscribe(() =>
+    status.set(deriveStatus()),
+  );
+
+  return status.asReadonly();
 }

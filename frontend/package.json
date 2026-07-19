@@ -8,7 +8,9 @@
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "test:coverage": "ng test --coverage --coverage-include=\"src/app/**/*.ts\" --coverage-exclude=\"src/app/**/*.spec.ts\" --coverage-exclude=\"src/app/**/*.model.ts\"",
-    "lint": "ng lint"
+    "lint": "ng lint",
+    "e2e": "cypress open",
+    "e2e:run": "cypress run"
   },
   "private": true,
   "packageManager": "npm@10.9.2",

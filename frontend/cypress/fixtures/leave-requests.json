@@ -1,0 +1,41 @@
+{
+  "success": true,
+  "data": [
+    {
+      "id": 1,
+      "employee_id": 11,
+      "employee_name": "Tăng Thanh Quang",
+      "current_position": "JS Developer",
+      "start_date": "2026-07-20",
+      "end_date": "2026-07-22",
+      "reason": "Việc gia đình",
+      "status": "pending",
+      "requested_at": "2026-07-18T09:00:00",
+      "rejection_reason": null
+    },
+    {
+      "id": 2,
+      "employee_id": 11,
+      "employee_name": "Tăng Thanh Quang",
+      "current_position": "JS Developer",
+      "start_date": "2026-06-01",
+      "end_date": "2026-06-02",
+      "reason": "Khám sức khoẻ",
+      "status": "approved",
+      "requested_at": "2026-05-28T09:00:00",
+      "rejection_reason": null
+    },
+    {
+      "id": 3,
+      "employee_id": 11,
+      "employee_name": "Tăng Thanh Quang",
+      "current_position": "JS Developer",
+      "start_date": "2026-04-10",
+      "end_date": "2026-04-11",
+      "reason": "Nghỉ phép cá nhân",
+      "status": "rejected",
+      "requested_at": "2026-04-01T09:00:00",
+      "rejection_reason": "Dự án đang gấp"
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+{
+  "success": true,
+  "data": {
+    "id": 1,
+    "name": "HR Admin",
+    "age": 36,
+    "image_path": "database/1.jpg",
+    "role": "admin",
+    "username": "admin",
+    "current_position": "HR Director",
+    "positions": [
+      { "id": 1, "title": "HR Director", "start_date": "2023-01-01", "end_date": null }
+    ],
+    "skills": [
+      { "skill_name": "HR Management", "description": "Over 10 years of human resource planning" },
+      { "skill_name": "Talent Acquisition", "description": "Experienced in hiring elite engineers" }
+    ],
+    "projects": [
+      {
+        "project_name": "Employee Face AI",
+        "role": "Product Owner",
+        "description": "Oversees HR rollout",
+        "start_date": "2023-01-01",
+        "end_date": null
+      }
+    ],
+    "income_history": [
+      { "id": 1, "amount": 7500, "effective_date": "2023-01-01", "change_reason": "Initial Offer" }
+    ],
+    "raw_logs": [
+      { "id": 101, "timestamp": "2026-07-15T08:05:00", "action": "CHECK_IN", "mood": "happy", "captured_image_path": "logs/101.jpg" },
+      { "id": 102, "timestamp": "2026-07-15T17:10:00", "action": "CHECK_OUT", "mood": "neutral", "captured_image_path": "logs/102.jpg" }
+    ],
+    "monthly_logs_summary": [
+      { "month": "2026-07", "check_ins": 1, "check_outs": 1 }
+    ]
+  }
+}

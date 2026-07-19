@@ -96,9 +96,6 @@ export class BaseProfileModalComponent implements OnInit {
 
   ngOnInit(): void {
     const data = this.employee();
-    this.editForm.controls.username.addAsyncValidators(
-      this.usernameCheckService.usernameTakenValidator(data.id),
-    );
     this.editForm.reset({
       name: data.name,
       age: data.age,
@@ -106,6 +103,17 @@ export class BaseProfileModalComponent implements OnInit {
       username: data.username || '',
       password: '',
     });
+    // Attached *after* the reset above, and deliberately not followed by an
+    // explicit updateValueAndValidity() call: addAsyncValidators() alone does
+    // not retroactively validate, so the employee's own current username
+    // (obviously already valid) is never re-checked against itself on open —
+    // the check only actually runs the next time the user edits this field.
+    // (Attaching it before reset() and letting reset() trigger the first run
+    // was tried and reliably left the control's very first validation stuck
+    // PENDING forever — a reproduced bug, not a hunch.)
+    this.editForm.controls.username.addAsyncValidators(
+      this.usernameCheckService.usernameTakenValidator(data.id),
+    );
   }
 
   close(): void {

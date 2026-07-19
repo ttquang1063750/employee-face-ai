@@ -1,0 +1,41 @@
+{
+  "success": true,
+  "data": [
+    {
+      "id": 101,
+      "employee_id": 1,
+      "employee_name": "HR Admin",
+      "timestamp": "2026-07-15 08:05:00",
+      "action": "CHECK_IN",
+      "mood": "happy",
+      "captured_image_path": "logs/101.jpg"
+    },
+    {
+      "id": 102,
+      "employee_id": 1,
+      "employee_name": "HR Admin",
+      "timestamp": "2026-07-15 17:10:00",
+      "action": "CHECK_OUT",
+      "mood": "neutral",
+      "captured_image_path": "logs/102.jpg"
+    },
+    {
+      "id": 201,
+      "employee_id": 11,
+      "employee_name": "Tăng Thanh Quang",
+      "timestamp": "2026-07-16 08:02:00",
+      "action": "CHECK_IN",
+      "mood": "happy",
+      "captured_image_path": "logs/201.jpg"
+    },
+    {
+      "id": 202,
+      "employee_id": 11,
+      "employee_name": "Tăng Thanh Quang",
+      "timestamp": "2026-07-16 17:00:00",
+      "action": "CHECK_OUT",
+      "mood": "sad",
+      "captured_image_path": "logs/202.jpg"
+    }
+  ]
+}
