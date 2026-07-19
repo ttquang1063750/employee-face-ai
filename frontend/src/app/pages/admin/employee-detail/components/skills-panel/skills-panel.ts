@@ -1,10 +1,9 @@
 import { Component, ChangeDetectionStrategy, signal, input, output, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { HttpErrorResponse } from '@angular/common/http';
 import { DialogService } from '../../../../../core/services/dialog.service';
-import { ApiResponse } from '../../../../../core/models/api-response.model';
+import { EmployeeService } from '../../../../../core/services/employee.service';
 import { Skill } from '../../../../../core/models/employee.model';
-import { environment } from '../../../../../../environments/environment';
 
 @Component({
   selector: 'app-skills-panel',
@@ -14,10 +13,9 @@ import { environment } from '../../../../../../environments/environment';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SkillsPanelComponent {
-  private http = inject(HttpClient);
   private dialogService = inject(DialogService);
   private fb = inject(FormBuilder);
-  private readonly apiUrl = environment.apiBaseUrl;
+  private employeeService = inject(EmployeeService);
 
   skills = input.required<Skill[]>();
   employeeId = input.required<number>();
@@ -64,8 +62,8 @@ export class SkillsPanelComponent {
   save(): void {
     this.isSaving.set(true);
 
-    this.http
-      .put<ApiResponse>(`${this.apiUrl}/employees/${this.employeeId()}/skills`, this.skillsListToEdit())
+    this.employeeService
+      .updateSkills(this.employeeId(), this.skillsListToEdit())
       .subscribe({
         next: async (res) => {
           this.isSaving.set(false);

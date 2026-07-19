@@ -16,7 +16,9 @@ import { EmployeeBase } from '../../../core/models/employee.model';
 import { AttendanceLogEntry } from '../../../core/models/attendance-log.model';
 import { translateMood } from '../../../core/utils/mood.util';
 import { todayLocalDateString, startOfMonthLocalDateString } from '../../../core/utils/date.util';
+import { triggerBlobDownload } from '../../../core/utils/download.util';
 import { environment } from '../../../../environments/environment';
+import { EmployeeService } from '../../../core/services/employee.service';
 import { StatWidgetComponent } from './components/stat-widget/stat-widget';
 import { HourlyChartComponent } from './components/hourly-chart/hourly-chart';
 import { MoodDonutComponent } from './components/mood-donut/mood-donut';
@@ -41,6 +43,7 @@ import { DialogService } from '../../../core/services/dialog.service';
 export class DashboardComponent implements OnInit, OnDestroy {
   private http = inject(HttpClient);
   private dialogService = inject(DialogService);
+  private employeeService = inject(EmployeeService);
 
   constructor() {
     this.nameControl.valueChanges.pipe(takeUntilDestroyed()).subscribe(() => this.onSearchInput());
@@ -260,7 +263,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     if (this.pollIntervalId) return;
     this.pollIntervalId = setInterval(() => {
       // Quiet reload: we load dashboard data directly
-      this.http.get<ApiResponse<EmployeeBase[]>>(`${this.apiUrl}/employees`).subscribe({
+      this.employeeService.getAll().subscribe({
         next: (res) => {
           if (res.success && res.data) {
             this.employees.set(res.data);
@@ -293,7 +296,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.errorMsg.set(null);
 
     // Call APIs in parallel
-    this.http.get<ApiResponse<EmployeeBase[]>>(`${this.apiUrl}/employees`).subscribe({
+    this.employeeService.getAll().subscribe({
       next: (empRes) => {
         if (empRes.success && empRes.data) {
           this.employees.set(empRes.data);
@@ -379,17 +382,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       ].join('\n');
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute(
-      'download',
-      `bao_cao_tong_hop_${this.filterStartDate()}_to_${this.filterEndDate()}.csv`,
-    );
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    triggerBlobDownload(blob, `bao_cao_tong_hop_${this.filterStartDate()}_to_${this.filterEndDate()}.csv`);
   }
 
   onDeleteLog(id: number): void {

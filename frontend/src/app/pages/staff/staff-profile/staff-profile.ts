@@ -17,14 +17,16 @@ import { AuthService } from '../../../core/services/auth.service';
 import { DialogService } from '../../../core/services/dialog.service';
 import { PASSWORD_HINT, passwordComplexityValidator } from '../../../core/services/credentials.util';
 import { DatePickerComponent } from '../../../core/components/date-picker/date-picker';
-import { ApiResponse } from '../../../core/models/api-response.model';
 import { DetailedEmployee } from '../../../core/models/employee.model';
 import { LeaveRequest } from '../../../core/models/leave-request.model';
+import { EmployeeDocument } from '../../../core/models/document.model';
 import { WebcamCaptureService } from '../../../core/services/webcam-capture.service';
 import { PhotoCaptureStateService } from '../../../core/services/photo-capture-state.service';
 import { AttendanceSummaryStateService } from '../../../core/services/attendance-summary-state.service';
+import { EmployeeService } from '../../../core/services/employee.service';
 import { AttendanceSummaryComponent } from '../../admin/employee-detail/components/attendance-summary/attendance-summary';
 import { avatarUrl } from '../../../core/utils/image.util';
+import { triggerBlobDownload } from '../../../core/utils/download.util';
 import { environment } from '../../../../environments/environment';
 
 @Component({
@@ -42,6 +44,7 @@ export class StaffProfileComponent implements OnInit, OnDestroy {
   private router = inject(Router);
   private dialogService = inject(DialogService);
   private fb = inject(FormBuilder);
+  private employeeService = inject(EmployeeService);
 
   videoElement = viewChild<ElementRef<HTMLVideoElement>>('videoElement');
   canvasElement = viewChild<ElementRef<HTMLCanvasElement>>('canvasElement');
@@ -79,6 +82,9 @@ export class StaffProfileComponent implements OnInit, OnDestroy {
   isSavingLeave = signal<boolean>(false);
   leaveRequests = signal<LeaveRequest[]>([]);
 
+  // --- My documents ---
+  documents = signal<EmployeeDocument[]>([]);
+
   readonly attendance = inject(AttendanceSummaryStateService);
   private readonly rawLogs = computed(() => this.employee()?.raw_logs || []);
 
@@ -98,6 +104,7 @@ export class StaffProfileComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.loadOwnProfile();
     this.loadLeaveRequests();
+    this.loadDocuments();
     this.startPolling();
   }
 
@@ -107,25 +114,37 @@ export class StaffProfileComponent implements OnInit, OnDestroy {
       const employeeId = this.authService.currentUser()?.id;
       if (!employeeId) return;
 
-      // Quiet reload profile details
-      this.http.get<ApiResponse<DetailedEmployee>>(`${this.apiUrl}/employees/${employeeId}`).subscribe({
+      // Quiet reload profile details — silently ignored on failure (a
+      // transient network blip shouldn't surface an error for a background
+      // poll), matching RealtimeService.refreshLeaveRequests()'s convention.
+      this.employeeService.getById(employeeId).subscribe({
         next: (res) => {
           if (res.success && res.data) {
             this.employee.set(res.data);
           }
         },
+        error: () => undefined,
       });
 
       // Quiet reload leave requests
-      this.http
-        .get<ApiResponse<LeaveRequest[]>>(`${this.apiUrl}/employees/${employeeId}/leave-requests`)
-        .subscribe({
-          next: (res) => {
-            if (res.success && res.data) {
-              this.leaveRequests.set(res.data);
-            }
-          },
-        });
+      this.employeeService.getLeaveRequests(employeeId).subscribe({
+        next: (res) => {
+          if (res.success && res.data) {
+            this.leaveRequests.set(res.data);
+          }
+        },
+        error: () => undefined,
+      });
+
+      // Quiet reload documents
+      this.employeeService.getDocuments(employeeId).subscribe({
+        next: (res) => {
+          if (res.success && res.data) {
+            this.documents.set(res.data);
+          }
+        },
+        error: () => undefined,
+      });
     }, 3000);
   }
 
@@ -147,7 +166,7 @@ export class StaffProfileComponent implements OnInit, OnDestroy {
     this.isLoading.set(true);
     this.errorMsg.set(null);
 
-    this.http.get<ApiResponse<DetailedEmployee>>(`${this.apiUrl}/employees/${employeeId}`).subscribe({
+    this.employeeService.getById(employeeId).subscribe({
       next: (res) => {
         this.isLoading.set(false);
         if (res.success && res.data) {
@@ -214,11 +233,8 @@ export class StaffProfileComponent implements OnInit, OnDestroy {
     }
 
     this.isSavingPassword.set(true);
-    this.http
-      .put<ApiResponse>(`${this.apiUrl}/employees/${employeeId}/password`, {
-        current_password: current,
-        new_password: newPassword,
-      })
+    this.employeeService
+      .changePassword(employeeId, current, newPassword)
       .subscribe({
         next: async (res) => {
           this.isSavingPassword.set(false);
@@ -252,8 +268,8 @@ export class StaffProfileComponent implements OnInit, OnDestroy {
     if (!employeeId || !this.photoCapture.imgBase64()) return;
 
     this.isSavingAvatar.set(true);
-    this.http
-      .put<ApiResponse>(`${this.apiUrl}/employees/${employeeId}/avatar`, { img: this.photoCapture.imgBase64() })
+    this.employeeService
+      .changeAvatar(employeeId, this.photoCapture.imgBase64())
       .subscribe({
         next: async (res) => {
           this.isSavingAvatar.set(false);
@@ -286,12 +302,13 @@ export class StaffProfileComponent implements OnInit, OnDestroy {
     const employeeId = this.authService.currentUser()?.id;
     if (!employeeId) return;
 
-    this.http.get<ApiResponse<LeaveRequest[]>>(`${this.apiUrl}/employees/${employeeId}/leave-requests`).subscribe({
+    this.employeeService.getLeaveRequests(employeeId).subscribe({
       next: (res) => {
         if (res.success && res.data) {
           this.leaveRequests.set(res.data);
         }
       },
+      error: () => undefined,
     });
   }
 
@@ -311,8 +328,8 @@ export class StaffProfileComponent implements OnInit, OnDestroy {
     }
 
     this.isSavingLeave.set(true);
-    this.http
-      .post<ApiResponse>(`${this.apiUrl}/employees/${employeeId}/leave-requests`, {
+    this.employeeService
+      .submitLeaveRequest(employeeId, {
         start_date: startDate,
         end_date: endDate,
         reason: reason.trim(),
@@ -333,6 +350,30 @@ export class StaffProfileComponent implements OnInit, OnDestroy {
           await this.dialogService.alert('LỖI', err.error?.error || 'Lỗi kết nối máy chủ.');
         },
       });
+  }
+
+  // ===================== My Documents =====================
+  loadDocuments(): void {
+    const employeeId = this.authService.currentUser()?.id;
+    if (!employeeId) return;
+
+    this.employeeService.getDocuments(employeeId).subscribe({
+      next: (res) => {
+        if (res.success && res.data) {
+          this.documents.set(res.data);
+        }
+      },
+      error: () => undefined,
+    });
+  }
+
+  downloadDocument(doc: EmployeeDocument): void {
+    this.http.get(`${this.apiUrl}/documents/${doc.id}/download`, { responseType: 'blob' }).subscribe({
+      next: (blob) => triggerBlobDownload(blob, doc.file_name),
+      error: async () => {
+        await this.dialogService.alert('LỖI', 'Không thể tải xuống tài liệu.');
+      },
+    });
   }
 
   leaveStatusLabel(status: string): string {

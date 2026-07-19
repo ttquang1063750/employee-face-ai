@@ -3,6 +3,7 @@ import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { DatePickerComponent } from '../../../../../core/components/date-picker/date-picker';
 import { DialogService } from '../../../../../core/services/dialog.service';
+import { EmployeeService } from '../../../../../core/services/employee.service';
 import { ApiResponse } from '../../../../../core/models/api-response.model';
 import { Position } from '../../../../../core/models/employee.model';
 import { todayLocalDateString } from '../../../../../core/utils/date.util';
@@ -19,6 +20,7 @@ export class PositionsTimelineComponent {
   private http = inject(HttpClient);
   private dialogService = inject(DialogService);
   private fb = inject(FormBuilder);
+  private employeeService = inject(EmployeeService);
   private readonly apiUrl = environment.apiBaseUrl;
 
   positions = input.required<Position[]>();
@@ -54,8 +56,8 @@ export class PositionsTimelineComponent {
       start_date: startDate,
     };
 
-    this.http
-      .post<ApiResponse>(`${this.apiUrl}/employees/${this.employeeId()}/positions`, payload)
+    this.employeeService
+      .addPosition(this.employeeId(), payload)
       .subscribe({
         next: async (res) => {
           this.isSaving.set(false);

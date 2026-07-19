@@ -1,12 +1,11 @@
 import { Component, ChangeDetectionStrategy, signal, input, output, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { HttpErrorResponse } from '@angular/common/http';
 import { DatePickerComponent } from '../../../../../core/components/date-picker/date-picker';
 import { DialogService } from '../../../../../core/services/dialog.service';
-import { ApiResponse } from '../../../../../core/models/api-response.model';
+import { EmployeeService } from '../../../../../core/services/employee.service';
 import { Project } from '../../../../../core/models/employee.model';
 import { todayLocalDateString } from '../../../../../core/utils/date.util';
-import { environment } from '../../../../../../environments/environment';
 
 @Component({
   selector: 'app-projects-panel',
@@ -16,10 +15,9 @@ import { environment } from '../../../../../../environments/environment';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ProjectsPanelComponent {
-  private http = inject(HttpClient);
   private dialogService = inject(DialogService);
   private fb = inject(FormBuilder);
-  private readonly apiUrl = environment.apiBaseUrl;
+  private employeeService = inject(EmployeeService);
 
   projects = input.required<Project[]>();
   employeeId = input.required<number>();
@@ -84,8 +82,8 @@ export class ProjectsPanelComponent {
   save(): void {
     this.isSaving.set(true);
 
-    this.http
-      .put<ApiResponse>(`${this.apiUrl}/employees/${this.employeeId()}/projects`, this.projectsListToEdit())
+    this.employeeService
+      .updateProjects(this.employeeId(), this.projectsListToEdit())
       .subscribe({
         next: async (res) => {
           this.isSaving.set(false);

@@ -47,6 +47,11 @@ export const routes: Routes = [
         path: 'leave-requests',
         title: 'Duyệt Đơn Xin Nghỉ - HR Control Panel',
         loadComponent: () => import('./pages/admin/leave-requests/leave-requests').then(m => m.LeaveRequestsComponent)
+      },
+      {
+        path: 'documents',
+        title: 'Quản Lý Tài Liệu - HR Control Panel',
+        loadComponent: () => import('./pages/admin/documents/documents').then(m => m.DocumentsComponent)
       }
     ]
   },

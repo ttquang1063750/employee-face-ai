@@ -1,0 +1,162 @@
+<div class="dashboard-layout">
+  <div class="dashboard-content">
+    <div class="page-title-row">
+      <h2 class="title">📄 QUẢN LÝ TÀI LIỆU NHÂN SỰ</h2>
+      <button class="hud-btn-success" (click)="openUploadModal()">TẢI LÊN TÀI LIỆU MỚI</button>
+    </div>
+
+    <div class="hud-filter-bar">
+      <div class="hud-field">
+        <label class="hud-label" for="doc-visibility-filter">LOẠI TÀI LIỆU</label>
+        <select id="doc-visibility-filter" class="hud-select" [formControl]="visibilityFilterControl">
+          <option value="all">Tất cả</option>
+          <option value="chung">Chung (Toàn bộ nhân viên)</option>
+          <option value="rieng">Riêng (Theo nhân viên)</option>
+        </select>
+      </div>
+      <div class="hud-field grow-3">
+        <label class="hud-label" for="doc-search-input">TÌM KIẾM</label>
+        <input
+          id="doc-search-input"
+          type="text"
+          [formControl]="searchQuery"
+          placeholder="Tìm theo tiêu đề hoặc tên nhân viên..."
+          class="hud-search-input">
+      </div>
+    </div>
+
+    @if (isLoading()) {
+      <div class="hud-loading-state">
+        <div class="hud-spinner"></div>
+        <p>Đang tải danh sách tài liệu...</p>
+      </div>
+    } @else if (errorMsg()) {
+      <div class="error-state">
+        <p class="err-text">⚠️ Lỗi: {{ errorMsg() }}</p>
+        <button class="retry-btn" (click)="loadDocuments()">Tải lại</button>
+      </div>
+    } @else {
+      <div class="logs-card">
+        <div class="logs-header">
+          <h3 class="logs-title">📋 DANH SÁCH TÀI LIỆU</h3>
+        </div>
+
+        <div class="logs-table-wrapper">
+          <table class="logs-table">
+            <thead>
+              <tr>
+                <th>TIÊU ĐỀ</th>
+                <th>NHÂN VIÊN</th>
+                <th>LOẠI</th>
+                <th>NGÀY TẢI LÊN</th>
+                <th class="action-col-header">HÀNH ĐỘNG</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (doc of paginatedDocuments(); track doc.id) {
+                <tr>
+                  <td class="log-name">{{ doc.title }}</td>
+                  <td>{{ doc.employee_name || 'Toàn bộ nhân viên' }}</td>
+                  <td>
+                    <span class="doc-visibility-badge" [class.broadcast]="doc.visibility === 'chung'">
+                      {{ doc.visibility === 'chung' ? 'Chung' : 'Riêng' }}
+                    </span>
+                  </td>
+                  <td class="log-time">{{ doc.uploaded_at | date: 'dd/MM/yyyy HH:mm' }}</td>
+                  <td class="action-col-cell">
+                    <button type="button" class="hud-btn-mini" data-tooltip="Tải xuống" (click)="downloadDocument(doc)">⬇️</button>
+                    <button type="button" class="hud-btn-mini danger" data-tooltip="Xóa tài liệu" (click)="deleteDocument(doc)">🗑️</button>
+                  </td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="5" class="no-data">Không tìm thấy tài liệu nào phù hợp.</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        @if (documents().length > 0) {
+          <div class="hud-pagination">
+            <div class="pag-size">
+              <label for="doc-page-size">Hiển thị</label>
+              <select id="doc-page-size" class="pag-size-select" [formControl]="pageSizeControl">
+                <option [ngValue]="8">8</option>
+                <option [ngValue]="16">16</option>
+                <option [ngValue]="24">24</option>
+                <option [ngValue]="50">50</option>
+              </select>
+              <span>/ trang</span>
+            </div>
+            <div class="pag-controls">
+              <button class="pag-btn" [disabled]="currentPage() === 1" (click)="prevPage()">◀ TRƯỚC</button>
+              <span class="pag-info">TRANG {{ currentPage() }} / {{ totalPages() }}</span>
+              <button class="pag-btn" [disabled]="currentPage() === totalPages()" (click)="nextPage()">SAU ▶</button>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </div>
+</div>
+
+@if (showUploadModal()) {
+  <div class="modal-backdrop">
+    <div class="modal-card mini">
+      <div class="modal-header">
+        <h3>📄 TẢI LÊN TÀI LIỆU MỚI</h3>
+        <button class="close-btn" (click)="closeUploadModal()">✖</button>
+      </div>
+      <div class="modal-body" [formGroup]="uploadForm">
+        <div class="form-fields">
+          <div class="form-group">
+            <label for="doc-title">TIÊU ĐỀ TÀI LIỆU</label>
+            <input id="doc-title" type="text" formControlName="title" placeholder="VD: Bảng lương Tháng 7/2026" class="hud-input">
+          </div>
+
+          <div class="form-group">
+            <label for="doc-visibility">LOẠI TÀI LIỆU</label>
+            <select id="doc-visibility" formControlName="visibility" class="hud-select">
+              <option value="rieng">Riêng (chỉ 1 nhân viên nhận được)</option>
+              <option value="chung">Chung (toàn bộ nhân viên nhận được)</option>
+            </select>
+          </div>
+
+          @if (uploadForm.controls.visibility.value === 'rieng') {
+            <div class="form-group">
+              <label for="doc-employee">NHÂN VIÊN NHẬN TÀI LIỆU</label>
+              <select id="doc-employee" formControlName="employeeId" class="hud-select">
+                <option [ngValue]="null">-- Chọn nhân viên --</option>
+                @for (emp of employees(); track emp.id) {
+                  <option [ngValue]="emp.id">{{ emp.name }} (#{{ emp.id }})</option>
+                }
+              </select>
+            </div>
+          }
+
+          <div class="form-group">
+            <span class="hud-label">FILE TÀI LIỆU (PDF, Word, Excel, ảnh — tối đa 15MB)</span>
+            <input #fileInputElement type="file" (change)="onFileSelected($event)" class="visually-hidden-input" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png">
+            <div class="filter-actions-row">
+              <button type="button" class="hud-btn-outline" (click)="triggerFileInput()">📁 CHỌN FILE</button>
+              @if (selectedFileName()) {
+                <span class="selected-file-name">{{ selectedFileName() }}</span>
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="hud-btn-success" [disabled]="isUploading() || uploadForm.invalid || !selectedFileName()" (click)="submitUpload()">
+          @if (isUploading()) {
+            <div class="loader"></div>
+          } @else {
+            <span>TẢI LÊN</span>
+          }
+        </button>
+        <button class="hud-btn-secondary" (click)="closeUploadModal()">HỦY</button>
+      </div>
+    </div>
+  </div>
+}

@@ -78,6 +78,29 @@
         </div>
       </div>
 
+      <!-- Documents assigned to this employee: broadcast ("chung") + own private ("riêng") -->
+      <div class="lifecycle-card">
+        <div class="section-header-row">
+          <h3 class="section-title">📄 TÀI LIỆU CỦA TÔI</h3>
+        </div>
+        <div class="comp-list">
+          @for (doc of documents(); track doc.id) {
+            <div class="comp-item">
+              <div class="comp-amount text-glow-green">
+                <span>{{ doc.title }}</span>
+                <button class="remove-inline-btn" (click)="downloadDocument(doc)" title="Tải xuống tài liệu này">⬇️</button>
+              </div>
+              <div class="comp-details">
+                <span class="reason">{{ doc.visibility === 'chung' ? 'Toàn bộ nhân viên' : 'Riêng cho bạn' }}</span>
+                <span class="date">📅 {{ doc.uploaded_at | date: 'dd/MM/yyyy' }}</span>
+              </div>
+            </div>
+          } @empty {
+            <p class="no-data">Chưa có tài liệu nào được gửi cho bạn.</p>
+          }
+        </div>
+      </div>
+
       <!-- Attendance summary (left, ~65%) + Lifecycle sections (right, ~35%) -->
       <div class="lifecycle-layout">
 

@@ -174,6 +174,25 @@ def init_db():
         """)
         cur.execute("ALTER TABLE employee_leave_requests ADD COLUMN IF NOT EXISTS rejection_reason TEXT DEFAULT NULL;")
         conn.commit()
+        # 9. employee_documents — employee_id is nullable (the one FK column in
+        # this schema that is), since a "chung" (broadcast) doc has no single
+        # owner. The CHECK keeps visibility and employee_id from drifting apart.
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS employee_documents (
+                id SERIAL PRIMARY KEY,
+                employee_id INTEGER REFERENCES employees(id) ON DELETE CASCADE,
+                title VARCHAR(255) NOT NULL,
+                file_name VARCHAR(255) NOT NULL,
+                file_path VARCHAR(255) NOT NULL,
+                visibility VARCHAR(20) NOT NULL DEFAULT 'rieng',
+                uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                CHECK (
+                    (visibility = 'chung' AND employee_id IS NULL)
+                    OR (visibility = 'rieng' AND employee_id IS NOT NULL)
+                )
+            );
+        """)
+        conn.commit()
         print("Database schemas initialized.", flush=True)
 
         # Seed data if database is empty
@@ -835,6 +854,133 @@ def update_leave_request_status(request_id, status, rejection_reason=None):
         conn.close()
 
 
+def create_document(title, file_name, visibility, employee_id=None):
+    conn = get_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute(
+            """
+            INSERT INTO employee_documents (employee_id, title, file_name, file_path, visibility)
+            VALUES (%s, %s, %s, '', %s) RETURNING id;
+        """,
+            (employee_id, title, file_name, visibility),
+        )
+        document_id = cur.fetchone()[0]
+        conn.commit()
+        return document_id
+    except Exception as e:
+        conn.rollback()
+        raise e
+    finally:
+        cur.close()
+        conn.close()
+
+
+def set_document_file_path(document_id, file_path):
+    conn = get_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute("UPDATE employee_documents SET file_path = %s WHERE id = %s;", (file_path, document_id))
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        raise e
+    finally:
+        cur.close()
+        conn.close()
+
+
+def get_all_documents():
+    conn = get_connection()
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    try:
+        cur.execute("""
+            SELECT d.id, d.employee_id, e.name AS employee_name, d.title, d.file_name,
+                   d.visibility, d.uploaded_at
+            FROM employee_documents d
+            LEFT JOIN employees e ON d.employee_id = e.id
+            ORDER BY d.uploaded_at DESC;
+        """)
+        rows = cur.fetchall()
+        for r in rows:
+            r["uploaded_at"] = r["uploaded_at"].isoformat()
+        return rows
+    finally:
+        cur.close()
+        conn.close()
+
+
+def get_documents_for_employee(employee_id):
+    conn = get_connection()
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    try:
+        cur.execute(
+            """
+            SELECT d.id, d.employee_id, e.name AS employee_name, d.title, d.file_name,
+                   d.visibility, d.uploaded_at
+            FROM employee_documents d
+            LEFT JOIN employees e ON d.employee_id = e.id
+            WHERE d.visibility = 'chung' OR d.employee_id = %s
+            ORDER BY d.uploaded_at DESC;
+        """,
+            (employee_id,),
+        )
+        rows = cur.fetchall()
+        for r in rows:
+            r["uploaded_at"] = r["uploaded_at"].isoformat()
+        return rows
+    finally:
+        cur.close()
+        conn.close()
+
+
+def get_document(document_id):
+    conn = get_connection()
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    try:
+        cur.execute(
+            """
+            SELECT id, employee_id, title, file_name, file_path, visibility, uploaded_at
+            FROM employee_documents WHERE id = %s;
+        """,
+            (document_id,),
+        )
+        row = cur.fetchone()
+        return dict(row) if row else None
+    finally:
+        cur.close()
+        conn.close()
+
+
+def delete_document(document_id):
+    import os
+
+    conn = get_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute("SELECT file_path FROM employee_documents WHERE id = %s;", (document_id,))
+        row = cur.fetchone()
+        file_path = row[0] if row else None
+
+        cur.execute("DELETE FROM employee_documents WHERE id = %s;", (document_id,))
+        conn.commit()
+
+        if file_path:
+            abs_path = os.path.abspath(file_path)
+            if os.path.isfile(abs_path):
+                try:
+                    os.remove(abs_path)
+                    print(f"Deleted document file: {abs_path}", flush=True)
+                except Exception as e:
+                    print(f"Failed to delete document file: {abs_path}, error: {str(e)}", flush=True)
+    except Exception as e:
+        conn.rollback()
+        raise e
+    finally:
+        cur.close()
+        conn.close()
+
+
 def delete_employee_profile(employee_id):
     conn = get_connection()
     cur = conn.cursor()
@@ -1173,6 +1319,7 @@ def delete_employee_income(income_id):
 
 def delete_attendance_log(log_id):
     import os
+
     conn = get_connection()
     cur = conn.cursor()
     try:
@@ -1180,10 +1327,10 @@ def delete_attendance_log(log_id):
         cur.execute("SELECT captured_image_path FROM attendance_logs WHERE id = %s;", (log_id,))
         row = cur.fetchone()
         img_path = row[0] if row else None
-        
+
         cur.execute("DELETE FROM attendance_logs WHERE id = %s;", (log_id,))
         conn.commit()
-        
+
         # Delete file if exists
         if img_path:
             abs_path = os.path.abspath(img_path)
@@ -1199,4 +1346,3 @@ def delete_attendance_log(log_id):
     finally:
         cur.close()
         conn.close()
-

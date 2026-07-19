@@ -3,6 +3,7 @@ import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { DatePickerComponent } from '../../../../../core/components/date-picker/date-picker';
 import { DialogService } from '../../../../../core/services/dialog.service';
+import { EmployeeService } from '../../../../../core/services/employee.service';
 import { ApiResponse } from '../../../../../core/models/api-response.model';
 import { IncomeEntry } from '../../../../../core/models/employee.model';
 import { todayLocalDateString } from '../../../../../core/utils/date.util';
@@ -19,6 +20,7 @@ export class IncomeHistoryComponent {
   private http = inject(HttpClient);
   private dialogService = inject(DialogService);
   private fb = inject(FormBuilder);
+  private employeeService = inject(EmployeeService);
   private readonly apiUrl = environment.apiBaseUrl;
 
   incomeHistory = input.required<IncomeEntry[]>();
@@ -58,7 +60,7 @@ export class IncomeHistoryComponent {
       change_reason: reason.trim() || 'HR Compensation Adjustment',
     };
 
-    this.http.post<ApiResponse>(`${this.apiUrl}/employees/${this.employeeId()}/income`, payload).subscribe({
+    this.employeeService.addIncome(this.employeeId(), payload).subscribe({
       next: async (res) => {
         this.isSaving.set(false);
         if (res.success) {

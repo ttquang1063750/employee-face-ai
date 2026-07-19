@@ -9,8 +9,11 @@ describe('Staff profile', () => {
     cy.intercept('GET', '**/api/employees/11/leave-requests', { fixture: 'leave-requests.json' }).as(
       'getLeaveRequests',
     );
+    cy.intercept('GET', '**/api/employees/11/documents', { fixture: 'documents.json' }).as(
+      'getDocuments',
+    );
     cy.loginAsStaff('/staff');
-    cy.wait(['@getDetail', '@getLeaveRequests']);
+    cy.wait(['@getDetail', '@getLeaveRequests', '@getDocuments']);
   });
 
   it('renders the read-only profile header and own leave requests', () => {
@@ -18,6 +21,25 @@ describe('Staff profile', () => {
     // Scoped to `.timeline-container` — the positions-history block below it
     // reuses the same `.timeline`/`.timeline-item` classes without that wrapper.
     cy.get('.timeline-container .timeline-item').should('have.length', 3);
+  });
+
+  it('renders own + broadcast documents and downloads one', () => {
+    cy.intercept('GET', '**/api/documents/1/download', {
+      statusCode: 200,
+      headers: { 'content-type': 'application/pdf' },
+      body: 'fake-pdf-bytes',
+    }).as('download');
+
+    cy.contains('.section-title', 'TÀI LIỆU CỦA TÔI')
+      .parents('.lifecycle-card')
+      .within(() => {
+        cy.contains('Bảng lương Tháng 7/2026').should('be.visible');
+        cy.contains('Thông báo nghỉ lễ Quốc khánh').should('be.visible');
+        cy.contains('Toàn bộ nhân viên').should('be.visible');
+        cy.contains('.comp-item', 'Bảng lương Tháng 7/2026').find('.remove-inline-btn').click();
+      });
+
+    cy.wait('@download');
   });
 
   describe('change password modal', () => {

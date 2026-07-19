@@ -140,30 +140,56 @@ MOOD_TRANSLATION = {
 # stall a DeepFace call (detection/embedding time scales with image size).
 MAX_IMAGE_BYTES = 8 * 1024 * 1024  # 8 MB
 
+# HR documents (payroll slips, contracts, etc.) aren't run through DeepFace and
+# can legitimately be a few MB (a scanned PDF), so they get their own, larger
+# cap rather than sharing MAX_IMAGE_BYTES.
+MAX_DOCUMENT_BYTES = 15 * 1024 * 1024  # 15 MB
 
-def image_within_size_limit(base64_str):
+DOCUMENTS_DIR = "documents"
+os.makedirs(DOCUMENTS_DIR, exist_ok=True)
+DOCUMENT_CONTENT_TYPES = {
+    ".pdf": "application/pdf",
+    ".doc": "application/msword",
+    ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    ".xls": "application/vnd.ms-excel",
+    ".xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg",
+    ".png": "image/png",
+}
+
+
+def base64_within_size_limit(base64_str, max_bytes):
     """Cheap check against the base64 string length (no decoding) so an
     oversized payload is rejected before we spend time decoding/writing it."""
     if not base64_str:
         return False
     encoded = base64_str.split(",", 1)[-1]
     estimated_bytes = (len(encoded) * 3) // 4
-    return estimated_bytes <= MAX_IMAGE_BYTES
+    return estimated_bytes <= max_bytes
 
 
-def save_base64_image(base64_str, output_path):
+def image_within_size_limit(base64_str):
+    return base64_within_size_limit(base64_str, MAX_IMAGE_BYTES)
+
+
+def save_base64_file(base64_str, output_path, max_bytes):
     try:
         header, encoded = base64_str.split(",", 1)
         data = base64.b64decode(encoded)
-        if len(data) > MAX_IMAGE_BYTES:
-            print(f"Rejected image write: {len(data)} bytes exceeds the {MAX_IMAGE_BYTES}-byte limit", flush=True)
+        if len(data) > max_bytes:
+            print(f"Rejected file write: {len(data)} bytes exceeds the {max_bytes}-byte limit", flush=True)
             return False
         with open(output_path, "wb") as f:
             f.write(data)
         return True
     except Exception as e:
-        print(f"Error saving base64 image: {e}", flush=True)
+        print(f"Error saving base64 file: {e}", flush=True)
         return False
+
+
+def save_base64_image(base64_str, output_path):
+    return save_base64_file(base64_str, output_path, MAX_IMAGE_BYTES)
 
 
 class EmployeeFaceAIRequestHandler(BaseHTTPRequestHandler):
@@ -197,10 +223,16 @@ class EmployeeFaceAIRequestHandler(BaseHTTPRequestHandler):
             self.handle_get_employees()
         elif self.path == "/api/leave-requests":
             self.handle_get_all_leave_requests()
+        elif self.path == "/api/documents":
+            self.handle_get_all_documents()
+        elif self.path.startswith("/api/documents/") and self.path.endswith("/download"):
+            self.handle_download_document()
         elif self.path.startswith("/api/employees/check-username"):
             self.handle_check_username()
         elif self.path.startswith("/api/employees/") and self.path.endswith("/leave-requests"):
             self.handle_get_leave_requests()
+        elif self.path.startswith("/api/employees/") and self.path.endswith("/documents"):
+            self.handle_get_employee_documents()
         elif self.path.startswith("/api/employees/"):
             self.handle_get_employee_detail()
         elif self.path.startswith("/database/"):
@@ -228,6 +260,8 @@ class EmployeeFaceAIRequestHandler(BaseHTTPRequestHandler):
             self.handle_adjust_income()
         elif self.path.startswith("/api/employees/") and self.path.endswith("/leave-requests"):
             self.handle_create_leave_request()
+        elif self.path == "/api/documents":
+            self.handle_create_document()
         elif self.path == "/api/attendance":
             self.handle_attendance()
         else:
@@ -258,6 +292,8 @@ class EmployeeFaceAIRequestHandler(BaseHTTPRequestHandler):
             self.handle_delete_employee()
         elif self.path.startswith("/api/logs/"):
             self.handle_delete_log()
+        elif self.path.startswith("/api/documents/"):
+            self.handle_delete_document()
         else:
             self.send_error(404, "Endpoint Not Found")
 
@@ -273,7 +309,7 @@ class EmployeeFaceAIRequestHandler(BaseHTTPRequestHandler):
         except FileNotFoundError:
             self.send_error(404, "File Not Found: index.html")
 
-    def _serve_local_image(self, root_dir, relative_path):
+    def _serve_local_file(self, root_dir, relative_path, content_type_map=None, download_name=None):
         root = os.path.realpath(root_dir)
         requested_path = os.path.realpath(os.path.join(root, relative_path))
 
@@ -283,7 +319,8 @@ class EmployeeFaceAIRequestHandler(BaseHTTPRequestHandler):
             return
 
         ext = os.path.splitext(requested_path)[1].lower()
-        content_type = {".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png"}.get(ext)
+        content_type_map = content_type_map or {".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png"}
+        content_type = content_type_map.get(ext)
         if not content_type:
             self.send_error(403, "Forbidden")
             return
@@ -294,13 +331,15 @@ class EmployeeFaceAIRequestHandler(BaseHTTPRequestHandler):
             self.send_response(200)
             self.send_header("Content-Type", content_type)
             self.send_header("Content-Length", str(len(content)))
+            if download_name:
+                self.send_header("Content-Disposition", f'attachment; filename="{download_name}"')
             self.end_headers()
             self.wfile.write(content)
         except FileNotFoundError:
             self.send_error(404, "File Not Found")
 
     def serve_database_image(self):
-        self._serve_local_image("database", self.path[len("/database/") :])
+        self._serve_local_file("database", self.path[len("/database/") :])
 
     def serve_audit_image(self):
         # Audit photos are forensic evidence of a specific person's face at a
@@ -324,7 +363,7 @@ class EmployeeFaceAIRequestHandler(BaseHTTPRequestHandler):
                 self.send_error(401, "Unauthorized")
                 return
 
-        self._serve_local_image(LOGS_DIR, relative_path)
+        self._serve_local_file(LOGS_DIR, relative_path)
 
     def handle_login(self):
         try:
@@ -1265,6 +1304,135 @@ class EmployeeFaceAIRequestHandler(BaseHTTPRequestHandler):
             self.send_json_response(200, {"success": True, "message": "Xóa lịch sử thu nhập thành công."})
         except Exception as e:
             self.send_json_response(500, {"success": False, "error": str(e)})
+
+    def handle_get_all_documents(self):
+        # Admin-only: every uploaded HR document across every employee.
+        user = self.get_authenticated_user()
+        if not user or user["role"] != "admin":
+            self.send_json_response(401, {"success": False, "error": "Unauthorized access"})
+            return
+        try:
+            documents = db.get_all_documents()
+            self.send_json_response(200, {"success": True, "data": documents})
+        except Exception as e:
+            self.send_json_response(500, {"success": False, "error": str(e)})
+
+    def handle_get_employee_documents(self):
+        # Admins can view any employee's documents; staff may only view their
+        # own scope (broadcast "chung" docs plus their own "rieng" ones —
+        # already filtered server-side by db.get_documents_for_employee).
+        user = self.get_authenticated_user()
+        if not user:
+            self.send_json_response(401, {"success": False, "error": "Unauthorized access"})
+            return
+        try:
+            employee_id = int(self.path.split("/")[-2])
+            if user["role"] != "admin" and user["employee_id"] != employee_id:
+                self.send_json_response(401, {"success": False, "error": "Unauthorized access"})
+                return
+
+            documents = db.get_documents_for_employee(employee_id)
+            self.send_json_response(200, {"success": True, "data": documents})
+        except Exception as e:
+            self.send_json_response(500, {"success": False, "error": str(e)})
+
+    def handle_create_document(self):
+        # Admin-only: upload a new HR document, broadcast ("chung") or scoped
+        # to one employee ("rieng").
+        user = self.get_authenticated_user()
+        if not user or user["role"] != "admin":
+            self.send_json_response(401, {"success": False, "error": "Unauthorized access"})
+            return
+        try:
+            content_length = int(self.headers["Content-Length"])
+            post_data = self.rfile.read(content_length)
+            data = json.loads(post_data.decode("utf-8"))
+
+            title = (data.get("title") or "").strip()
+            visibility = data.get("visibility")
+            employee_id = data.get("employee_id")
+            file_name = data.get("file_name") or ""
+            file_data = data.get("file")
+
+            if not title:
+                self.send_json_response(400, {"success": False, "error": "Thiếu tiêu đề tài liệu."})
+                return
+            if visibility not in ("chung", "rieng"):
+                self.send_json_response(400, {"success": False, "error": "Loại tài liệu không hợp lệ."})
+                return
+            if visibility == "rieng" and not employee_id:
+                self.send_json_response(
+                    400, {"success": False, "error": "Vui lòng chọn nhân viên nhận tài liệu riêng."}
+                )
+                return
+            if visibility == "chung":
+                employee_id = None
+
+            ext = os.path.splitext(file_name)[1].lower()
+            if ext not in DOCUMENT_CONTENT_TYPES:
+                self.send_json_response(400, {"success": False, "error": "Định dạng file không được hỗ trợ."})
+                return
+            if not file_data or not base64_within_size_limit(file_data, MAX_DOCUMENT_BYTES):
+                self.send_json_response(
+                    400,
+                    {"success": False, "error": "File tài liệu trống hoặc vượt quá dung lượng cho phép (15MB)."},
+                )
+                return
+
+            document_id = db.create_document(title, file_name, visibility, employee_id)
+            output_path = os.path.join(DOCUMENTS_DIR, f"{document_id}{ext}")
+            if not save_base64_file(file_data, output_path, MAX_DOCUMENT_BYTES):
+                db.delete_document(document_id)
+                self.send_json_response(400, {"success": False, "error": "Không thể lưu file tài liệu."})
+                return
+            db.set_document_file_path(document_id, output_path)
+
+            self.send_json_response(
+                200, {"success": True, "message": "Tải lên tài liệu thành công.", "id": document_id}
+            )
+        except Exception as e:
+            self.send_json_response(500, {"success": False, "error": str(e)})
+
+    def handle_delete_document(self):
+        user = self.get_authenticated_user()
+        if not user or user["role"] != "admin":
+            self.send_json_response(401, {"success": False, "error": "Unauthorized access"})
+            return
+        try:
+            document_id = int(self.path.split("/")[-1])
+            db.delete_document(document_id)
+            self.send_json_response(200, {"success": True, "message": "Xóa tài liệu thành công."})
+        except Exception as e:
+            self.send_json_response(500, {"success": False, "error": str(e)})
+
+    def handle_download_document(self):
+        user = self.get_authenticated_user()
+        if not user:
+            self.send_error(401, "Unauthorized")
+            return
+        try:
+            document_id = int(self.path.split("/")[-2])
+        except (ValueError, IndexError):
+            self.send_error(404, "Not Found")
+            return
+
+        document = db.get_document(document_id)
+        if not document:
+            self.send_error(404, "Document Not Found")
+            return
+
+        is_owner = document["employee_id"] == user["employee_id"]
+        is_broadcast = document["visibility"] == "chung"
+        if user["role"] != "admin" and not is_owner and not is_broadcast:
+            self.send_error(401, "Unauthorized")
+            return
+
+        self._serve_local_file(
+            DOCUMENTS_DIR,
+            os.path.basename(document["file_path"]),
+            content_type_map=DOCUMENT_CONTENT_TYPES,
+            download_name=document["file_name"],
+        )
 
     def send_json_response(self, status_code, payload):
         response_bytes = json.dumps(payload).encode("utf-8")

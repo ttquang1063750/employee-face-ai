@@ -5,6 +5,7 @@ import { ApiResponse } from '../../../core/models/api-response.model';
 import { DetailedEmployee } from '../../../core/models/employee.model';
 import { avatarUrl, onImageError } from '../../../core/utils/image.util';
 import { environment } from '../../../../environments/environment';
+import { EmployeeService } from '../../../core/services/employee.service';
 import { AttendanceSummaryStateService } from '../../../core/services/attendance-summary-state.service';
 import { AttendanceSummaryComponent } from './components/attendance-summary/attendance-summary';
 import { PositionsTimelineComponent } from './components/positions-timeline/positions-timeline';
@@ -34,6 +35,7 @@ export class EmployeeDetailComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private http = inject(HttpClient);
   private dialogService = inject(DialogService);
+  private employeeService = inject(EmployeeService);
 
   employee = signal<DetailedEmployee | null>(null);
   isLoading = signal<boolean>(true);
@@ -78,7 +80,7 @@ export class EmployeeDetailComponent implements OnInit {
       this.errorMsg.set(null);
     }
 
-    this.http.get<ApiResponse<DetailedEmployee>>(`${this.apiUrl}/employees/${this.employeeId}`).subscribe({
+    this.employeeService.getById(this.employeeId).subscribe({
       next: (res) => {
         if (!silent) {
           this.isLoading.set(false);

@@ -10,7 +10,7 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { HttpErrorResponse } from '@angular/common/http';
 import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { map } from 'rxjs';
 import { DialogService } from '../../../core/services/dialog.service';
@@ -19,12 +19,11 @@ import {
   usernameStatusSignal,
 } from '../../../core/services/username-check.service';
 import { PASSWORD_HINT, generateRandomPassword, passwordComplexityValidator } from '../../../core/services/credentials.util';
-import { ApiResponse } from '../../../core/models/api-response.model';
 import { EmployeeBase } from '../../../core/models/employee.model';
 import { WebcamCaptureService } from '../../../core/services/webcam-capture.service';
 import { PhotoCaptureStateService } from '../../../core/services/photo-capture-state.service';
+import { EmployeeService } from '../../../core/services/employee.service';
 import { avatarUrl } from '../../../core/utils/image.util';
-import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-employee-list',
@@ -36,10 +35,10 @@ import { environment } from '../../../../environments/environment';
   providers: [WebcamCaptureService, PhotoCaptureStateService],
 })
 export class EmployeeListComponent implements OnInit {
-  private http = inject(HttpClient);
   private dialogService = inject(DialogService);
   private usernameCheckService = inject(UsernameCheckService);
   private fb = inject(FormBuilder);
+  private employeeService = inject(EmployeeService);
 
   videoElement = viewChild<ElementRef<HTMLVideoElement>>('videoElement');
   canvasElement = viewChild<ElementRef<HTMLCanvasElement>>('canvasElement');
@@ -139,7 +138,6 @@ export class EmployeeListComponent implements OnInit {
     );
   });
 
-  private readonly apiUrl = environment.apiBaseUrl;
   protected readonly avatarUrl = avatarUrl;
 
   ngOnInit(): void {
@@ -150,7 +148,7 @@ export class EmployeeListComponent implements OnInit {
     this.isLoading.set(true);
     this.errorMsg.set(null);
 
-    this.http.get<ApiResponse<EmployeeBase[]>>(`${this.apiUrl}/employees`).subscribe({
+    this.employeeService.getAll().subscribe({
       next: (res) => {
         this.isLoading.set(false);
         if (res.success && res.data) {
@@ -276,7 +274,7 @@ export class EmployeeListComponent implements OnInit {
       projects: parsedProjects,
     };
 
-    this.http.post<ApiResponse>(`${this.apiUrl}/employees`, payload).subscribe({
+    this.employeeService.create(payload).subscribe({
       next: async (res) => {
         this.isSubmitting.set(false);
         if (res.success) {
@@ -304,7 +302,7 @@ export class EmployeeListComponent implements OnInit {
       `Bạn có chắc chắn muốn xóa hồ sơ nhân sự của "${name}" (Mã: #${id})? Hành động này sẽ xóa vĩnh viễn dữ liệu chấm công liên quan.`,
     );
     if (confirmed) {
-      this.http.delete<ApiResponse>(`${this.apiUrl}/employees/${id}`).subscribe({
+      this.employeeService.delete(id).subscribe({
         next: async (res) => {
           if (res.success) {
             await this.dialogService.alert('XÓA THÀNH CÔNG', 'Đã xóa hồ sơ nhân sự thành công.');

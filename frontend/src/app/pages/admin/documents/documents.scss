@@ -1,0 +1,125 @@
+.dashboard-layout {
+  min-height: 100%;
+  color: var(--color-text-primary);
+  display: flex;
+  flex-direction: column;
+}
+
+.dashboard-content {
+  flex: 1;
+  width: 100%;
+  margin: var(--space-8) auto;
+  padding: 0 var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+
+.page-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  .title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: var(--color-heading);
+    text-shadow: 0 0 10px rgba(var(--color-cyan-rgb), 0.2);
+  }
+}
+
+.logs-card {
+  background: rgba(var(--color-bg-card-rgb), 1);
+  border-radius: 14px;
+  padding: var(--space-6);
+  box-shadow: var(--shadow-card);
+}
+
+.logs-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-6);
+  border-bottom: 1px solid rgba(var(--color-border-rgb), 0.45);
+  padding-bottom: var(--space-3);
+}
+
+.logs-title {
+  font-size: 0.85rem;
+  letter-spacing: 1.5px;
+  color: var(--color-text-secondary);
+}
+
+.logs-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.logs-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-family: 'Inter', sans-serif;
+
+  th, td {
+    padding: 0.85rem var(--space-4);
+    border-bottom: 1px solid rgba(var(--color-border-rgb), 0.45);
+  }
+
+  th {
+    font-family: 'Orbitron', sans-serif;
+    color: var(--color-text-muted);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 1px;
+  }
+
+  td {
+    font-size: var(--text-base);
+  }
+
+  .log-time {
+    color: var(--color-cyan);
+  }
+
+  .log-name {
+    font-weight: 600;
+  }
+
+  tr:last-child td {
+    border-bottom: none;
+  }
+
+  .no-data {
+    text-align: center;
+    color: var(--color-text-muted);
+    padding: var(--space-8);
+  }
+}
+
+// Visibility badge: "riêng" (private, default orange) vs "chung" (broadcast, green)
+.doc-visibility-badge {
+  display: inline-block;
+  padding: 0.2rem var(--space-2);
+  border-radius: var(--radius-sm);
+  font-family: 'Orbitron', sans-serif;
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  background: rgba(var(--color-orange-rgb), 0.1);
+  border: 1px solid rgba(var(--color-orange-rgb), 0.3);
+  color: var(--color-orange);
+
+  &.broadcast {
+    background: rgba(var(--color-green-rgb), 0.08);
+    border-color: rgba(var(--color-green-rgb), 0.3);
+    color: var(--color-green);
+  }
+}
+
+.selected-file-name {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+}
