@@ -4,7 +4,7 @@ import { HttpClient } from '@angular/common/http';
 import { ApiResponse } from '../../../core/models/api-response.model';
 import { DetailedEmployee } from '../../../core/models/employee.model';
 import { avatarUrl, onImageError } from '../../../core/utils/image.util';
-import { API_BASE_URL } from '../../../core/config/api.config';
+import { environment } from '../../../../environments/environment';
 import { AttendanceSummaryStateService } from '../../../core/services/attendance-summary-state.service';
 import { AttendanceSummaryComponent } from './components/attendance-summary/attendance-summary';
 import { PositionsTimelineComponent } from './components/positions-timeline/positions-timeline';
@@ -48,7 +48,7 @@ export class EmployeeDetailComponent implements OnInit {
   private readonly rawLogs = computed(() => this.employee()?.raw_logs || []);
 
   private employeeId: number | null = null;
-  private readonly apiUrl = API_BASE_URL;
+  private readonly apiUrl = environment.apiBaseUrl;
 
   constructor() {
     this.attendance.configure(this.rawLogs);

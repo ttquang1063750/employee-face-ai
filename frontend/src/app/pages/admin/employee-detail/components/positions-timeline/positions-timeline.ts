@@ -6,7 +6,7 @@ import { DialogService } from '../../../../../core/services/dialog.service';
 import { ApiResponse } from '../../../../../core/models/api-response.model';
 import { Position } from '../../../../../core/models/employee.model';
 import { todayLocalDateString } from '../../../../../core/utils/date.util';
-import { API_BASE_URL } from '../../../../../core/config/api.config';
+import { environment } from '../../../../../../environments/environment';
 
 @Component({
   selector: 'app-positions-timeline',
@@ -19,7 +19,7 @@ export class PositionsTimelineComponent {
   private http = inject(HttpClient);
   private dialogService = inject(DialogService);
   private fb = inject(FormBuilder);
-  private readonly apiUrl = API_BASE_URL;
+  private readonly apiUrl = environment.apiBaseUrl;
 
   positions = input.required<Position[]>();
   employeeId = input.required<number>();

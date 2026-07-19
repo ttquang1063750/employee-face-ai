@@ -24,7 +24,7 @@ import { EmployeeBase } from '../../../core/models/employee.model';
 import { WebcamCaptureService } from '../../../core/services/webcam-capture.service';
 import { PhotoCaptureStateService } from '../../../core/services/photo-capture-state.service';
 import { avatarUrl } from '../../../core/utils/image.util';
-import { API_BASE_URL } from '../../../core/config/api.config';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-employee-list',
@@ -139,7 +139,7 @@ export class EmployeeListComponent implements OnInit {
     );
   });
 
-  private readonly apiUrl = API_BASE_URL;
+  private readonly apiUrl = environment.apiBaseUrl;
   protected readonly avatarUrl = avatarUrl;
 
   ngOnInit(): void {

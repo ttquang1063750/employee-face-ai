@@ -16,7 +16,7 @@ import { EmployeeBase } from '../../../core/models/employee.model';
 import { AttendanceLogEntry } from '../../../core/models/attendance-log.model';
 import { translateMood } from '../../../core/utils/mood.util';
 import { todayLocalDateString, startOfMonthLocalDateString } from '../../../core/utils/date.util';
-import { API_BASE_URL } from '../../../core/config/api.config';
+import { environment } from '../../../../environments/environment';
 import { StatWidgetComponent } from './components/stat-widget/stat-widget';
 import { HourlyChartComponent } from './components/hourly-chart/hourly-chart';
 import { MoodDonutComponent } from './components/mood-donut/mood-donut';
@@ -240,7 +240,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   hasHourlyData = computed(() => this.hourlyTimeline().points.some((pt) => pt.count > 0));
 
-  private readonly apiUrl = API_BASE_URL;
+  private readonly apiUrl = environment.apiBaseUrl;
   private pollIntervalId: ReturnType<typeof setInterval> | null = null;
 
   ngOnInit(): void {

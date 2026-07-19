@@ -2,7 +2,7 @@ import { Injectable, Signal, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { AbstractControl, AsyncValidatorFn } from '@angular/forms';
 import { Observable, map, merge, of, switchMap, timer } from 'rxjs';
-import { API_BASE_URL } from '../config/api.config';
+import { environment } from '../../../environments/environment';
 
 export type UsernameStatus = 'idle' | 'checking' | 'available' | 'taken';
 
@@ -17,7 +17,7 @@ export interface UsernameCheckResponse {
 export class UsernameCheckService {
   private http = inject(HttpClient);
 
-  private readonly apiUrl = API_BASE_URL;
+  private readonly apiUrl = environment.apiBaseUrl;
 
   check(username: string, excludeId?: number): Observable<UsernameCheckResponse> {
     const params: Record<string, string> = { username };

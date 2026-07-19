@@ -1,7 +1,7 @@
 import { Injectable, signal, computed, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
-import { API_BASE_URL } from '../config/api.config';
+import { environment } from '../../../environments/environment';
 
 export interface TokenResponse {
   success: boolean;
@@ -26,7 +26,7 @@ export interface UserSession {
 export class AuthService {
   private http = inject(HttpClient);
 
-  private readonly apiUrl = API_BASE_URL;
+  private readonly apiUrl = environment.apiBaseUrl;
 
   // Reactive state signals
   readonly accessToken = signal<string | null>(localStorage.getItem('access_token'));

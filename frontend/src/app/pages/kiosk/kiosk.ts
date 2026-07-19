@@ -12,7 +12,7 @@ import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { ApiResponse } from '../../core/models/api-response.model';
 import { WebcamCaptureService } from '../../core/services/webcam-capture.service';
-import { API_BASE_URL } from '../../core/config/api.config';
+import { environment } from '../../../environments/environment';
 
 export interface AttendanceResult {
   employee_name: string;
@@ -52,7 +52,7 @@ export class KioskComponent implements OnInit, OnDestroy {
   capturedFrame = signal<string | null>(null);
   showFlash = signal<boolean>(false);
 
-  private readonly apiUrl = API_BASE_URL;
+  private readonly apiUrl = environment.apiBaseUrl;
 
   ngOnInit(): void {
     this.startCamera();

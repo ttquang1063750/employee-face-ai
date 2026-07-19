@@ -4,9 +4,9 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { provideRouter, Router } from '@angular/router';
 import { authInterceptor } from './auth.interceptor';
 import { AuthService } from '../services/auth.service';
-import { API_BASE_URL } from '../config/api.config';
+import { environment } from '../../../environments/environment';
 
-const API = API_BASE_URL;
+const API = environment.apiBaseUrl;
 
 describe('authInterceptor', () => {
   let http: HttpClient;

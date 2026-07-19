@@ -29,7 +29,7 @@ import {
 import { avatarUrl, onImageError } from '../../../../../core/utils/image.util';
 import { ApiResponse } from '../../../../../core/models/api-response.model';
 import { DetailedEmployee, Skill, Project } from '../../../../../core/models/employee.model';
-import { API_BASE_URL } from '../../../../../core/config/api.config';
+import { environment } from '../../../../../../environments/environment';
 
 @Component({
   selector: 'app-base-profile-modal',
@@ -44,7 +44,7 @@ export class BaseProfileModalComponent implements OnInit {
   private dialogService = inject(DialogService);
   private usernameCheckService = inject(UsernameCheckService);
   private fb = inject(FormBuilder);
-  private readonly apiUrl = API_BASE_URL;
+  private readonly apiUrl = environment.apiBaseUrl;
 
   employee = input.required<DetailedEmployee>();
 
