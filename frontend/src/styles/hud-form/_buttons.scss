@@ -1,0 +1,106 @@
+// ============================================================
+//  hud-form/_buttons.scss
+//  Reusable HUD button variants + the hover tooltip they're
+//  usually paired with.
+// ============================================================
+
+// ─── Outline Button ───────────────────────────────────────────
+// Usage: secondary/utility action, e.g. <button class="hud-btn-outline">ÁP DỤNG</button>
+.hud-btn-outline {
+  background: rgba(var(--color-bg-card-rgb), 1);
+  border: 1px solid rgba(var(--color-cyan-rgb), 0.5);
+  color: var(--color-cyan);
+  font-family: 'Orbitron', sans-serif;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  padding: 0.6rem var(--space-5);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+
+  &:hover {
+    background: rgba(var(--color-cyan-rgb), 0.1);
+    border-color: var(--color-cyan);
+    box-shadow: 0 0 10px rgba(var(--color-cyan-rgb), 0.3);
+  }
+
+  &[disabled] {
+    opacity: 0.5;
+    cursor: not-allowed;
+    &:hover { box-shadow: none; background: transparent; }
+  }
+}
+
+// Muted variant of .hud-btn-outline for secondary/clear actions.
+.hud-btn-outline.muted {
+  border-color: var(--color-border-dim);
+  color: var(--color-text-secondary);
+}
+
+// ─── Icon-only Mini Action Button ─────────────────────────────
+// Usage: small square icon button, pair with [data-tooltip] for
+// its label, e.g. <button class="hud-btn-mini" data-tooltip="...">
+.hud-btn-mini {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  background: transparent;
+  border: 1px solid rgba(var(--color-cyan-rgb), 0.4);
+  color: var(--color-cyan);
+  font-size: 0.9rem;
+  line-height: 1;
+  padding: 0;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    background: rgba(var(--color-cyan-rgb), 0.1);
+    border-color: var(--color-cyan);
+    box-shadow: 0 0 8px rgba(var(--color-cyan-rgb), 0.25);
+  }
+}
+
+// Danger variant of .hud-btn-mini for destructive row actions (delete).
+.hud-btn-mini.danger {
+  border-color: rgba(var(--color-red-rgb), 0.4);
+  color: var(--color-red);
+}
+
+// ─── Hover Tooltip ────────────────────────────────────────────
+// Usage: add [data-tooltip] to any element with `position: relative`
+// (e.g. .hud-btn-mini) to reveal its label on hover.
+[data-tooltip] {
+  position: relative;
+
+  &::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    background: rgba(var(--color-bg-card-rgb), 1);
+    border: 1px solid rgba(var(--color-cyan-rgb), 0.4);
+    color: var(--color-cyan);
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+    padding: 0.3rem 0.65rem;
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-tooltip);
+    opacity: 0;
+    transform: translateY(-4px);
+    pointer-events: none;
+    transition: opacity 0.15s ease, transform 0.15s ease;
+    z-index: 20;
+  }
+
+  &:hover::after {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

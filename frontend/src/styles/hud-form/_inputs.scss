@@ -1,0 +1,189 @@
+// ============================================================
+//  hud-form/_inputs.scss
+//  Text/search inputs, the autocomplete dropdown that pairs with
+//  the search input, inline validation hints, and the
+//  input-plus-mini-buttons row layout.
+// ============================================================
+
+// ─── Base HUD Input ─────────────────────────────────────────
+// Applies to: input[type="text"], input[type="date"], input[type="number"]
+.hud-input {
+  width: 100%;
+  height: var(--input-height);
+  background: var(--color-bg-input);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--input-radius);
+  color: var(--color-text-primary);
+  font-family: var(--font-body);
+  font-size: var(--input-font-size);
+  padding: var(--input-padding-y) var(--input-padding-x);
+  outline: none;
+  transition: var(--transition-base);
+  box-shadow: var(--shadow-inset);
+  appearance: none;
+  -webkit-appearance: none;
+
+  // Date picker icon color on WebKit
+  &::-webkit-calendar-picker-indicator {
+    filter: invert(0.5) sepia(1) saturate(2) hue-rotate(155deg);
+    cursor: pointer;
+    opacity: 0.7;
+
+    &:hover { opacity: 1; }
+  }
+
+  &::placeholder {
+    color: var(--color-text-muted);
+    font-style: italic;
+    font-size: var(--text-sm);
+  }
+
+  &:hover {
+    border-color: var(--color-border-cyan-glow);
+  }
+
+  &:focus {
+    border-color: var(--color-cyan);
+    background: var(--color-bg-input-focus);
+    box-shadow: 0 0 0 3px rgba(var(--color-cyan-rgb), 0.08), var(--glow-cyan);
+  }
+}
+
+// ─── Search Wrapper (use instead of raw .hud-search-input) ──
+// Usage: <div class="hud-search-wrapper"> <input class="hud-search-input"> </div>
+.hud-search-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 1;
+
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0.75rem;
+    width: 15px;
+    height: 15px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='15' height='15' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.5' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-size: contain;
+    pointer-events: none;
+    transition: var(--transition-fast);
+    z-index: 1;
+  }
+
+  &:focus-within::before {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='15' height='15' viewBox='0 0 24 24' fill='none' stroke='%2300f0ff' stroke-width='2.5' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E");
+  }
+}
+
+// ─── Search Input ────────────────────────────────────────────
+.hud-search-input {
+  @extend .hud-input;
+  padding-left: 2.4rem;
+  width: 100%;
+}
+
+// ─── Autocomplete Dropdown ───────────────────────────────────
+// Usage:
+//   <div class="hud-autocomplete">
+//     <div class="hud-search-wrapper"><input class="hud-search-input"></div>
+//     <ul class="hud-autocomplete-list">
+//       <li class="hud-autocomplete-item">...</li>
+//     </ul>
+//   </div>
+.hud-autocomplete {
+  position: relative;
+  flex: 1;
+
+  .hud-autocomplete-list {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    z-index: 9999;
+    background: rgba(var(--color-bg-card-rgb), 1);
+    border: 1px solid var(--color-border-cyan);
+    border-radius: var(--radius-md);
+    list-style: none;
+    margin: 0;
+    padding: var(--space-1) 0;
+    box-shadow: var(--glow-cyan), var(--shadow-autocomplete);
+    backdrop-filter: blur(12px);
+    overflow: hidden;
+    animation: acDropIn 0.15s ease;
+
+    @keyframes acDropIn {
+      from { opacity: 0; transform: translateY(-6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+  }
+
+  .hud-autocomplete-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    font-family: var(--font-body);
+    font-size: var(--text-base);
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    transition: var(--transition-fast);
+    border-left: 2px solid transparent;
+
+    .ac-icon {
+      font-size: 0.75rem;
+      opacity: 0.5;
+    }
+
+    .ac-name {
+      flex: 1;
+    }
+
+    em {
+      font-style: normal;
+      color: var(--color-cyan);
+      font-weight: 600;
+    }
+
+    &:hover, &.active {
+      background: rgba(var(--color-cyan-rgb), 0.07);
+      color: var(--color-heading);
+      border-left-color: var(--color-cyan);
+    }
+  }
+
+  .hud-autocomplete-empty {
+    padding: var(--space-3) var(--space-4);
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+    font-style: italic;
+    text-align: center;
+  }
+}
+
+// ─── Inline Field Hint ────────────────────────────────────────
+// Usage: async/live validation feedback under an input, e.g.
+// <p class="field-hint error">✖ Username đã tồn tại.</p>
+.field-hint {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  margin-top: 0.3rem;
+
+  &.error { color: var(--color-red); }
+  &.success { color: var(--color-green); }
+}
+
+// ─── Input With Inline Action Buttons ─────────────────────────
+// Usage: an .hud-input paired with one or more .hud-btn-mini buttons
+// on the same row, e.g. a password field with show/hide + generate buttons.
+//   <div class="input-with-actions">
+//     <input class="hud-input">
+//     <button class="hud-btn-mini" data-tooltip="...">👁</button>
+//   </div>
+.input-with-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+
+  .hud-input { flex: 1; min-width: 0; }
+}

@@ -1,0 +1,78 @@
+// ============================================================
+//  hud-form/_misc.scss
+//  Small single-purpose primitives that don't have enough
+//  siblings yet to earn their own file: a status badge, the
+//  audit-photo viewer, a leave-request rejection note, and the
+//  layout utilities that replace one-off inline `style="..."`
+//  attributes (see AGENTS.md rule 28).
+// ============================================================
+
+// ─── Leave Request Status Badge ───────────────────────────────
+// Usage: <span class="leave-status-badge" [class]="req.status">...</span>
+// req.status is one of 'pending' | 'approved' | 'rejected'.
+.leave-status-badge {
+  display: inline-block;
+  padding: 0.2rem var(--space-2);
+  border-radius: var(--radius-sm);
+  font-family: 'Orbitron', sans-serif;
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  background: rgba(var(--color-orange-rgb), 0.1);
+  border: 1px solid rgba(var(--color-orange-rgb), 0.3);
+  color: var(--color-orange);
+
+  &.approved {
+    background: rgba(var(--color-green-rgb), 0.08);
+    border-color: rgba(var(--color-green-rgb), 0.3);
+    color: var(--color-green);
+  }
+
+  &.rejected {
+    background: rgba(var(--color-red-rgb), 0.08);
+    border-color: rgba(var(--color-red-rgb), 0.3);
+    color: var(--color-red);
+  }
+}
+
+// Rejection reason note shown under a leave request's original reason.
+.rejection-reason {
+  margin-top: var(--space-2);
+  color: var(--color-red);
+  font-size: var(--text-xs);
+  font-style: italic;
+}
+
+// ─── Audit Photo Viewer (app-audit-photo-button) ──────────────
+.audit-photo-error {
+  margin-left: var(--space-2);
+  cursor: help;
+}
+
+.audit-photo-full {
+  display: block;
+  width: 100%;
+  max-height: 70vh;
+  object-fit: contain;
+  border-radius: var(--radius-sm);
+}
+
+// ─── Shared layout/style utilities (avoid inline `style="..."` in templates) ──────────────
+
+// Native <input type="file">/<canvas> elements kept off-screen and triggered
+// programmatically (via a viewChild ref) rather than shown directly.
+.visually-hidden-input {
+  display: none;
+}
+
+// Trailing icon-button "action" column shared by attendance/log tables
+// (attendance-summary, logs-table).
+.action-col-header {
+  width: 80px;
+  text-align: center;
+}
+
+.action-col-cell {
+  text-align: center;
+}

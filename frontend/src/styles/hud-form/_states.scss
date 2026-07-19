@@ -1,0 +1,108 @@
+// ============================================================
+//  hud-form/_states.scss
+//  Loading/error/skeleton states shared across pages while data
+//  is being fetched or has failed to load.
+// ============================================================
+
+// ─── Skeleton Loading Placeholder ───────────────────────────
+// Usage: <div class="hud-skeleton" style="width: 60%; height: 14px"></div>
+// Give it an explicit width/height (or a component-scoped modifier class)
+// per use — this primitive only supplies the shimmer look, not sizing.
+.hud-skeleton {
+  display: block;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(
+    90deg,
+    rgba(var(--color-border-rgb), 0.12) 25%,
+    rgba(var(--color-border-rgb), 0.24) 37%,
+    rgba(var(--color-border-rgb), 0.12) 63%
+  );
+  background-size: 400% 100%;
+  animation: hud-skeleton-shimmer 1.4s ease infinite;
+}
+
+@keyframes hud-skeleton-shimmer {
+  0% { background-position: 100% 50%; }
+  100% { background-position: 0 50%; }
+}
+
+// ─── Error State Text & Retry Button ─────────────────────────
+// Usage:
+//   <div class="error-state">
+//     <p class="err-text">⚠️ {{ errorMsg() }}</p>
+//     <button class="retry-btn" (click)="reload()">Thử lại</button>
+//   </div>
+.err-text {
+  color: var(--color-red);
+  font-family: 'Inter', sans-serif;
+  font-size: var(--text-base);
+  text-align: center;
+}
+
+.retry-btn {
+  background: transparent;
+  border: 1px solid rgba(var(--color-red-rgb), 0.5);
+  color: var(--color-red);
+  font-family: 'Orbitron', sans-serif;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  padding: 0.6rem var(--space-5);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: rgba(var(--color-red-rgb), 0.1);
+    border-color: var(--color-red);
+    box-shadow: var(--glow-red);
+  }
+}
+
+// ─── Loading State ────────────────────────────────────────────
+// Usage:
+//   <div class="hud-loading-state">
+//     <div class="hud-spinner"></div>
+//     <p>Đang tải...</p>
+//   </div>
+.hud-loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 250px;
+  gap: var(--space-4);
+  color: var(--color-text-muted);
+  font-family: 'Inter', sans-serif;
+  width: 100%;
+}
+
+.hud-spinner {
+  width: 28px;
+  height: 28px;
+  border: 3px solid rgba(var(--color-cyan-rgb), 0.1);
+  border-radius: 50%;
+  border-top-color: var(--color-cyan);
+  animation: hud-spin 0.8s linear infinite;
+}
+
+@keyframes hud-spin {
+  to { transform: rotate(360deg); }
+}
+
+// ─── Error State Container ───────────────────────────────────
+// Usage:
+//   <div class="error-state">
+//     <p class="err-text">⚠️ {{ errorMsg() }}</p>
+//     <button class="retry-btn" (click)="reload()">Thử lại</button>
+//   </div>
+.error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  gap: var(--space-4);
+  color: var(--color-text-secondary);
+  font-family: 'Inter', sans-serif;
+  width: 100%;
+}

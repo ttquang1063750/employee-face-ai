@@ -1,0 +1,96 @@
+// ============================================================
+//  hud-form/_pagination.scss
+//  The page-size selector + prev/next pagination bar shared by
+//  every paginated table (logs, employees, attendance, leave requests).
+// ============================================================
+
+// ─── HUD Pagination Bar ─────────────────────────────────────
+// Usage:
+//   <div class="hud-pagination">
+//     <div class="pag-size">
+//       <label>Hiển thị</label>
+//       <select class="pag-size-select">...</select>
+//       <span>/ trang</span>
+//     </div>
+//     <div class="pag-controls">
+//       <button class="pag-btn">...</button>
+//       <span class="pag-info">...</span>
+//       <button class="pag-btn">...</button>
+//     </div>
+//   </div>
+.hud-pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  margin-top: var(--space-6);
+  font-family: var(--font-hud);
+
+  .pag-size {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+    letter-spacing: 0.5px;
+  }
+
+  .pag-size-select {
+    background: rgba(var(--color-bg-input-rgb), 0.9);
+    border: 1px solid rgba(var(--color-border-rgb), 0.5);
+    color: var(--color-text-primary);
+    font-family: var(--font-hud);
+    font-size: var(--text-xs);
+    font-weight: 600;
+    padding: 0.3rem 0.5rem;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    outline: none;
+
+    &:focus {
+      border-color: var(--color-cyan);
+    }
+  }
+
+  .pag-controls {
+    display: flex;
+    align-items: center;
+    gap: var(--space-6);
+  }
+
+  .pag-info {
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+    letter-spacing: 1px;
+    font-weight: 600;
+  }
+
+  .pag-btn {
+    background: transparent;
+    border: 1px solid var(--color-border-cyan-glow);
+    color: var(--color-cyan);
+    padding: var(--space-2) var(--space-4);
+    font-family: var(--font-hud);
+    font-size: var(--text-xs);
+    font-weight: 700;
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+    transition: var(--transition-fast);
+    box-shadow: 0 0 6px rgba(var(--color-cyan-rgb), 0.1);
+
+    &:hover:not([disabled]) {
+      background: rgba(var(--color-cyan-rgb), 0.1);
+      box-shadow: var(--glow-cyan);
+      border-color: var(--color-cyan);
+    }
+
+    &[disabled] {
+      opacity: 0.35;
+      cursor: not-allowed;
+      border-color: var(--color-border-dim);
+      color: var(--color-text-muted);
+      box-shadow: none;
+    }
+  }
+}
