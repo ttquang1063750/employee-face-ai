@@ -71,8 +71,7 @@
             <label for="backend-detector">MODULE PHÁT HIỆN KHUÔN MẶT</label>
             <select 
               id="backend-detector" 
-              [ngModel]="detector()" 
-              (ngModelChange)="detector.set($event)" 
+              [formControl]="detector"
               class="hud-select">
               <option value="retinaface">RetinaFace (Độ chính xác cao nhất)</option>
               <option value="mtcnn">MTCNN (Tốc độ xử lý nhanh)</option>

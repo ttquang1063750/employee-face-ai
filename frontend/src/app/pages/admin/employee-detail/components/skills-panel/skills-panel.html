@@ -43,18 +43,18 @@
           </div>
 
           <!-- Add new skill form -->
-          <div class="skills-editor-form">
+          <div class="skills-editor-form" [formGroup]="newSkillForm">
             <span class="form-title">THÊM KỸ NĂNG MỚI</span>
             <div class="form-fields">
               <div class="form-group">
                 <label for="new-skill-name">TÊN KỸ NĂNG</label>
-                <input id="new-skill-name" type="text" [ngModel]="newSkillName()" (ngModelChange)="newSkillName.set($event)" placeholder="Ví dụ: Angular, Python, AWS" class="hud-input">
+                <input id="new-skill-name" type="text" formControlName="name" placeholder="Ví dụ: Angular, Python, AWS" class="hud-input">
               </div>
               <div class="form-group">
                 <label for="new-skill-desc">MÔ TẢ KỸ NĂNG / MỨC ĐỘ THÀNH THẠO</label>
-                <textarea id="new-skill-desc" [ngModel]="newSkillDesc()" (ngModelChange)="newSkillDesc.set($event)" placeholder="Mô tả chi tiết" rows="2" class="hud-textarea"></textarea>
+                <textarea id="new-skill-desc" formControlName="desc" placeholder="Mô tả chi tiết" rows="2" class="hud-textarea"></textarea>
               </div>
-              <button class="hud-btn-outline" [disabled]="!newSkillName()" (click)="addSkillToList()">THÊM VÀO DANH SÁCH</button>
+              <button class="hud-btn-outline" [disabled]="!newSkillForm.controls.name.value.trim()" (click)="addSkillToList()">THÊM VÀO DANH SÁCH</button>
             </div>
           </div>
         </div>

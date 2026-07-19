@@ -10,11 +10,11 @@
       <div class="hud-filter-bar">
         <div class="hud-field">
           <span class="hud-label">TỪ NGÀY</span>
-          <app-date-picker [ngModel]="filterStartDateInput()" (ngModelChange)="filterStartDateInput.set($event)"></app-date-picker>
+          <app-date-picker [formControl]="filterStartDateInput"></app-date-picker>
         </div>
         <div class="hud-field">
           <span class="hud-label">ĐẾN NGÀY</span>
-          <app-date-picker [ngModel]="filterEndDateInput()" (ngModelChange)="filterEndDateInput.set($event)"></app-date-picker>
+          <app-date-picker [formControl]="filterEndDateInput"></app-date-picker>
         </div>
         <div class="hud-field filter-apply-field">
           <button class="hud-btn-outline" (click)="applyDateFilter()">ÁP DỤNG</button>
@@ -28,8 +28,7 @@
               <input
                 id="dashboard-employee-search"
                 type="text"
-                [ngModel]="filterEmployeeName()"
-                (ngModelChange)="onSearchInput($event)"
+                [formControl]="nameControl"
                 (focus)="showSuggestions.set(true)"
                 (blur)="closeSuggestions()"
                 placeholder="Tìm kiếm tên nhân viên..."

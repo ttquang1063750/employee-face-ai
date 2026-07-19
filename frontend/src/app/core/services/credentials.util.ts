@@ -1,3 +1,5 @@
+import { AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
+
 // Min 8 chars, at least one lowercase, one uppercase, one digit, one special character.
 // Must mirror PASSWORD_PATTERN in server.py.
 export const PASSWORD_PATTERN = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
@@ -6,6 +8,16 @@ export const PASSWORD_HINT = 'Tối thiểu 8 ký tự, gồm chữ hoa, chữ t
 
 export function isPasswordValid(password: string): boolean {
   return PASSWORD_PATTERN.test(password);
+}
+
+// A blank value passes: on edit forms an empty password field means "keep the
+// existing password", so complexity is only enforced when something is typed.
+export function passwordComplexityValidator(): ValidatorFn {
+  return (control: AbstractControl): ValidationErrors | null => {
+    const value = (control.value as string) ?? '';
+    if (!value) return null;
+    return isPasswordValid(value) ? null : { passwordComplexity: true };
+  };
 }
 
 // Generates a random password that always satisfies PASSWORD_PATTERN: at least

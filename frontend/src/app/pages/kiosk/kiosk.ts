@@ -8,7 +8,7 @@ import {
   ChangeDetectionStrategy,
   inject,
 } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { ApiResponse } from '../../core/models/api-response.model';
 import { WebcamCaptureService } from '../../core/services/webcam-capture.service';
@@ -23,7 +23,7 @@ export interface AttendanceResult {
 @Component({
   selector: 'app-kiosk',
   standalone: true,
-  imports: [FormsModule],
+  imports: [ReactiveFormsModule],
   templateUrl: './kiosk.html',
   styleUrl: './kiosk.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -37,7 +37,7 @@ export class KioskComponent implements OnInit, OnDestroy {
   canvasElement = viewChild<ElementRef<HTMLCanvasElement>>('canvasElement');
 
   currentAction = signal<'CHECK_IN' | 'CHECK_OUT'>('CHECK_IN');
-  detector = signal<string>('retinaface');
+  detector = new FormControl('retinaface', { nonNullable: true });
 
   isLoading = signal<boolean>(false);
   statusMsg = signal<string | null>(null);
@@ -108,7 +108,7 @@ export class KioskComponent implements OnInit, OnDestroy {
         .post<ApiResponse<AttendanceResult>>(`${this.apiUrl}/attendance`, {
           img: base64Data,
           action: this.currentAction(),
-          detector_backend: this.detector(),
+          detector_backend: this.detector.value,
         })
         .subscribe({
           next: (res) => {

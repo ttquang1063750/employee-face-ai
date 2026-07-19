@@ -1,5 +1,5 @@
 import { Component, ChangeDetectionStrategy, signal, input, output, inject } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { DatePickerComponent } from '../../../../../core/components/date-picker/date-picker';
 import { DialogService } from '../../../../../core/services/dialog.service';
@@ -10,13 +10,14 @@ import { todayLocalDateString } from '../../../../../core/utils/date.util';
 @Component({
   selector: 'app-income-history',
   standalone: true,
-  imports: [FormsModule, DatePickerComponent],
+  imports: [ReactiveFormsModule, DatePickerComponent],
   templateUrl: './income-history.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class IncomeHistoryComponent {
   private http = inject(HttpClient);
   private dialogService = inject(DialogService);
+  private fb = inject(FormBuilder);
   private readonly apiUrl = 'http://localhost:8000/api';
 
   incomeHistory = input.required<IncomeEntry[]>();
@@ -25,15 +26,19 @@ export class IncomeHistoryComponent {
   changed = output<void>();
 
   showModal = signal<boolean>(false);
-  newAmount = signal<number>(0);
-  newEffectiveDate = signal<string>('');
-  newReason = signal<string>('');
+  newIncomeForm = this.fb.nonNullable.group({
+    amount: [0],
+    effectiveDate: [''],
+    reason: [''],
+  });
   isSaving = signal<boolean>(false);
 
   openModal(): void {
-    this.newAmount.set(0);
-    this.newReason.set('');
-    this.newEffectiveDate.set(todayLocalDateString());
+    this.newIncomeForm.reset({
+      amount: 0,
+      effectiveDate: todayLocalDateString(),
+      reason: '',
+    });
     this.showModal.set(true);
   }
 
@@ -42,13 +47,14 @@ export class IncomeHistoryComponent {
   }
 
   save(): void {
-    if (this.newAmount() <= 0) return;
+    const { amount, effectiveDate, reason } = this.newIncomeForm.getRawValue();
+    if (amount <= 0) return;
     this.isSaving.set(true);
 
     const payload = {
-      amount: this.newAmount(),
-      effective_date: this.newEffectiveDate(),
-      change_reason: this.newReason().trim() || 'HR Compensation Adjustment',
+      amount,
+      effective_date: effectiveDate,
+      change_reason: reason.trim() || 'HR Compensation Adjustment',
     };
 
     this.http.post<ApiResponse>(`${this.apiUrl}/employees/${this.employeeId()}/income`, payload).subscribe({

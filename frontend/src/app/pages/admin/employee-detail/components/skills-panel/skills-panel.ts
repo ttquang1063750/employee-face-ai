@@ -1,5 +1,5 @@
 import { Component, ChangeDetectionStrategy, signal, input, output, inject } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { DialogService } from '../../../../../core/services/dialog.service';
 import { ApiResponse } from '../../../../../core/models/api-response.model';
@@ -8,13 +8,14 @@ import { Skill } from '../../../../../core/models/employee.model';
 @Component({
   selector: 'app-skills-panel',
   standalone: true,
-  imports: [FormsModule],
+  imports: [ReactiveFormsModule],
   templateUrl: './skills-panel.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SkillsPanelComponent {
   private http = inject(HttpClient);
   private dialogService = inject(DialogService);
+  private fb = inject(FormBuilder);
   private readonly apiUrl = 'http://localhost:8000/api';
 
   skills = input.required<Skill[]>();
@@ -24,14 +25,15 @@ export class SkillsPanelComponent {
 
   showModal = signal<boolean>(false);
   skillsListToEdit = signal<Skill[]>([]);
-  newSkillName = signal<string>('');
-  newSkillDesc = signal<string>('');
+  newSkillForm = this.fb.nonNullable.group({
+    name: [''],
+    desc: [''],
+  });
   isSaving = signal<boolean>(false);
 
   openModal(): void {
     this.skillsListToEdit.set(JSON.parse(JSON.stringify(this.skills())));
-    this.newSkillName.set('');
-    this.newSkillDesc.set('');
+    this.newSkillForm.reset({ name: '', desc: '' });
     this.showModal.set(true);
   }
 
@@ -40,8 +42,9 @@ export class SkillsPanelComponent {
   }
 
   async addSkillToList(): Promise<void> {
-    const name = this.newSkillName().trim();
-    const desc = this.newSkillDesc().trim() || 'No description provided';
+    const { name: rawName, desc: rawDesc } = this.newSkillForm.getRawValue();
+    const name = rawName.trim();
+    const desc = rawDesc.trim() || 'No description provided';
     if (!name) return;
 
     if (this.skillsListToEdit().some((s) => s.skill_name.toLowerCase() === name.toLowerCase())) {
@@ -50,8 +53,7 @@ export class SkillsPanelComponent {
     }
 
     this.skillsListToEdit.update((list) => [...list, { skill_name: name, description: desc }]);
-    this.newSkillName.set('');
-    this.newSkillDesc.set('');
+    this.newSkillForm.reset({ name: '', desc: '' });
   }
 
   removeSkillFromList(index: number): void {

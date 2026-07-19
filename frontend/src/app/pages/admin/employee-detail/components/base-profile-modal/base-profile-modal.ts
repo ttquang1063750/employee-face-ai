@@ -10,16 +10,21 @@ import {
   ElementRef,
   viewChild,
 } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { map } from 'rxjs';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { DialogService } from '../../../../../core/services/dialog.service';
-import { UsernameCheckService } from '../../../../../core/services/username-check.service';
+import {
+  UsernameCheckService,
+  usernameStatusSignal,
+} from '../../../../../core/services/username-check.service';
 import { WebcamCaptureService } from '../../../../../core/services/webcam-capture.service';
 import { PhotoCaptureStateService } from '../../../../../core/services/photo-capture-state.service';
 import {
-  isPasswordValid,
   PASSWORD_HINT,
   generateRandomPassword,
+  passwordComplexityValidator,
 } from '../../../../../core/services/credentials.util';
 import { onImageError } from '../../../../../core/utils/image.util';
 import { ApiResponse } from '../../../../../core/models/api-response.model';
@@ -28,7 +33,7 @@ import { DetailedEmployee, Skill, Project } from '../../../../../core/models/emp
 @Component({
   selector: 'app-base-profile-modal',
   standalone: true,
-  imports: [FormsModule],
+  imports: [ReactiveFormsModule],
   templateUrl: './base-profile-modal.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [WebcamCaptureService, PhotoCaptureStateService],
@@ -37,6 +42,7 @@ export class BaseProfileModalComponent implements OnInit {
   private http = inject(HttpClient);
   private dialogService = inject(DialogService);
   private usernameCheckService = inject(UsernameCheckService);
+  private fb = inject(FormBuilder);
   private readonly apiUrl = 'http://localhost:8000/api';
 
   employee = input.required<DetailedEmployee>();
@@ -60,13 +66,18 @@ export class BaseProfileModalComponent implements OnInit {
     });
   }
 
-  editName = signal<string>('');
-  editAge = signal<number>(30);
-  editRole = signal<'staff' | 'admin'>('staff');
-  editUsername = signal<string>('');
-  usernameStatus = signal<'idle' | 'checking' | 'available' | 'taken'>('idle');
-  private usernameCheckTimer: ReturnType<typeof setTimeout> | undefined;
-  editPassword = signal<string>('');
+  editForm = this.fb.nonNullable.group({
+    name: ['', Validators.required],
+    age: [30],
+    role: this.fb.nonNullable.control<'staff' | 'admin'>('staff'),
+    username: ['', Validators.required],
+    password: ['', passwordComplexityValidator()],
+  });
+  private editFormValue = toSignal(
+    this.editForm.valueChanges.pipe(map(() => this.editForm.getRawValue())),
+    { initialValue: this.editForm.getRawValue() },
+  );
+  usernameStatus = usernameStatusSignal(this.editForm.controls.username);
   showEditPassword = signal<boolean>(false);
   readonly passwordHint = PASSWORD_HINT;
 
@@ -74,53 +85,43 @@ export class BaseProfileModalComponent implements OnInit {
 
   protected readonly onImageError = onImageError;
 
-  passwordValid = computed(() => !this.editPassword() || isPasswordValid(this.editPassword()));
-  canSave = computed(
-    () => !!this.editUsername().trim() && this.usernameStatus() === 'available' && this.passwordValid(),
-  );
+  canSave = computed(() => {
+    const { username } = this.editFormValue();
+    return (
+      !!username.trim() &&
+      this.usernameStatus() === 'available' &&
+      !this.editForm.controls.password.hasError('passwordComplexity')
+    );
+  });
 
   ngOnInit(): void {
     const data = this.employee();
-    this.editName.set(data.name);
-    this.editAge.set(data.age);
-    this.editRole.set(data.role);
-    this.editUsername.set(data.username || '');
-    this.usernameStatus.set(data.username ? 'available' : 'idle');
-    this.editPassword.set('');
+    this.editForm.controls.username.addAsyncValidators(
+      this.usernameCheckService.usernameTakenValidator(data.id),
+    );
+    this.editForm.reset({
+      name: data.name,
+      age: data.age,
+      role: data.role,
+      username: data.username || '',
+      password: '',
+    });
   }
 
   close(): void {
     this.photoCapture.stopWebcam();
-    clearTimeout(this.usernameCheckTimer);
     this.closed.emit();
   }
 
-  onUsernameInput(value: string): void {
-    this.editUsername.set(value);
-    this.usernameStatus.set('idle');
-    clearTimeout(this.usernameCheckTimer);
-
-    const username = value.trim();
-    if (!username) return;
-
-    const employeeId = this.employee().id;
-    this.usernameCheckTimer = setTimeout(() => {
-      this.usernameStatus.set('checking');
-      this.usernameCheckService.check(username, employeeId).subscribe({
-        next: (res) => this.usernameStatus.set(res.exists ? 'taken' : 'available'),
-        error: () => this.usernameStatus.set('idle'),
-      });
-    }, 450);
-  }
-
   generatePassword(): void {
-    this.editPassword.set(generateRandomPassword());
+    this.editForm.controls.password.setValue(generateRandomPassword());
     this.showEditPassword.set(true);
   }
 
   save(): void {
     this.isSaving.set(true);
     const employeeId = this.employee().id;
+    const { name, age, role, username, password } = this.editForm.getRawValue();
 
     const payload: {
       name: string;
@@ -132,11 +133,11 @@ export class BaseProfileModalComponent implements OnInit {
       projects: Project[];
       img?: string;
     } = {
-      name: this.editName(),
-      age: this.editAge(),
-      role: this.editRole(),
-      username: this.editUsername().trim(),
-      password: this.editPassword() || null,
+      name,
+      age,
+      role,
+      username: username.trim(),
+      password: password || null,
       // The backend fully replaces skills/projects with whatever is sent here,
       // so the current lists must always be included to avoid wiping them.
       skills: this.employee().skills || [],
@@ -152,7 +153,6 @@ export class BaseProfileModalComponent implements OnInit {
         if (res.success) {
           await this.dialogService.alert('THÀNH CÔNG', 'Cập nhật thông tin cơ bản thành công.');
           this.photoCapture.stopWebcam();
-          clearTimeout(this.usernameCheckTimer);
           this.saved.emit();
         }
       },

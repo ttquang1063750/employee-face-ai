@@ -12,8 +12,7 @@
         <input
           id="emp-search-input"
           type="text"
-          [ngModel]="searchQuery()"
-          (ngModelChange)="searchQuery.set($event); currentPage.set(1)"
+          [formControl]="searchQuery"
           placeholder="Tìm theo Tên, ID hoặc Vị trí..."
           class="hud-search-input">
       </div>
@@ -88,11 +87,11 @@
         <div class="hud-pagination">
           <div class="pag-size">
             <label for="emp-page-size">Hiển thị</label>
-            <select id="emp-page-size" class="pag-size-select" [ngModel]="pageSize()" (ngModelChange)="pageSize.set(+$event); currentPage.set(1)">
-              <option [value]="8">8</option>
-              <option [value]="16">16</option>
-              <option [value]="24">24</option>
-              <option [value]="50">50</option>
+            <select id="emp-page-size" class="pag-size-select" [formControl]="pageSize">
+              <option [ngValue]="8">8</option>
+              <option [ngValue]="16">16</option>
+              <option [ngValue]="24">24</option>
+              <option [ngValue]="50">50</option>
             </select>
             <span>/ trang</span>
           </div>
@@ -115,34 +114,34 @@
           <button class="close-btn" (click)="closeAddModal()">✕</button>
         </div>
 
-        <div class="modal-body">
+        <div class="modal-body" [formGroup]="newEmployeeForm">
           <div class="form-grid">
             <!-- Text Inputs Section -->
             <div class="form-fields">
               <div class="form-group">
                 <label for="new-emp-name">HỌ VÀ TÊN</label>
-                <input id="new-emp-name" type="text" [ngModel]="newName()" (ngModelChange)="newName.set($event)" placeholder="Nguyễn Văn A" class="hud-input">
+                <input id="new-emp-name" type="text" formControlName="name" placeholder="Nguyễn Văn A" class="hud-input">
               </div>
 
               <div class="form-row">
                 <div class="form-group">
                   <label for="new-emp-age">TUỔI</label>
-                  <input id="new-emp-age" type="number" [ngModel]="newAge()" (ngModelChange)="newAge.set($event)" class="hud-input">
+                  <input id="new-emp-age" type="number" formControlName="age" class="hud-input">
                 </div>
                 <div class="form-group">
                   <label for="new-emp-position">VỊ TRÍ / CHỨC VỤ</label>
-                  <input id="new-emp-position" type="text" [ngModel]="newPosition()" (ngModelChange)="newPosition.set($event)" placeholder="Software Engineer" class="hud-input">
+                  <input id="new-emp-position" type="text" formControlName="position" placeholder="Software Engineer" class="hud-input">
                 </div>
               </div>
 
               <div class="form-row">
                 <div class="form-group">
                   <label for="new-emp-income">MỨC LƯƠNG KHỞI ĐIỂM (USD)</label>
-                  <input id="new-emp-income" type="number" [ngModel]="newIncome()" (ngModelChange)="newIncome.set($event)" class="hud-input">
+                  <input id="new-emp-income" type="number" formControlName="income" class="hud-input">
                 </div>
                 <div class="form-group">
                   <label for="new-emp-role">PHÂN QUYỀN HỆ THỐNG</label>
-                  <select id="new-emp-role" [ngModel]="newRole()" (ngModelChange)="newRole.set($event)" class="hud-select">
+                  <select id="new-emp-role" formControlName="role" class="hud-select">
                     <option value="staff">Nhân viên (Staff)</option>
                     <option value="admin">Quản lý (Admin)</option>
                   </select>
@@ -151,7 +150,7 @@
 
               <div class="form-group">
                 <label for="new-emp-username">USERNAME *</label>
-                <input id="new-emp-username" type="text" [ngModel]="newUsername()" (ngModelChange)="onUsernameInput($event)" placeholder="vd: nguyen.van.a" autocomplete="off" class="hud-input">
+                <input id="new-emp-username" type="text" formControlName="username" placeholder="vd: nguyen.van.a" autocomplete="off" class="hud-input">
                 @if (usernameStatus() === 'checking') {
                   <p class="field-hint">⏳ Đang kiểm tra username...</p>
                 } @else if (usernameStatus() === 'taken') {
@@ -164,11 +163,11 @@
               <div class="form-group">
                 <label for="new-emp-password">MẬT KHẨU ĐĂNG NHẬP *</label>
                 <div class="input-with-actions">
-                  <input id="new-emp-password" [type]="showNewPassword() ? 'text' : 'password'" [ngModel]="newPassword()" (ngModelChange)="newPassword.set($event)" placeholder="Nhập mật khẩu đăng nhập" class="hud-input" autocomplete="new-password">
+                  <input id="new-emp-password" [type]="showNewPassword() ? 'text' : 'password'" formControlName="password" placeholder="Nhập mật khẩu đăng nhập" class="hud-input" autocomplete="new-password">
                   <button type="button" class="hud-btn-mini" data-tooltip="Hiện/ẩn mật khẩu" (click)="showNewPassword.set(!showNewPassword())">{{ showNewPassword() ? '🙈' : '👁' }}</button>
                   <button type="button" class="hud-btn-mini" data-tooltip="Tạo mật khẩu ngẫu nhiên" (click)="generatePassword()">🎲</button>
                 </div>
-                @if (newPassword() && !passwordValid()) {
+                @if (newEmployeeForm.controls.password.value && newEmployeeForm.controls.password.hasError('passwordComplexity')) {
                   <p class="field-hint error">✖ {{ passwordHint }}</p>
                 }
               </div>
@@ -176,12 +175,12 @@
               <!-- Skills & Projects Initial Seeding -->
               <div class="form-group">
                 <label for="new-emp-skills">KỸ NĂNG KHỞI ĐẦU (Định dạng: Skill: Mô tả, phân tách bằng dấu phẩy)</label>
-                <input id="new-emp-skills" type="text" [ngModel]="newSkills()" (ngModelChange)="newSkills.set($event)" placeholder="Angular: Thành thạo core, Python: Có kinh nghiệm viết REST API" class="hud-input">
+                <input id="new-emp-skills" type="text" formControlName="skills" placeholder="Angular: Thành thạo core, Python: Có kinh nghiệm viết REST API" class="hud-input">
               </div>
 
               <div class="form-group">
                 <label for="new-emp-projects">DỰ ÁN BAN ĐẦU (Định dạng: Dự án: Vai trò: Mô tả công việc)</label>
-                <input id="new-emp-projects" type="text" [ngModel]="newProjects()" (ngModelChange)="newProjects.set($event)" placeholder="Employee Face AI: Lead Developer: Xây dựng UI chấm công bằng Angular" class="hud-input">
+                <input id="new-emp-projects" type="text" formControlName="projects" placeholder="Employee Face AI: Lead Developer: Xây dựng UI chấm công bằng Angular" class="hud-input">
               </div>
             </div>
 

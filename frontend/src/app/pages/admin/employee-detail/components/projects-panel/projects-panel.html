@@ -51,32 +51,32 @@
           </div>
 
           <!-- Add new project form -->
-          <div class="projects-editor-form">
+          <div class="projects-editor-form" [formGroup]="newProjectForm">
             <span class="form-title">THÊM DỰ ÁN MỚI</span>
             <div class="form-fields">
               <div class="form-group">
                 <label for="new-proj-name">TÊN DỰ ÁN</label>
-                <input id="new-proj-name" type="text" [ngModel]="newProjName()" (ngModelChange)="newProjName.set($event)" placeholder="Ví dụ: ERP Portal, AI Kiosk" class="hud-input">
+                <input id="new-proj-name" type="text" formControlName="name" placeholder="Ví dụ: ERP Portal, AI Kiosk" class="hud-input">
               </div>
               <div class="form-row">
                 <div class="form-group">
                   <label for="new-proj-role">VAI TRÒ</label>
-                  <input id="new-proj-role" type="text" [ngModel]="newProjRole()" (ngModelChange)="newProjRole.set($event)" placeholder="Ví dụ: Tech Lead, FE Dev" class="hud-input">
+                  <input id="new-proj-role" type="text" formControlName="role" placeholder="Ví dụ: Tech Lead, FE Dev" class="hud-input">
                 </div>
                 <div class="form-group">
                   <span>NGÀY BẮT ĐẦU</span>
-                  <app-date-picker [ngModel]="newProjStartDate()" (ngModelChange)="newProjStartDate.set($event)"></app-date-picker>
+                  <app-date-picker formControlName="startDate"></app-date-picker>
                 </div>
               </div>
               <div class="form-group">
                 <span>NGÀY KẾT THÚC (Để trống nếu đang diễn ra)</span>
-                <app-date-picker [ngModel]="newProjEndDate()" (ngModelChange)="newProjEndDate.set($event)"></app-date-picker>
+                <app-date-picker formControlName="endDate"></app-date-picker>
               </div>
               <div class="form-group">
                 <label for="new-proj-desc">MÔ TẢ CHI TIẾT NHIỆM VỤ DỰ ÁN</label>
-                <textarea id="new-proj-desc" [ngModel]="newProjDesc()" (ngModelChange)="newProjDesc.set($event)" placeholder="Nhiệm vụ cụ thể" rows="2" class="hud-textarea"></textarea>
+                <textarea id="new-proj-desc" formControlName="desc" placeholder="Nhiệm vụ cụ thể" rows="2" class="hud-textarea"></textarea>
               </div>
-              <button class="hud-btn-outline" [disabled]="!newProjName()" (click)="addProjectToList()">THÊM DỰ ÁN VÀO DANH SÁCH</button>
+              <button class="hud-btn-outline" [disabled]="!newProjectForm.controls.name.value.trim()" (click)="addProjectToList()">THÊM DỰ ÁN VÀO DANH SÁCH</button>
             </div>
           </div>
         </div>

@@ -1,6 +1,7 @@
 import { Component, OnInit, signal, computed, ChangeDetectionStrategy, inject } from '@angular/core';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { FormsModule } from '@angular/forms';
+import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { DialogService } from '../../../core/services/dialog.service';
 import { DatePickerComponent } from '../../../core/components/date-picker/date-picker';
 import { RealtimeService } from '../../../core/services/realtime.service';
@@ -12,7 +13,7 @@ type StatusFilter = 'all' | 'pending' | 'approved' | 'rejected';
 @Component({
   selector: 'app-leave-requests',
   standalone: true,
-  imports: [FormsModule, DatePickerComponent],
+  imports: [ReactiveFormsModule, DatePickerComponent],
   templateUrl: './leave-requests.html',
   styleUrl: './leave-requests.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -28,23 +29,42 @@ export class LeaveRequestsComponent implements OnInit {
   requests = this.realtimeService.leaveRequests;
   isLoading = signal<boolean>(true);
   errorMsg = signal<string | null>(null);
-  statusFilter = signal<StatusFilter>('pending');
-  searchQuery = signal<string>('');
+  statusFilterControl = new FormControl<StatusFilter>('pending', { nonNullable: true });
+  private statusFilter = toSignal(this.statusFilterControl.valueChanges, {
+    initialValue: this.statusFilterControl.value,
+  });
+  // Free-text search is exempt from the explicit-Apply rule (rule 10) — it
+  // live-filters, so its value is bridged into a signal for filteredRequests.
+  searchQuery = new FormControl('', { nonNullable: true });
+  private searchQueryValue = toSignal(this.searchQuery.valueChanges, {
+    initialValue: this.searchQuery.value,
+  });
 
   // Date filters
-  filterStartDateInput = signal<string>('');
-  filterEndDateInput = signal<string>('');
+  filterStartDateInput = new FormControl('', { nonNullable: true });
+  filterEndDateInput = new FormControl('', { nonNullable: true });
   filterStartDate = signal<string>('');
   filterEndDate = signal<string>('');
 
   currentPage = signal<number>(1);
-  pageSize = signal<number>(8);
+  pageSizeControl = new FormControl(8, { nonNullable: true });
+  private pageSize = toSignal(this.pageSizeControl.valueChanges, {
+    initialValue: this.pageSizeControl.value,
+  });
 
   pendingCount = this.realtimeService.pendingLeaveCount;
 
+  constructor() {
+    this.statusFilterControl.valueChanges
+      .pipe(takeUntilDestroyed())
+      .subscribe(() => this.currentPage.set(1));
+    this.searchQuery.valueChanges.pipe(takeUntilDestroyed()).subscribe(() => this.currentPage.set(1));
+    this.pageSizeControl.valueChanges.pipe(takeUntilDestroyed()).subscribe(() => this.currentPage.set(1));
+  }
+
   filteredRequests = computed(() => {
     const filter = this.statusFilter();
-    const q = this.searchQuery().toLowerCase().trim();
+    const q = this.searchQueryValue().toLowerCase().trim();
     const start = this.filterStartDate();
     const end = this.filterEndDate();
     let list = this.requests();
@@ -107,25 +127,20 @@ export class LeaveRequestsComponent implements OnInit {
   }
 
   applyDateFilter(): void {
-    this.filterStartDate.set(this.filterStartDateInput());
-    this.filterEndDate.set(this.filterEndDateInput());
+    this.filterStartDate.set(this.filterStartDateInput.value);
+    this.filterEndDate.set(this.filterEndDateInput.value);
     this.currentPage.set(1);
   }
 
   clearDateFilter(): void {
-    this.filterStartDateInput.set('');
-    this.filterEndDateInput.set('');
+    this.filterStartDateInput.setValue('');
+    this.filterEndDateInput.setValue('');
     this.filterStartDate.set('');
     this.filterEndDate.set('');
     this.currentPage.set(1);
   }
 
-  setStatusFilter(filter: StatusFilter): void {
-    this.statusFilter.set(filter);
-    this.currentPage.set(1);
-  }
-
-  async approve(req: LeaveRequest): Promise<void> {
+async approve(req: LeaveRequest): Promise<void> {
     const confirmed = await this.dialogService.confirm(
       'DUYỆT ĐƠN NGHỈ',
       `Duyệt đơn xin nghỉ của ${req.employee_name} (${req.start_date} → ${req.end_date})?`,

@@ -19,8 +19,7 @@
         <div class="dialog-prompt-field">
           <input
             type="text"
-            [ngModel]="promptValue()"
-            (ngModelChange)="promptValue.set($event)"
+            [formControl]="promptValue"
             [placeholder]="state.placeholder || ''"
             class="hud-input"
             autocomplete="off"

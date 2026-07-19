@@ -196,29 +196,29 @@
           <h3>🔒 Đổi mật khẩu</h3>
           <button class="close-btn" (click)="closePasswordModal()">✕</button>
         </div>
-        <div class="modal-body">
+        <div class="modal-body" [formGroup]="passwordForm">
           <div class="form-fields">
             <div class="form-group">
               <label for="staff-current-password">MẬT KHẨU HIỆN TẠI</label>
               <div class="input-with-actions">
-                <input id="staff-current-password" [type]="showCurrentPassword() ? 'text' : 'password'" [ngModel]="currentPassword()" (ngModelChange)="currentPassword.set($event)" class="hud-input" autocomplete="current-password">
+                <input id="staff-current-password" [type]="showCurrentPassword() ? 'text' : 'password'" formControlName="current" class="hud-input" autocomplete="current-password">
                 <button type="button" class="hud-btn-mini" data-tooltip="Hiện/ẩn mật khẩu" (click)="showCurrentPassword.set(!showCurrentPassword())">{{ showCurrentPassword() ? '🙈' : '👁' }}</button>
               </div>
             </div>
             <div class="form-group">
               <label for="staff-new-password">MẬT KHẨU MỚI</label>
               <div class="input-with-actions">
-                <input id="staff-new-password" [type]="showNewStaffPassword() ? 'text' : 'password'" [ngModel]="newStaffPassword()" (ngModelChange)="newStaffPassword.set($event)" class="hud-input" autocomplete="new-password">
+                <input id="staff-new-password" [type]="showNewStaffPassword() ? 'text' : 'password'" formControlName="newPassword" class="hud-input" autocomplete="new-password">
                 <button type="button" class="hud-btn-mini" data-tooltip="Hiện/ẩn mật khẩu" (click)="showNewStaffPassword.set(!showNewStaffPassword())">{{ showNewStaffPassword() ? '🙈' : '👁' }}</button>
               </div>
-              @if (newStaffPassword() && !passwordValid()) {
+              @if (passwordForm.controls.newPassword.value && passwordForm.controls.newPassword.hasError('passwordComplexity')) {
                 <p class="field-hint error">✖ {{ passwordHint }}</p>
               }
             </div>
             <div class="form-group">
               <label for="staff-confirm-password">XÁC NHẬN MẬT KHẨU MỚI</label>
-              <input id="staff-confirm-password" type="password" [ngModel]="confirmStaffPassword()" (ngModelChange)="confirmStaffPassword.set($event)" class="hud-input" autocomplete="new-password">
-              @if (confirmStaffPassword() && !passwordsMatch()) {
+              <input id="staff-confirm-password" type="password" formControlName="confirm" class="hud-input" autocomplete="new-password">
+              @if (passwordForm.controls.confirm.value && passwordForm.controls.newPassword.value !== passwordForm.controls.confirm.value) {
                 <p class="field-hint error">✖ Mật khẩu xác nhận không khớp.</p>
               }
             </div>
@@ -288,21 +288,21 @@
           <h3>📝 Xin nghỉ phép</h3>
           <button class="close-btn" (click)="closeLeaveModal()">✕</button>
         </div>
-        <div class="modal-body">
+        <div class="modal-body" [formGroup]="leaveForm">
           <div class="form-fields">
             <div class="form-row">
               <div class="form-group">
                 <span>TỪ NGÀY</span>
-                <app-date-picker [ngModel]="leaveStartDate()" (ngModelChange)="leaveStartDate.set($event)"></app-date-picker>
+                <app-date-picker formControlName="startDate"></app-date-picker>
               </div>
               <div class="form-group">
                 <span>ĐẾN NGÀY</span>
-                <app-date-picker [ngModel]="leaveEndDate()" (ngModelChange)="leaveEndDate.set($event)"></app-date-picker>
+                <app-date-picker formControlName="endDate"></app-date-picker>
               </div>
             </div>
             <div class="form-group">
               <label for="staff-leave-reason">LÝ DO XIN NGHỈ</label>
-              <input id="staff-leave-reason" type="text" [ngModel]="leaveReason()" (ngModelChange)="leaveReason.set($event)" placeholder="VD: Việc gia đình, khám sức khoẻ..." class="hud-input">
+              <input id="staff-leave-reason" type="text" formControlName="reason" placeholder="VD: Việc gia đình, khám sức khoẻ..." class="hud-input">
             </div>
           </div>
         </div>

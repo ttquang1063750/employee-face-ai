@@ -1,5 +1,5 @@
 import { Component, ChangeDetectionStrategy, signal, input, output, inject } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { DatePickerComponent } from '../../../../../core/components/date-picker/date-picker';
 import { DialogService } from '../../../../../core/services/dialog.service';
@@ -10,13 +10,14 @@ import { todayLocalDateString } from '../../../../../core/utils/date.util';
 @Component({
   selector: 'app-projects-panel',
   standalone: true,
-  imports: [FormsModule, DatePickerComponent],
+  imports: [ReactiveFormsModule, DatePickerComponent],
   templateUrl: './projects-panel.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ProjectsPanelComponent {
   private http = inject(HttpClient);
   private dialogService = inject(DialogService);
+  private fb = inject(FormBuilder);
   private readonly apiUrl = 'http://localhost:8000/api';
 
   projects = input.required<Project[]>();
@@ -26,20 +27,24 @@ export class ProjectsPanelComponent {
 
   showModal = signal<boolean>(false);
   projectsListToEdit = signal<Project[]>([]);
-  newProjName = signal<string>('');
-  newProjRole = signal<string>('');
-  newProjDesc = signal<string>('');
-  newProjStartDate = signal<string>('');
-  newProjEndDate = signal<string>('');
+  newProjectForm = this.fb.nonNullable.group({
+    name: [''],
+    role: [''],
+    desc: [''],
+    startDate: [''],
+    endDate: [''],
+  });
   isSaving = signal<boolean>(false);
 
   openModal(): void {
     this.projectsListToEdit.set(JSON.parse(JSON.stringify(this.projects())));
-    this.newProjName.set('');
-    this.newProjRole.set('');
-    this.newProjDesc.set('');
-    this.newProjStartDate.set(todayLocalDateString());
-    this.newProjEndDate.set('');
+    this.newProjectForm.reset({
+      name: '',
+      role: '',
+      desc: '',
+      startDate: todayLocalDateString(),
+      endDate: '',
+    });
     this.showModal.set(true);
   }
 
@@ -48,11 +53,12 @@ export class ProjectsPanelComponent {
   }
 
   addProjectToList(): void {
-    const name = this.newProjName().trim();
-    const role = this.newProjRole().trim() || 'Contributor';
-    const desc = this.newProjDesc().trim() || 'No description provided';
-    const start = this.newProjStartDate();
-    const end = this.newProjEndDate() ? this.newProjEndDate() : null;
+    const raw = this.newProjectForm.getRawValue();
+    const name = raw.name.trim();
+    const role = raw.role.trim() || 'Contributor';
+    const desc = raw.desc.trim() || 'No description provided';
+    const start = raw.startDate;
+    const end = raw.endDate ? raw.endDate : null;
 
     if (!name) return;
 
@@ -67,10 +73,7 @@ export class ProjectsPanelComponent {
       },
     ]);
 
-    this.newProjName.set('');
-    this.newProjRole.set('');
-    this.newProjDesc.set('');
-    this.newProjEndDate.set('');
+    this.newProjectForm.patchValue({ name: '', role: '', desc: '', endDate: '' });
   }
 
   removeProjectFromList(index: number): void {

@@ -65,11 +65,11 @@
     <div class="hud-pagination">
       <div class="pag-size">
         <label for="logs-page-size">Hiển thị</label>
-        <select id="logs-page-size" class="pag-size-select" [ngModel]="pageSize()" (ngModelChange)="pageSizeChange.emit(+$event)">
-          <option [value]="8">8</option>
-          <option [value]="16">16</option>
-          <option [value]="24">24</option>
-          <option [value]="50">50</option>
+        <select id="logs-page-size" class="pag-size-select" [formControl]="pageSizeControl">
+          <option [ngValue]="8">8</option>
+          <option [ngValue]="16">16</option>
+          <option [ngValue]="24">24</option>
+          <option [ngValue]="50">50</option>
         </select>
         <span>/ trang</span>
       </div>

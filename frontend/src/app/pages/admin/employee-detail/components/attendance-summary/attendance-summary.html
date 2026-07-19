@@ -5,11 +5,11 @@
   <div class="hud-filter-bar">
     <div class="hud-field">
       <span class="hud-label">TỪ NGÀY</span>
-      <app-date-picker [ngModel]="filterStartDateInput()" (ngModelChange)="filterStartDateInputChange.emit($event)"></app-date-picker>
+      <app-date-picker [formControl]="startDateControl"></app-date-picker>
     </div>
     <div class="hud-field">
       <span class="hud-label">ĐẾN NGÀY</span>
-      <app-date-picker [ngModel]="filterEndDateInput()" (ngModelChange)="filterEndDateInputChange.emit($event)"></app-date-picker>
+      <app-date-picker [formControl]="endDateControl"></app-date-picker>
     </div>
     <div class="hud-field filter-apply-field">
       <button class="hud-btn-outline" (click)="applyFilter.emit()">ÁP DỤNG</button>
@@ -82,11 +82,11 @@
     <div class="hud-pagination">
       <div class="pag-size">
         <label for="attendance-page-size">Hiển thị</label>
-        <select id="attendance-page-size" class="pag-size-select" [ngModel]="pageSize()" (ngModelChange)="pageSizeChange.emit(+$event)">
-          <option [value]="5">5</option>
-          <option [value]="10">10</option>
-          <option [value]="20">20</option>
-          <option [value]="50">50</option>
+        <select id="attendance-page-size" class="pag-size-select" [formControl]="pageSizeControl">
+          <option [ngValue]="5">5</option>
+          <option [ngValue]="10">10</option>
+          <option [ngValue]="20">20</option>
+          <option [ngValue]="50">50</option>
         </select>
         <span>/ trang</span>
       </div>

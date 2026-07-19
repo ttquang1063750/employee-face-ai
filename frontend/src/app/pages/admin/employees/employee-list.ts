@@ -8,16 +8,17 @@ import {
   ChangeDetectionStrategy,
   inject,
 } from '@angular/core';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { FormsModule } from '@angular/forms';
+import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
+import { map } from 'rxjs';
 import { DialogService } from '../../../core/services/dialog.service';
-import { UsernameCheckService } from '../../../core/services/username-check.service';
 import {
-  isPasswordValid,
-  PASSWORD_HINT,
-  generateRandomPassword,
-} from '../../../core/services/credentials.util';
+  UsernameCheckService,
+  usernameStatusSignal,
+} from '../../../core/services/username-check.service';
+import { PASSWORD_HINT, generateRandomPassword, passwordComplexityValidator } from '../../../core/services/credentials.util';
 import { ApiResponse } from '../../../core/models/api-response.model';
 import { EmployeeBase } from '../../../core/models/employee.model';
 import { WebcamCaptureService } from '../../../core/services/webcam-capture.service';
@@ -26,7 +27,7 @@ import { PhotoCaptureStateService } from '../../../core/services/photo-capture-s
 @Component({
   selector: 'app-employee-list',
   standalone: true,
-  imports: [RouterLink, FormsModule],
+  imports: [RouterLink, ReactiveFormsModule],
   templateUrl: './employee-list.html',
   styleUrl: './employee-list.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -36,6 +37,7 @@ export class EmployeeListComponent implements OnInit {
   private http = inject(HttpClient);
   private dialogService = inject(DialogService);
   private usernameCheckService = inject(UsernameCheckService);
+  private fb = inject(FormBuilder);
 
   videoElement = viewChild<ElementRef<HTMLVideoElement>>('videoElement');
   canvasElement = viewChild<ElementRef<HTMLCanvasElement>>('canvasElement');
@@ -49,10 +51,15 @@ export class EmployeeListComponent implements OnInit {
       canvasElement: this.canvasElement,
       fileInputElement: this.fileInputElement,
     });
+    this.searchQuery.valueChanges.pipe(takeUntilDestroyed()).subscribe(() => this.currentPage.set(1));
+    this.pageSize.valueChanges.pipe(takeUntilDestroyed()).subscribe(() => this.currentPage.set(1));
   }
 
   employees = signal<EmployeeBase[]>([]);
-  searchQuery = signal<string>('');
+  searchQuery = new FormControl('', { nonNullable: true });
+  private searchQueryValue = toSignal(this.searchQuery.valueChanges, {
+    initialValue: this.searchQuery.value,
+  });
   isLoading = signal<boolean>(true);
   errorMsg = signal<string | null>(null);
 
@@ -60,28 +67,39 @@ export class EmployeeListComponent implements OnInit {
   showAddModal = signal<boolean>(false);
   isSubmitting = signal<boolean>(false);
 
-  // New Employee Form Signals
-  newName = signal<string>('');
-  newAge = signal<number>(28);
-  newRole = signal<'staff' | 'admin'>('staff');
-  newUsername = signal<string>('');
-  usernameStatus = signal<'idle' | 'checking' | 'available' | 'taken'>('idle');
-  private usernameCheckTimer: ReturnType<typeof setTimeout> | undefined;
-  newPassword = signal<string>('');
+  // New Employee Registration Form
+  newEmployeeForm = this.fb.nonNullable.group({
+    name: ['', Validators.required],
+    age: [28],
+    position: [''],
+    income: [3000],
+    role: this.fb.nonNullable.control<'staff' | 'admin'>('staff'),
+    username: this.fb.nonNullable.control('', {
+      validators: Validators.required,
+      asyncValidators: this.usernameCheckService.usernameTakenValidator(),
+    }),
+    password: this.fb.nonNullable.control('', passwordComplexityValidator()),
+    skills: [''], // formatted as "Skill: Desc, Skill2: Desc"
+    projects: [''], // formatted as "Name: Role: Desc"
+  });
+  private newEmployeeFormValue = toSignal(
+    this.newEmployeeForm.valueChanges.pipe(map(() => this.newEmployeeForm.getRawValue())),
+    { initialValue: this.newEmployeeForm.getRawValue() },
+  );
+  usernameStatus = usernameStatusSignal(this.newEmployeeForm.controls.username);
   showNewPassword = signal<boolean>(false);
   readonly passwordHint = PASSWORD_HINT;
-  newPosition = signal<string>('');
-  newIncome = signal<number>(3000);
-  newSkills = signal<string>(''); // formatted as "Skill: Desc, Skill2: Desc"
-  newProjects = signal<string>(''); // formatted as "Name: Role: Desc"
 
   // Pagination for employee list
   currentPage = signal<number>(1);
-  pageSize = signal<number>(8);
+  pageSize = new FormControl(8, { nonNullable: true });
+  private pageSizeValue = toSignal(this.pageSize.valueChanges, {
+    initialValue: this.pageSize.value,
+  });
 
   // Filtered employees list
   filteredEmployees = computed(() => {
-    const q = this.searchQuery().toLowerCase().trim();
+    const q = this.searchQueryValue().toLowerCase().trim();
     if (!q) return this.employees();
     return this.employees().filter(
       (e) =>
@@ -94,7 +112,7 @@ export class EmployeeListComponent implements OnInit {
   // Computed: Pagination properties
   totalPages = computed(() => {
     const len = this.filteredEmployees().length;
-    return Math.ceil(len / this.pageSize()) || 1;
+    return Math.ceil(len / this.pageSizeValue()) || 1;
   });
 
   paginatedEmployees = computed(() => {
@@ -103,22 +121,21 @@ export class EmployeeListComponent implements OnInit {
     if (page > total) {
       page = total;
     }
-    const start = (page - 1) * this.pageSize();
-    return this.filteredEmployees().slice(start, start + this.pageSize());
+    const start = (page - 1) * this.pageSizeValue();
+    return this.filteredEmployees().slice(start, start + this.pageSizeValue());
   });
 
-  // Computed: Password strength check for the create form
-  passwordValid = computed(() => isPasswordValid(this.newPassword()));
-
   // Computed: Whether the registration form can be submitted
-  canSubmit = computed(
-    () =>
-      !!this.newName() &&
+  canSubmit = computed(() => {
+    const { name, username } = this.newEmployeeFormValue();
+    return (
+      !!name &&
       !!this.photoCapture.imgBase64() &&
-      !!this.newUsername().trim() &&
+      !!username.trim() &&
       this.usernameStatus() === 'available' &&
-      this.passwordValid(),
-  );
+      !this.newEmployeeForm.controls.password.hasError('passwordComplexity')
+    );
+  });
 
   private readonly apiUrl = 'http://localhost:8000/api';
 
@@ -167,44 +184,31 @@ export class EmployeeListComponent implements OnInit {
   }
 
   resetForm(): void {
-    this.newName.set('');
-    this.newAge.set(28);
-    this.newRole.set('staff');
-    this.newUsername.set('');
-    this.usernameStatus.set('idle');
-    clearTimeout(this.usernameCheckTimer);
-    this.newPassword.set('');
-    this.newPosition.set('');
-    this.newIncome.set(3000);
-    this.newSkills.set('');
-    this.newProjects.set('');
+    this.newEmployeeForm.reset({
+      name: '',
+      age: 28,
+      position: '',
+      income: 3000,
+      role: 'staff',
+      username: '',
+      password: '',
+      skills: '',
+      projects: '',
+    });
+    this.showNewPassword.set(false);
     this.photoCapture.reset();
   }
 
-  onUsernameInput(value: string): void {
-    this.newUsername.set(value);
-    this.usernameStatus.set('idle');
-    clearTimeout(this.usernameCheckTimer);
-
-    const username = value.trim();
-    if (!username) return;
-
-    this.usernameCheckTimer = setTimeout(() => {
-      this.usernameStatus.set('checking');
-      this.usernameCheckService.check(username).subscribe({
-        next: (res) => this.usernameStatus.set(res.exists ? 'taken' : 'available'),
-        error: () => this.usernameStatus.set('idle'),
-      });
-    }, 450);
-  }
-
   generatePassword(): void {
-    this.newPassword.set(generateRandomPassword());
+    this.newEmployeeForm.controls.password.setValue(generateRandomPassword());
     this.showNewPassword.set(true);
   }
 
   async submitEmployee(): Promise<void> {
-    if (!this.newName() || !this.photoCapture.imgBase64()) {
+    const { name, age, position, income, role, username, password, skills, projects } =
+      this.newEmployeeForm.getRawValue();
+
+    if (!name || !this.photoCapture.imgBase64()) {
       await this.dialogService.alert(
         'THIẾU THÔNG TIN',
         'Vui lòng điền tên và chụp/tải lên ảnh chân dung mẫu.',
@@ -212,7 +216,7 @@ export class EmployeeListComponent implements OnInit {
       return;
     }
 
-    if (!this.newUsername().trim() || this.usernameStatus() !== 'available') {
+    if (!username.trim() || this.usernameStatus() !== 'available') {
       await this.dialogService.alert(
         'USERNAME KHÔNG HỢP LỆ',
         'Vui lòng nhập một username hợp lệ và chưa được sử dụng.',
@@ -220,7 +224,7 @@ export class EmployeeListComponent implements OnInit {
       return;
     }
 
-    if (!this.passwordValid()) {
+    if (this.newEmployeeForm.controls.password.hasError('passwordComplexity')) {
       await this.dialogService.alert('MẬT KHẨU KHÔNG HỢP LỆ', this.passwordHint);
       return;
     }
@@ -228,7 +232,7 @@ export class EmployeeListComponent implements OnInit {
     this.isSubmitting.set(true);
 
     // Parse skills: e.g. "Angular: Expert state management, ROS: Robotics control"
-    const parsedSkills = this.newSkills()
+    const parsedSkills = skills
       .split(',')
       .map((s) => s.trim())
       .filter((s) => s.length > 0)
@@ -242,7 +246,7 @@ export class EmployeeListComponent implements OnInit {
       .filter((sk) => sk.skill_name.length > 0);
 
     // Parse projects: e.g. "Project Name: Role in project: Project description details"
-    const parsedProjects = this.newProjects()
+    const parsedProjects = projects
       .split(',')
       .map((p) => p.trim())
       .filter((p) => p.length > 0)
@@ -257,14 +261,14 @@ export class EmployeeListComponent implements OnInit {
       .filter((pr) => pr.project_name.length > 0);
 
     const payload = {
-      name: this.newName(),
-      age: this.newAge(),
-      role: this.newRole(),
-      username: this.newUsername().trim(),
-      password: this.newPassword() || null,
+      name,
+      age,
+      role,
+      username: username.trim(),
+      password: password || null,
       img: this.photoCapture.imgBase64(),
-      position: this.newPosition() || 'Developer',
-      income: this.newIncome(),
+      position: position || 'Developer',
+      income,
       skills: parsedSkills,
       projects: parsedProjects,
     };

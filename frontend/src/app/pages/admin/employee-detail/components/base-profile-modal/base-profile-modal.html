@@ -4,26 +4,26 @@
       <h3>⚙️ CẬP NHẬT HỒ SƠ CƠ BẢN</h3>
       <button class="close-btn" (click)="close()">✖</button>
     </div>
-    <div class="modal-body">
+    <div class="modal-body" [formGroup]="editForm">
       <div class="form-fields">
         <div class="form-group">
           <label for="edit-emp-name">HỌ VÀ TÊN</label>
-          <input id="edit-emp-name" type="text" [ngModel]="editName()" (ngModelChange)="editName.set($event)" class="hud-input">
+          <input id="edit-emp-name" type="text" formControlName="name" class="hud-input">
         </div>
         <div class="form-group">
           <label for="edit-emp-age">TUỔI</label>
-          <input id="edit-emp-age" type="number" [ngModel]="editAge()" (ngModelChange)="editAge.set($event)" class="hud-input">
+          <input id="edit-emp-age" type="number" formControlName="age" class="hud-input">
         </div>
         <div class="form-group">
           <label for="edit-emp-role">PHÂN QUYỀN HỆ THỐNG</label>
-          <select id="edit-emp-role" [ngModel]="editRole()" (ngModelChange)="editRole.set($event)" class="hud-select">
+          <select id="edit-emp-role" formControlName="role" class="hud-select">
             <option value="staff">Nhân sự (Staff)</option>
             <option value="admin">Quản lý (Admin)</option>
           </select>
         </div>
         <div class="form-group">
           <label for="edit-emp-username">USERNAME *</label>
-          <input id="edit-emp-username" type="text" [ngModel]="editUsername()" (ngModelChange)="onUsernameInput($event)" autocomplete="off" class="hud-input">
+          <input id="edit-emp-username" type="text" formControlName="username" autocomplete="off" class="hud-input">
           @if (usernameStatus() === 'checking') {
             <p class="field-hint">⏳ Đang kiểm tra username...</p>
           } @else if (usernameStatus() === 'taken') {
@@ -35,11 +35,11 @@
         <div class="form-group">
           <label for="edit-emp-password">MẬT KHẨU MỚI (Để trống nếu giữ nguyên)</label>
           <div class="input-with-actions">
-            <input id="edit-emp-password" [type]="showEditPassword() ? 'text' : 'password'" [ngModel]="editPassword()" (ngModelChange)="editPassword.set($event)" class="hud-input" autocomplete="new-password">
+            <input id="edit-emp-password" [type]="showEditPassword() ? 'text' : 'password'" formControlName="password" class="hud-input" autocomplete="new-password">
             <button type="button" class="hud-btn-mini" data-tooltip="Hiện/ẩn mật khẩu" (click)="showEditPassword.set(!showEditPassword())">{{ showEditPassword() ? '🙈' : '👁' }}</button>
             <button type="button" class="hud-btn-mini" data-tooltip="Tạo mật khẩu ngẫu nhiên" (click)="generatePassword()">🎲</button>
           </div>
-          @if (editPassword() && !passwordValid()) {
+          @if (editForm.controls.password.value && editForm.controls.password.hasError('passwordComplexity')) {
             <p class="field-hint error">✖ {{ passwordHint }}</p>
           }
         </div>

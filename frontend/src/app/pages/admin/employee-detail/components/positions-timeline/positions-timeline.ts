@@ -1,5 +1,5 @@
 import { Component, ChangeDetectionStrategy, signal, input, output, inject } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { DatePickerComponent } from '../../../../../core/components/date-picker/date-picker';
 import { DialogService } from '../../../../../core/services/dialog.service';
@@ -10,13 +10,14 @@ import { todayLocalDateString } from '../../../../../core/utils/date.util';
 @Component({
   selector: 'app-positions-timeline',
   standalone: true,
-  imports: [FormsModule, DatePickerComponent],
+  imports: [ReactiveFormsModule, DatePickerComponent],
   templateUrl: './positions-timeline.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PositionsTimelineComponent {
   private http = inject(HttpClient);
   private dialogService = inject(DialogService);
+  private fb = inject(FormBuilder);
   private readonly apiUrl = 'http://localhost:8000/api';
 
   positions = input.required<Position[]>();
@@ -27,13 +28,14 @@ export class PositionsTimelineComponent {
   changed = output<void>();
 
   showModal = signal<boolean>(false);
-  newTitle = signal<string>('');
-  newStartDate = signal<string>('');
+  newPositionForm = this.fb.nonNullable.group({
+    title: [''],
+    startDate: [''],
+  });
   isSaving = signal<boolean>(false);
 
   openModal(): void {
-    this.newTitle.set('');
-    this.newStartDate.set(todayLocalDateString());
+    this.newPositionForm.reset({ title: '', startDate: todayLocalDateString() });
     this.showModal.set(true);
   }
 
@@ -42,12 +44,13 @@ export class PositionsTimelineComponent {
   }
 
   save(): void {
-    if (!this.newTitle().trim()) return;
+    const { title, startDate } = this.newPositionForm.getRawValue();
+    if (!title.trim()) return;
     this.isSaving.set(true);
 
     const payload = {
-      title: this.newTitle().trim(),
-      start_date: this.newStartDate(),
+      title: title.trim(),
+      start_date: startDate,
     };
 
     this.http

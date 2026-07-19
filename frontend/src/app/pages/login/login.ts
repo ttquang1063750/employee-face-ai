@@ -1,12 +1,12 @@
 import { Component, signal, ChangeDetectionStrategy, inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { FormsModule } from '@angular/forms';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AuthService } from '../../core/services/auth.service';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [FormsModule],
+  imports: [ReactiveFormsModule],
   templateUrl: './login.html',
   styleUrl: './login.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -14,9 +14,13 @@ import { AuthService } from '../../core/services/auth.service';
 export class LoginComponent {
   private authService = inject(AuthService);
   private router = inject(Router);
+  private fb = inject(FormBuilder);
 
-  username = signal<string>('');
-  password = signal<string>('');
+  form = this.fb.nonNullable.group({
+    username: ['', Validators.required],
+    password: ['', Validators.required],
+  });
+
   errorMsg = signal<string | null>(null);
   isLoading = signal<boolean>(false);
 
@@ -27,7 +31,8 @@ export class LoginComponent {
   }
 
   onSubmit(): void {
-    if (!this.username().trim() || !this.password()) {
+    const { username, password } = this.form.getRawValue();
+    if (!username.trim() || !password) {
       this.errorMsg.set('Vui lòng nhập đầy đủ Username và Mật khẩu.');
       return;
     }
@@ -35,7 +40,7 @@ export class LoginComponent {
     this.isLoading.set(true);
     this.errorMsg.set(null);
 
-    this.authService.login(this.username().trim(), this.password()).subscribe({
+    this.authService.login(username.trim(), password).subscribe({
       next: (res) => {
         this.isLoading.set(false);
         this.router.navigate([res.user.role === 'admin' ? '/admin/dashboard' : '/staff']);

@@ -1,11 +1,11 @@
-import { Component, ChangeDetectionStrategy, signal, inject } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject } from '@angular/core';
 import { DialogService } from '../../services/dialog.service';
-import { FormsModule } from '@angular/forms';
+import { FormControl, ReactiveFormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-hud-dialog',
   standalone: true,
-  imports: [FormsModule],
+  imports: [ReactiveFormsModule],
   templateUrl: './hud-dialog.html',
   styleUrl: './hud-dialog.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -13,7 +13,7 @@ import { FormsModule } from '@angular/forms';
 export class HudDialogComponent {
   dialogService = inject(DialogService);
 
-  promptValue = signal<string>('');
+  promptValue = new FormControl('', { nonNullable: true });
 
   onConfirm(): void {
     const state = this.dialogService.dialogState();
@@ -21,8 +21,8 @@ export class HudDialogComponent {
       if (state.type === 'confirm') {
         state.resolve(true);
       } else if (state.type === 'prompt') {
-        state.resolve(this.promptValue());
-        this.promptValue.set('');
+        state.resolve(this.promptValue.value);
+        this.promptValue.reset('');
       } else {
         state.resolve();
       }
@@ -36,7 +36,7 @@ export class HudDialogComponent {
         state.resolve(false);
       } else if (state.type === 'prompt') {
         state.resolve(null);
-        this.promptValue.set('');
+        this.promptValue.reset('');
       }
     }
   }

@@ -11,11 +11,11 @@ import {
 } from '@angular/core';
 import { Router } from '@angular/router';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { FormsModule } from '@angular/forms';
+import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../../core/services/auth.service';
 import { DialogService } from '../../../core/services/dialog.service';
-import { isPasswordValid, PASSWORD_HINT } from '../../../core/services/credentials.util';
+import { PASSWORD_HINT, passwordComplexityValidator } from '../../../core/services/credentials.util';
 import { DatePickerComponent } from '../../../core/components/date-picker/date-picker';
 import { ApiResponse } from '../../../core/models/api-response.model';
 import { DetailedEmployee } from '../../../core/models/employee.model';
@@ -28,7 +28,7 @@ import { AttendanceSummaryComponent } from '../../admin/employee-detail/componen
 @Component({
   selector: 'app-staff-profile',
   standalone: true,
-  imports: [FormsModule, CommonModule, DatePickerComponent, AttendanceSummaryComponent],
+  imports: [ReactiveFormsModule, CommonModule, DatePickerComponent, AttendanceSummaryComponent],
   templateUrl: './staff-profile.html',
   styleUrl: './staff-profile.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -39,6 +39,7 @@ export class StaffProfileComponent implements OnInit, OnDestroy {
   private authService = inject(AuthService);
   private router = inject(Router);
   private dialogService = inject(DialogService);
+  private fb = inject(FormBuilder);
 
   videoElement = viewChild<ElementRef<HTMLVideoElement>>('videoElement');
   canvasElement = viewChild<ElementRef<HTMLCanvasElement>>('canvasElement');
@@ -52,15 +53,15 @@ export class StaffProfileComponent implements OnInit, OnDestroy {
 
   // --- Change password ---
   showPasswordModal = signal<boolean>(false);
-  currentPassword = signal<string>('');
-  newStaffPassword = signal<string>('');
-  confirmStaffPassword = signal<string>('');
+  passwordForm = this.fb.nonNullable.group({
+    current: [''],
+    newPassword: ['', passwordComplexityValidator()],
+    confirm: [''],
+  });
   showCurrentPassword = signal<boolean>(false);
   showNewStaffPassword = signal<boolean>(false);
   isSavingPassword = signal<boolean>(false);
   readonly passwordHint = PASSWORD_HINT;
-  passwordValid = computed(() => isPasswordValid(this.newStaffPassword()));
-  passwordsMatch = computed(() => this.newStaffPassword() === this.confirmStaffPassword());
 
   // --- Change avatar ---
   showAvatarModal = signal<boolean>(false);
@@ -68,9 +69,11 @@ export class StaffProfileComponent implements OnInit, OnDestroy {
 
   // --- Leave requests ---
   showLeaveModal = signal<boolean>(false);
-  leaveStartDate = signal<string>('');
-  leaveEndDate = signal<string>('');
-  leaveReason = signal<string>('');
+  leaveForm = this.fb.nonNullable.group({
+    startDate: [''],
+    endDate: [''],
+    reason: [''],
+  });
   isSavingLeave = signal<boolean>(false);
   leaveRequests = signal<LeaveRequest[]>([]);
 
@@ -175,9 +178,7 @@ export class StaffProfileComponent implements OnInit, OnDestroy {
 
   // ===================== Change Password =====================
   openPasswordModal(): void {
-    this.currentPassword.set('');
-    this.newStaffPassword.set('');
-    this.confirmStaffPassword.set('');
+    this.passwordForm.reset({ current: '', newPassword: '', confirm: '' });
     this.showCurrentPassword.set(false);
     this.showNewStaffPassword.set(false);
     this.showPasswordModal.set(true);
@@ -191,15 +192,17 @@ export class StaffProfileComponent implements OnInit, OnDestroy {
     const employeeId = this.authService.currentUser()?.id;
     if (!employeeId) return;
 
-    if (!this.currentPassword()) {
+    const { current, newPassword, confirm } = this.passwordForm.getRawValue();
+
+    if (!current) {
       await this.dialogService.alert('THIẾU THÔNG TIN', 'Vui lòng nhập mật khẩu hiện tại.');
       return;
     }
-    if (!this.passwordValid()) {
+    if (this.passwordForm.controls.newPassword.hasError('passwordComplexity')) {
       await this.dialogService.alert('MẬT KHẨU KHÔNG HỢP LỆ', this.passwordHint);
       return;
     }
-    if (!this.passwordsMatch()) {
+    if (newPassword !== confirm) {
       await this.dialogService.alert(
         'MẬT KHẨU KHÔNG KHỚP',
         'Mật khẩu mới và xác nhận mật khẩu không giống nhau.',
@@ -210,8 +213,8 @@ export class StaffProfileComponent implements OnInit, OnDestroy {
     this.isSavingPassword.set(true);
     this.http
       .put<ApiResponse>(`${this.apiUrl}/employees/${employeeId}/password`, {
-        current_password: this.currentPassword(),
-        new_password: this.newStaffPassword(),
+        current_password: current,
+        new_password: newPassword,
       })
       .subscribe({
         next: async (res) => {
@@ -268,9 +271,7 @@ export class StaffProfileComponent implements OnInit, OnDestroy {
 
   // ===================== Leave Requests =====================
   openLeaveModal(): void {
-    this.leaveStartDate.set('');
-    this.leaveEndDate.set('');
-    this.leaveReason.set('');
+    this.leaveForm.reset({ startDate: '', endDate: '', reason: '' });
     this.showLeaveModal.set(true);
   }
 
@@ -295,11 +296,13 @@ export class StaffProfileComponent implements OnInit, OnDestroy {
     const employeeId = this.authService.currentUser()?.id;
     if (!employeeId) return;
 
-    if (!this.leaveStartDate() || !this.leaveEndDate() || !this.leaveReason().trim()) {
+    const { startDate, endDate, reason } = this.leaveForm.getRawValue();
+
+    if (!startDate || !endDate || !reason.trim()) {
       await this.dialogService.alert('THIẾU THÔNG TIN', 'Vui lòng nhập đầy đủ ngày nghỉ và lý do.');
       return;
     }
-    if (this.leaveEndDate() < this.leaveStartDate()) {
+    if (endDate < startDate) {
       await this.dialogService.alert('NGÀY KHÔNG HỢP LỆ', 'Ngày kết thúc phải sau ngày bắt đầu.');
       return;
     }
@@ -307,9 +310,9 @@ export class StaffProfileComponent implements OnInit, OnDestroy {
     this.isSavingLeave.set(true);
     this.http
       .post<ApiResponse>(`${this.apiUrl}/employees/${employeeId}/leave-requests`, {
-        start_date: this.leaveStartDate(),
-        end_date: this.leaveEndDate(),
-        reason: this.leaveReason().trim(),
+        start_date: startDate,
+        end_date: endDate,
+        reason: reason.trim(),
       })
       .subscribe({
         next: async (res) => {

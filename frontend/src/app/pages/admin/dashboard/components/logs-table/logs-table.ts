@@ -1,5 +1,6 @@
-import { Component, ChangeDetectionStrategy, input, output } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { Component, ChangeDetectionStrategy, effect, input, output } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { translateMood } from '../../../../../core/utils/mood.util';
 import { AttendanceLogEntry } from '../../../../../core/models/attendance-log.model';
 import { AuditPhotoButtonComponent } from '../../../../../core/components/audit-photo-button/audit-photo-button';
@@ -7,7 +8,7 @@ import { AuditPhotoButtonComponent } from '../../../../../core/components/audit-
 @Component({
   selector: 'app-logs-table',
   standalone: true,
-  imports: [FormsModule, AuditPhotoButtonComponent],
+  imports: [ReactiveFormsModule, AuditPhotoButtonComponent],
   templateUrl: './logs-table.html',
   styleUrl: './logs-table.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -28,4 +29,16 @@ export class LogsTableComponent {
 
   readonly translateMood = translateMood;
   readonly skeletonRows = [1, 2, 3, 4, 5];
+
+  // Bridges the pageSize input()/output() pair to a real FormControl for
+  // this component's own <select> — see attendance-summary.ts for the same
+  // pattern with the rationale spelled out.
+  pageSizeControl = new FormControl(8, { nonNullable: true });
+
+  constructor() {
+    effect(() => this.pageSizeControl.setValue(this.pageSize(), { emitEvent: false }));
+    this.pageSizeControl.valueChanges
+      .pipe(takeUntilDestroyed())
+      .subscribe((value) => this.pageSizeChange.emit(value));
+  }
 }

@@ -8,7 +8,8 @@ import {
   inject,
 } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { FormsModule } from '@angular/forms';
+import { FormControl, ReactiveFormsModule } from '@angular/forms';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { DatePickerComponent } from '../../../core/components/date-picker/date-picker';
 import { ApiResponse } from '../../../core/models/api-response.model';
 import { EmployeeBase } from '../../../core/models/employee.model';
@@ -25,7 +26,7 @@ import { DialogService } from '../../../core/services/dialog.service';
   selector: 'app-dashboard',
   standalone: true,
   imports: [
-    FormsModule,
+    ReactiveFormsModule,
     DatePickerComponent,
     StatWidgetComponent,
     HourlyChartComponent,
@@ -40,19 +41,29 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private http = inject(HttpClient);
   private dialogService = inject(DialogService);
 
+  constructor() {
+    this.nameControl.valueChanges.pipe(takeUntilDestroyed()).subscribe(() => this.onSearchInput());
+  }
+
   employees = signal<EmployeeBase[]>([]);
   logs = signal<AttendanceLogEntry[]>([]);
   isLoading = signal<boolean>(true);
   errorMsg = signal<string | null>(null);
 
   // Filters for logs list (applied values used by filteredLogs below;
-  // the *Input signals are the draft date-range values bound to the date
+  // the *Input controls are the draft date-range values bound to the date
   // pickers and only take effect once ÁP DỤNG is clicked)
   filterStartDate = signal<string>('');
   filterEndDate = signal<string>('');
-  filterStartDateInput = signal<string>('');
-  filterEndDateInput = signal<string>('');
-  filterEmployeeName = signal<string>('');
+  filterStartDateInput = new FormControl('', { nonNullable: true });
+  filterEndDateInput = new FormControl('', { nonNullable: true });
+  // Free-text autocomplete search is exempt from the explicit-Apply rule
+  // (rule 10) — it live-filters, so its value is bridged into a signal for
+  // the filteredLogs()/employeeSuggestions() computeds below.
+  nameControl = new FormControl('', { nonNullable: true });
+  filterEmployeeName = toSignal(this.nameControl.valueChanges, {
+    initialValue: this.nameControl.value,
+  });
 
   // Autocomplete dropdown state
   showSuggestions = signal<boolean>(false);
@@ -237,8 +248,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
     const endStr = todayLocalDateString();
     this.filterStartDate.set(startStr);
     this.filterEndDate.set(endStr);
-    this.filterStartDateInput.set(startStr);
-    this.filterEndDateInput.set(endStr);
+    this.filterStartDateInput.setValue(startStr);
+    this.filterEndDateInput.setValue(endStr);
 
     this.loadDashboardData();
     this.startPolling();
@@ -308,8 +319,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   applyDateFilter(): void {
-    this.filterStartDate.set(this.filterStartDateInput());
-    this.filterEndDate.set(this.filterEndDateInput());
+    this.filterStartDate.set(this.filterStartDateInput.value);
+    this.filterEndDate.set(this.filterEndDateInput.value);
     this.currentPage.set(1);
   }
 
@@ -331,13 +342,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   selectSuggestion(name: string): void {
-    this.filterEmployeeName.set(name);
+    this.nameControl.setValue(name);
     this.showSuggestions.set(false);
     this.currentPage.set(1);
   }
 
-  onSearchInput(value: string): void {
-    this.filterEmployeeName.set(value);
+  onSearchInput(): void {
     this.showSuggestions.set(true);
     this.currentPage.set(1);
   }

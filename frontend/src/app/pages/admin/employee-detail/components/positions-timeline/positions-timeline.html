@@ -26,21 +26,21 @@
         <h3>📈 BỔ NHIỆM CHỨC DANH MỚI</h3>
         <button class="close-btn" (click)="closeModal()">✖</button>
       </div>
-      <div class="modal-body">
+      <div class="modal-body" [formGroup]="newPositionForm">
         <div class="form-fields">
           <div class="form-group">
             <label for="new-pos-title">CHỨC DANH MỚI</label>
-            <input id="new-pos-title" type="text" [ngModel]="newTitle()" (ngModelChange)="newTitle.set($event)" placeholder="Ví dụ: Team Leader, Senior Manager" class="hud-input">
+            <input id="new-pos-title" type="text" formControlName="title" placeholder="Ví dụ: Team Leader, Senior Manager" class="hud-input">
           </div>
           <div class="form-group">
             <span>NGÀY HIỆU LỰC BỔ NHIỆM</span>
-            <app-date-picker [ngModel]="newStartDate()" (ngModelChange)="newStartDate.set($event)"></app-date-picker>
+            <app-date-picker formControlName="startDate"></app-date-picker>
           </div>
           <p class="warning-alert">ℹ️ Ghi chú: Hệ thống sẽ tự động chuyển chức danh hiện tại của nhân sự này sang trạng thái kết thúc vào ngày bổ nhiệm.</p>
         </div>
       </div>
       <div class="modal-footer">
-        <button class="hud-btn-success" [disabled]="isSaving() || !newTitle()" (click)="save()">
+        <button class="hud-btn-success" [disabled]="isSaving() || !newPositionForm.controls.title.value.trim()" (click)="save()">
           @if (isSaving()) { <div class="loader"></div> }
           <span>GHI NHẬN BỔ NHIỆM</span>
         </button>

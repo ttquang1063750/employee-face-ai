@@ -7,7 +7,7 @@
     <div class="hud-filter-bar">
       <div class="hud-field">
         <label class="hud-label" for="leave-status-filter">LỌC TRẠNG THÁI</label>
-        <select id="leave-status-filter" class="hud-select" [ngModel]="statusFilter()" (ngModelChange)="setStatusFilter($event)">
+        <select id="leave-status-filter" class="hud-select" [formControl]="statusFilterControl">
           <option value="pending">Chờ duyệt ({{ pendingCount() }})</option>
           <option value="approved">Đã duyệt</option>
           <option value="rejected">Từ chối</option>
@@ -16,11 +16,11 @@
       </div>
       <div class="hud-field">
         <span class="hud-label">TỪ NGÀY</span>
-        <app-date-picker [ngModel]="filterStartDateInput()" (ngModelChange)="filterStartDateInput.set($event)"></app-date-picker>
+        <app-date-picker [formControl]="filterStartDateInput"></app-date-picker>
       </div>
       <div class="hud-field">
         <span class="hud-label">ĐẾN NGÀY</span>
-        <app-date-picker [ngModel]="filterEndDateInput()" (ngModelChange)="filterEndDateInput.set($event)"></app-date-picker>
+        <app-date-picker [formControl]="filterEndDateInput"></app-date-picker>
       </div>
       <div class="hud-field filter-apply-field">
         <span class="hud-label hud-label-spacer">LỌC</span>
@@ -36,8 +36,7 @@
         <input
           id="leave-search-input"
           type="text"
-          [ngModel]="searchQuery()"
-          (ngModelChange)="searchQuery.set($event); currentPage.set(1)"
+          [formControl]="searchQuery"
           placeholder="Tìm theo tên hoặc vị trí nhân viên..."
           class="hud-input">
       </div>
@@ -114,11 +113,11 @@
           <div class="hud-pagination">
             <div class="pag-size">
               <label for="leave-page-size">Hiển thị</label>
-              <select id="leave-page-size" class="pag-size-select" [ngModel]="pageSize()" (ngModelChange)="pageSize.set(+$event); currentPage.set(1)">
-                <option [value]="8">8</option>
-                <option [value]="16">16</option>
-                <option [value]="24">24</option>
-                <option [value]="50">50</option>
+              <select id="leave-page-size" class="pag-size-select" [formControl]="pageSizeControl">
+                <option [ngValue]="8">8</option>
+                <option [ngValue]="16">16</option>
+                <option [ngValue]="24">24</option>
+                <option [ngValue]="50">50</option>
               </select>
               <span>/ trang</span>
             </div>

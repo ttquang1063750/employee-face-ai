@@ -61,7 +61,7 @@ describe('DashboardComponent', () => {
     });
 
     it('filters by employee name, case-insensitively', () => {
-      component.filterEmployeeName.set('bob');
+      component.nameControl.setValue('bob');
 
       const ids = component.filteredLogs().map((l) => l.id);
       expect(ids).toEqual([3]);
@@ -70,14 +70,14 @@ describe('DashboardComponent', () => {
     it('combines the date range and name filters', () => {
       component.filterStartDate.set('2026-01-01');
       component.filterEndDate.set('2026-01-10');
-      component.filterEmployeeName.set('bob');
+      component.nameControl.setValue('bob');
 
       expect(component.filteredLogs()).toHaveLength(0);
     });
 
-    it('does not react to the draft *Input signals before ÁP DỤNG is applied', () => {
-      component.filterStartDateInput.set('2026-01-01');
-      component.filterEndDateInput.set('2026-01-01');
+    it('does not react to the draft *Input controls before ÁP DỤNG is applied', () => {
+      component.filterStartDateInput.setValue('2026-01-01');
+      component.filterEndDateInput.setValue('2026-01-01');
 
       expect(component.filteredLogs()).toHaveLength(3);
     });
@@ -206,7 +206,7 @@ describe('DashboardComponent', () => {
 
     it('clamps to the last page when currentPage overshoots after a filter narrows the results', () => {
       component.currentPage.set(3);
-      component.filterEmployeeName.set('nonexistent-name');
+      component.nameControl.setValue('nonexistent-name');
       expect(component.filteredLogs()).toHaveLength(0);
       expect(component.totalPages()).toBe(1);
       expect(component.paginatedLogs()).toHaveLength(0);
@@ -248,7 +248,7 @@ describe('DashboardComponent', () => {
     });
 
     it('filters case-insensitively by the current query', () => {
-      component.filterEmployeeName.set('bo');
+      component.nameControl.setValue('bo');
       expect(component.employeeSuggestions()).toEqual(['Bob']);
     });
   });
@@ -256,8 +256,8 @@ describe('DashboardComponent', () => {
   describe('filter/search actions', () => {
     it('applyDateFilter copies the draft inputs into the applied signals and resets to page 1', () => {
       component.currentPage.set(3);
-      component.filterStartDateInput.set('2026-02-01');
-      component.filterEndDateInput.set('2026-02-28');
+      component.filterStartDateInput.setValue('2026-02-01');
+      component.filterEndDateInput.setValue('2026-02-28');
 
       component.applyDateFilter();
 
@@ -277,10 +277,10 @@ describe('DashboardComponent', () => {
       expect(component.currentPage()).toBe(1);
     });
 
-    it('onSearchInput sets the name filter, opens the dropdown, and resets to page 1', () => {
+    it('typing into nameControl opens the dropdown and resets to page 1', () => {
       component.currentPage.set(2);
 
-      component.onSearchInput('ali');
+      component.nameControl.setValue('ali');
 
       expect(component.filterEmployeeName()).toBe('ali');
       expect(component.showSuggestions()).toBe(true);
