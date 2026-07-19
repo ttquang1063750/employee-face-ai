@@ -304,12 +304,27 @@ class EmployeeFaceAIRequestHandler(BaseHTTPRequestHandler):
 
     def serve_audit_image(self):
         # Audit photos are forensic evidence of a specific person's face at a
-        # specific time — unlike reference avatars, only admins may view them.
+        # specific time — unlike reference avatars, viewing is restricted.
+        # Admins may view any employee's; a staff member may only view their
+        # own (the employee_id embedded in the filename, e.g.
+        # "20260719_044221_CHECK_IN_11.jpg", must match their own session).
         user = self.get_authenticated_user()
-        if not user or user["role"] != "admin":
+        if not user:
             self.send_error(401, "Unauthorized")
             return
-        self._serve_local_image(LOGS_DIR, self.path[len("/logs/") :])
+
+        relative_path = self.path[len("/logs/") :]
+        if user["role"] != "admin":
+            stem = os.path.splitext(os.path.basename(relative_path))[0]
+            try:
+                owner_id = int(stem.rsplit("_", 1)[-1])
+            except ValueError:
+                owner_id = None
+            if owner_id != user["employee_id"]:
+                self.send_error(401, "Unauthorized")
+                return
+
+        self._serve_local_image(LOGS_DIR, relative_path)
 
     def handle_login(self):
         try:
