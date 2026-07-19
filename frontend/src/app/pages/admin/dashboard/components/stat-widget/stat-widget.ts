@@ -1,11 +1,6 @@
-import { Component, ChangeDetectionStrategy, input, output } from '@angular/core';
+import { Component, ChangeDetectionStrategy, input } from '@angular/core';
 
 export type StatWidgetKind = 'info' | 'success' | 'warning' | 'danger' | 'none';
-
-export interface StatWidgetFilterOption {
-  value: string;
-  label: string;
-}
 
 @Component({
   selector: 'app-stat-widget',
@@ -23,15 +18,4 @@ export class StatWidgetComponent {
   statusLabel = input<string>('info');
   kind = input<StatWidgetKind>('info');
   loading = input<boolean>(false);
-
-  // Optional replacement for the statusLabel badge: a small select the
-  // widget's own consumer can use to scope its `value` (e.g. attendance
-  // count by CHECK_IN/CHECK_OUT). Absent for widgets that don't need one.
-  filterOptions = input<StatWidgetFilterOption[]>([]);
-  filterValue = input<string>('');
-  filterChange = output<string>();
-
-  onFilterChange(event: Event): void {
-    this.filterChange.emit((event.target as HTMLSelectElement).value);
-  }
 }
