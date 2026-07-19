@@ -83,23 +83,23 @@
 
         <!-- Attendance logs and time metrics aggregation -->
         <app-attendance-summary
-          [paginatedLogs]="paginatedRawLogs()"
-          [totalCount]="filteredRawLogs().length"
-          [workingDays]="workingDays()"
-          [workingHours]="workingHours()"
-          [hasIncompleteAttendance]="hasIncompleteAttendance()"
-          [currentPage]="currentPage()"
-          [totalPages]="totalPages()"
-          [filterStartDateInput]="filterStartDateInput()"
-          [filterEndDateInput]="filterEndDateInput()"
-          [pageSize]="pageSize()"
+          [paginatedLogs]="attendance.paginatedRawLogs()"
+          [totalCount]="attendance.filteredRawLogs().length"
+          [workingDays]="attendance.workingDays()"
+          [workingHours]="attendance.workingHours()"
+          [hasIncompleteAttendance]="attendance.hasIncompleteAttendance()"
+          [currentPage]="attendance.currentPage()"
+          [totalPages]="attendance.totalPages()"
+          [filterStartDateInput]="attendance.filterStartDateInput()"
+          [filterEndDateInput]="attendance.filterEndDateInput()"
+          [pageSize]="attendance.pageSize()"
           [showDeleteButton]="false"
-          (filterStartDateInputChange)="filterStartDateInput.set($event)"
-          (filterEndDateInputChange)="filterEndDateInput.set($event)"
-          (applyFilter)="applyDateFilter()"
-          (prevPage)="prevPage()"
-          (nextPage)="nextPage()"
-          (pageSizeChange)="onPageSizeChange($event)"
+          (filterStartDateInputChange)="attendance.filterStartDateInput.set($event)"
+          (filterEndDateInputChange)="attendance.filterEndDateInput.set($event)"
+          (applyFilter)="attendance.applyDateFilter()"
+          (prevPage)="attendance.prevPage()"
+          (nextPage)="attendance.nextPage()"
+          (pageSizeChange)="attendance.onPageSizeChange($event)"
         />
 
         <!-- Lifecycle side column: Positions, Compensation, Skills, Projects (read-only) -->
@@ -246,12 +246,12 @@
         <div class="modal-body">
           <div class="form-camera-zone">
             <div class="camera-viewport-frame">
-              @if (showWebcam()) {
+              @if (photoCapture.showWebcam()) {
                 <video #videoElement autoplay playsinline class="modal-video"></video>
-                <button class="camera-cap-btn" (click)="capturePhoto()">📸 CHỤP ẢNH</button>
+                <button class="camera-cap-btn" (click)="photoCapture.capturePhoto()">📸 CHỤP ẢNH</button>
               } @else {
-                @if (imgBase64()) {
-                  <img [src]="imgBase64()" alt="Ảnh đại diện đã chụp" class="captured-preview-img">
+                @if (photoCapture.imgBase64()) {
+                  <img [src]="photoCapture.imgBase64()" alt="Ảnh đại diện đã chụp" class="captured-preview-img">
                 } @else {
                   <img
                     [src]="'http://localhost:8000/' + employee()?.image_path"
@@ -260,9 +260,9 @@
                     alt="{{ employee()?.name }}">
                 }
                 <div class="photo-controls">
-                  <button class="hud-btn-outline" (click)="startWebcam()">📸 CAMERA CHỤP TRỰC TIẾP</button>
-                  <input #fileInputElement type="file" (change)="handleFileUpload($event)" class="visually-hidden-input" accept="image/*">
-                  <button class="hud-btn-outline" (click)="triggerFileInput()">📁 TẢI LÊN FILE ẢNH</button>
+                  <button class="hud-btn-outline" (click)="photoCapture.startWebcam()">📸 CAMERA CHỤP TRỰC TIẾP</button>
+                  <input #fileInputElement type="file" (change)="photoCapture.handleFileUpload($event)" class="visually-hidden-input" accept="image/*">
+                  <button class="hud-btn-outline" (click)="photoCapture.triggerFileInput()">📁 TẢI LÊN FILE ẢNH</button>
                 </div>
               }
             </div>
@@ -270,7 +270,7 @@
           </div>
         </div>
         <div class="modal-footer">
-          <button class="hud-btn-success" [disabled]="isSavingAvatar() || !imgBase64()" (click)="saveAvatar()">
+          <button class="hud-btn-success" [disabled]="isSavingAvatar() || !photoCapture.imgBase64()" (click)="saveAvatar()">
             @if (isSavingAvatar()) { <div class="loader"></div> }
             <span>LƯU ẢNH MỚI</span>
           </button>

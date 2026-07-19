@@ -18,10 +18,11 @@ import { DialogService } from '../../../core/services/dialog.service';
 import { isPasswordValid, PASSWORD_HINT } from '../../../core/services/credentials.util';
 import { DatePickerComponent } from '../../../core/components/date-picker/date-picker';
 import { ApiResponse } from '../../../core/models/api-response.model';
-import { DetailedEmployee, AttendanceLog } from '../../../core/models/employee.model';
+import { DetailedEmployee } from '../../../core/models/employee.model';
 import { LeaveRequest } from '../../../core/models/leave-request.model';
-import { WebcamCaptureService, readFileAsBase64 } from '../../../core/services/webcam-capture.service';
-import { todayLocalDateString, startOfMonthLocalDateString } from '../../../core/utils/date.util';
+import { WebcamCaptureService } from '../../../core/services/webcam-capture.service';
+import { PhotoCaptureStateService } from '../../../core/services/photo-capture-state.service';
+import { AttendanceSummaryStateService } from '../../../core/services/attendance-summary-state.service';
 import { AttendanceSummaryComponent } from '../../admin/employee-detail/components/attendance-summary/attendance-summary';
 
 @Component({
@@ -31,18 +32,19 @@ import { AttendanceSummaryComponent } from '../../admin/employee-detail/componen
   templateUrl: './staff-profile.html',
   styleUrl: './staff-profile.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  providers: [WebcamCaptureService],
+  providers: [WebcamCaptureService, PhotoCaptureStateService, AttendanceSummaryStateService],
 })
 export class StaffProfileComponent implements OnInit, OnDestroy {
   private http = inject(HttpClient);
   private authService = inject(AuthService);
   private router = inject(Router);
   private dialogService = inject(DialogService);
-  private webcam = inject(WebcamCaptureService);
 
   videoElement = viewChild<ElementRef<HTMLVideoElement>>('videoElement');
   canvasElement = viewChild<ElementRef<HTMLCanvasElement>>('canvasElement');
   fileInputElement = viewChild<ElementRef<HTMLInputElement>>('fileInputElement');
+
+  readonly photoCapture = inject(PhotoCaptureStateService);
 
   employee = signal<DetailedEmployee | null>(null);
   isLoading = signal<boolean>(true);
@@ -62,8 +64,6 @@ export class StaffProfileComponent implements OnInit, OnDestroy {
 
   // --- Change avatar ---
   showAvatarModal = signal<boolean>(false);
-  imgBase64 = signal<string>('');
-  showWebcam = signal<boolean>(false);
   isSavingAvatar = signal<boolean>(false);
 
   // --- Leave requests ---
@@ -74,112 +74,20 @@ export class StaffProfileComponent implements OnInit, OnDestroy {
   isSavingLeave = signal<boolean>(false);
   leaveRequests = signal<LeaveRequest[]>([]);
 
-  // Attendance Filters (applied values used by the computed logs below;
-  // the *Input signals are the draft values bound to the date pickers and
-  // only take effect once ÁP DỤNG is clicked)
-  filterStartDate = signal<string>('');
-  filterEndDate = signal<string>('');
-  filterStartDateInput = signal<string>('');
-  filterEndDateInput = signal<string>('');
-
-  // Pagination for logs list
-  currentPage = signal<number>(1);
-  pageSize = signal<number>(5);
-
-  // Computed: Filtered attendance logs in selected time range
-  filteredRawLogs = computed(() => {
-    const start = this.filterStartDate();
-    const end = this.filterEndDate();
-    const raw = this.employee()?.raw_logs || [];
-    if (!start || !end) return raw;
-    return raw.filter((log: AttendanceLog) => {
-      const logDate = log.timestamp.split('T')[0];
-      return logDate >= start && logDate <= end;
-    });
-  });
-
-  // Computed: Pagination properties
-  totalPages = computed(() => {
-    const len = this.filteredRawLogs().length;
-    return Math.ceil(len / this.pageSize()) || 1;
-  });
-
-  paginatedRawLogs = computed(() => {
-    let page = this.currentPage();
-    const total = this.totalPages();
-    if (page > total) {
-      page = total;
-    }
-    const start = (page - 1) * this.pageSize();
-    return this.filteredRawLogs().slice(start, start + this.pageSize());
-  });
-
-  // Computed: Calculate total unique calendar working days
-  workingDays = computed(() => {
-    const logs = this.filteredRawLogs();
-    const uniqueDates = new Set<string>();
-    logs.forEach((log: AttendanceLog) => {
-      uniqueDates.add(log.timestamp.split('T')[0]);
-    });
-    return uniqueDates.size;
-  });
-
-  // Computed: Aggregate working hours via a CHECK_IN/CHECK_OUT pairing
-  // algorithm, single-pass so workingHours and hasIncompleteAttendance never
-  // disagree about which days had an open (unpaired) session.
-  private dailyAttendanceSummary = computed(() => {
-    const logs = this.filteredRawLogs();
-    const logsByDate: Record<string, AttendanceLog[]> = {};
-
-    logs.forEach((log: AttendanceLog) => {
-      const date = log.timestamp.split('T')[0];
-      if (!logsByDate[date]) {
-        logsByDate[date] = [];
-      }
-      logsByDate[date].push(log);
-    });
-
-    let totalHours = 0;
-    let hasIncomplete = false;
-
-    Object.keys(logsByDate).forEach((date) => {
-      // Sort day logs chronologically (oldest first)
-      const dayLogs = logsByDate[date].sort(
-        (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
-      );
-
-      let lastCheckInTime: number | null = null;
-      dayLogs.forEach((log) => {
-        if (log.action === 'CHECK_IN') {
-          if (lastCheckInTime === null) {
-            lastCheckInTime = new Date(log.timestamp).getTime();
-          }
-        } else if (log.action === 'CHECK_OUT' && lastCheckInTime !== null) {
-          const checkOutTime = new Date(log.timestamp).getTime();
-          const diffHrs = (checkOutTime - lastCheckInTime) / (1000 * 60 * 60);
-          if (diffHrs > 0) {
-            totalHours += diffHrs;
-          }
-          lastCheckInTime = null; // Reset pairing
-        }
-      });
-
-      if (lastCheckInTime !== null) {
-        hasIncomplete = true;
-      }
-    });
-
-    return { totalHours: parseFloat(totalHours.toFixed(1)), hasIncomplete };
-  });
-
-  workingHours = computed(() => this.dailyAttendanceSummary().totalHours);
-
-  // True when at least one day in the filtered range has an unpaired
-  // CHECK_IN, meaning workingHours() under-counts that day.
-  hasIncompleteAttendance = computed(() => this.dailyAttendanceSummary().hasIncomplete);
+  readonly attendance = inject(AttendanceSummaryStateService);
+  private readonly rawLogs = computed(() => this.employee()?.raw_logs || []);
 
   private readonly apiUrl = 'http://localhost:8000/api';
   private pollIntervalId: ReturnType<typeof setInterval> | null = null;
+
+  constructor() {
+    this.attendance.configure(this.rawLogs);
+    this.photoCapture.configure({
+      videoElement: this.videoElement,
+      canvasElement: this.canvasElement,
+      fileInputElement: this.fileInputElement,
+    });
+  }
 
   ngOnInit(): void {
     this.loadOwnProfile();
@@ -238,7 +146,7 @@ export class StaffProfileComponent implements OnInit, OnDestroy {
         this.isLoading.set(false);
         if (res.success && res.data) {
           this.employee.set(res.data);
-          this.initializeDateFilters();
+          this.attendance.initializeDateRangeDefaults();
         } else {
           this.errorMsg.set(res.error || 'Không thể lấy thông tin hồ sơ.');
         }
@@ -248,40 +156,6 @@ export class StaffProfileComponent implements OnInit, OnDestroy {
         this.errorMsg.set('Lỗi kết nối máy chủ API.');
       },
     });
-  }
-
-  private initializeDateFilters(): void {
-    // Default attendance date range: first day of current month -> today
-    const startStr = startOfMonthLocalDateString();
-    const endStr = todayLocalDateString();
-
-    this.filterStartDate.set(startStr);
-    this.filterEndDate.set(endStr);
-    this.filterStartDateInput.set(startStr);
-    this.filterEndDateInput.set(endStr);
-  }
-
-  applyDateFilter(): void {
-    this.filterStartDate.set(this.filterStartDateInput());
-    this.filterEndDate.set(this.filterEndDateInput());
-    this.currentPage.set(1);
-  }
-
-  prevPage(): void {
-    if (this.currentPage() > 1) {
-      this.currentPage.update((p) => p - 1);
-    }
-  }
-
-  nextPage(): void {
-    if (this.currentPage() < this.totalPages()) {
-      this.currentPage.update((p) => p + 1);
-    }
-  }
-
-  onPageSizeChange(size: number): void {
-    this.pageSize.set(size);
-    this.currentPage.set(1);
   }
 
   onImageError(event: Event): void {
@@ -358,65 +232,22 @@ export class StaffProfileComponent implements OnInit, OnDestroy {
 
   // ===================== Change Avatar =====================
   openAvatarModal(): void {
-    this.imgBase64.set('');
-    this.showWebcam.set(false);
+    this.photoCapture.reset();
     this.showAvatarModal.set(true);
   }
 
   closeAvatarModal(): void {
-    this.stopWebcam();
+    this.photoCapture.stopWebcam();
     this.showAvatarModal.set(false);
-  }
-
-  async startWebcam(): Promise<void> {
-    this.showWebcam.set(true);
-    try {
-      const stream = await this.webcam.start();
-      setTimeout(() => {
-        if (this.videoElement()) {
-          this.videoElement()!.nativeElement.srcObject = stream;
-        }
-      }, 100);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      await this.dialogService.alert('LỖI CAMERA', 'Không thể khởi chạy camera: ' + message);
-      this.showWebcam.set(false);
-    }
-  }
-
-  stopWebcam(): void {
-    this.webcam.stop();
-    this.showWebcam.set(false);
-  }
-
-  capturePhoto(): void {
-    const video = this.videoElement()!.nativeElement;
-    const canvas = this.canvasElement()!.nativeElement;
-    const dataUrl = this.webcam.capture(video, canvas, { width: 400, height: 300, quality: 0.95 });
-    if (dataUrl) {
-      this.imgBase64.set(dataUrl);
-      this.stopWebcam();
-    }
-  }
-
-  triggerFileInput(): void {
-    this.fileInputElement()?.nativeElement.click();
-  }
-
-  async handleFileUpload(event: Event): Promise<void> {
-    const input = event.target as HTMLInputElement;
-    if (input.files && input.files[0]) {
-      this.imgBase64.set(await readFileAsBase64(input.files[0]));
-    }
   }
 
   saveAvatar(): void {
     const employeeId = this.authService.currentUser()?.id;
-    if (!employeeId || !this.imgBase64()) return;
+    if (!employeeId || !this.photoCapture.imgBase64()) return;
 
     this.isSavingAvatar.set(true);
     this.http
-      .put<ApiResponse>(`${this.apiUrl}/employees/${employeeId}/avatar`, { img: this.imgBase64() })
+      .put<ApiResponse>(`${this.apiUrl}/employees/${employeeId}/avatar`, { img: this.photoCapture.imgBase64() })
       .subscribe({
         next: async (res) => {
           this.isSavingAvatar.set(false);

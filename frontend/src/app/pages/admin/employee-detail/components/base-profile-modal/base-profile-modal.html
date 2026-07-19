@@ -49,12 +49,12 @@
           <span class="camera-label">ẢNH CHÂN DUNG ĐỐI CHIẾU (MẪU)</span>
 
           <div class="camera-viewport-frame">
-            @if (showWebcam()) {
+            @if (photoCapture.showWebcam()) {
               <video #videoElement autoplay playsinline class="modal-video"></video>
-              <button class="camera-cap-btn" (click)="capturePhoto()">📸 CHỤP ẢNH MẪU</button>
+              <button class="camera-cap-btn" (click)="photoCapture.capturePhoto()">📸 CHỤP ẢNH MẪU</button>
             } @else {
-              @if (imgBase64()) {
-                <img [src]="imgBase64()" alt="Ảnh chân dung đã chụp" class="captured-preview-img">
+              @if (photoCapture.imgBase64()) {
+                <img [src]="photoCapture.imgBase64()" alt="Ảnh chân dung đã chụp" class="captured-preview-img">
               } @else {
                 <img
                   [src]="'http://localhost:8000/' + employee().image_path"
@@ -63,9 +63,9 @@
                   alt="{{ employee().name }}">
               }
               <div class="photo-controls">
-                <button class="hud-btn-outline" (click)="startWebcam()">📸 CAMERA CHỤP TRỰC TIẾP</button>
-                <input #fileInputElement type="file" (change)="handleFileUpload($event)" class="visually-hidden-input" accept="image/*">
-                <button class="hud-btn-outline" (click)="triggerFileInput()">📁 TẢI LÊN FILE ẢNH</button>
+                <button class="hud-btn-outline" (click)="photoCapture.startWebcam()">📸 CAMERA CHỤP TRỰC TIẾP</button>
+                <input #fileInputElement type="file" (change)="photoCapture.handleFileUpload($event)" class="visually-hidden-input" accept="image/*">
+                <button class="hud-btn-outline" (click)="photoCapture.triggerFileInput()">📁 TẢI LÊN FILE ẢNH</button>
               </div>
             }
           </div>

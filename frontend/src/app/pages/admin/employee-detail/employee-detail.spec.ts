@@ -56,9 +56,9 @@ describe('EmployeeDetailComponent', () => {
         ]),
       );
 
-      expect(component.workingHours()).toBe(12);
-      expect(component.workingDays()).toBe(2);
-      expect(component.hasIncompleteAttendance()).toBe(false);
+      expect(component.attendance.workingHours()).toBe(12);
+      expect(component.attendance.workingDays()).toBe(2);
+      expect(component.attendance.hasIncompleteAttendance()).toBe(false);
     });
 
     it('keeps the first CHECK_IN when a duplicate CHECK_IN arrives before any CHECK_OUT', () => {
@@ -72,8 +72,8 @@ describe('EmployeeDetailComponent', () => {
 
       // Should count from the *first* check-in (08:00), i.e. 4 hours —
       // not silently overwritten by the duplicate at 08:05.
-      expect(component.workingHours()).toBe(4);
-      expect(component.hasIncompleteAttendance()).toBe(false);
+      expect(component.attendance.workingHours()).toBe(4);
+      expect(component.attendance.hasIncompleteAttendance()).toBe(false);
     });
 
     it('flags an unpaired trailing CHECK_IN as incomplete instead of silently dropping it', () => {
@@ -85,8 +85,8 @@ describe('EmployeeDetailComponent', () => {
         ]),
       );
 
-      expect(component.workingHours()).toBe(4); // only the completed pair counts
-      expect(component.hasIncompleteAttendance()).toBe(true);
+      expect(component.attendance.workingHours()).toBe(4); // only the completed pair counts
+      expect(component.attendance.hasIncompleteAttendance()).toBe(true);
     });
 
     it('does not count a negative interval when CHECK_OUT precedes CHECK_IN (bad/skewed data)', () => {
@@ -97,15 +97,15 @@ describe('EmployeeDetailComponent', () => {
         ]),
       );
 
-      expect(component.workingHours()).toBe(0);
+      expect(component.attendance.workingHours()).toBe(0);
     });
 
     it('returns 0 hours / 0 days with no logs, and no incomplete-attendance flag', () => {
       component.employee.set(makeEmployee([]));
 
-      expect(component.workingHours()).toBe(0);
-      expect(component.workingDays()).toBe(0);
-      expect(component.hasIncompleteAttendance()).toBe(false);
+      expect(component.attendance.workingHours()).toBe(0);
+      expect(component.attendance.workingDays()).toBe(0);
+      expect(component.attendance.hasIncompleteAttendance()).toBe(false);
     });
   });
 
@@ -115,17 +115,17 @@ describe('EmployeeDetailComponent', () => {
         makeEmployee([log('CHECK_IN', '2026-01-05T08:00:00'), log('CHECK_IN', '2026-02-10T08:00:00')]),
       );
 
-      expect(component.filteredRawLogs()).toHaveLength(2);
+      expect(component.attendance.filteredRawLogs()).toHaveLength(2);
     });
 
     it('filters logs outside the applied date range', () => {
       component.employee.set(
         makeEmployee([log('CHECK_IN', '2026-01-05T08:00:00'), log('CHECK_IN', '2026-02-10T08:00:00')]),
       );
-      component.filterStartDate.set('2026-01-01');
-      component.filterEndDate.set('2026-01-31');
+      component.attendance.filterStartDate.set('2026-01-01');
+      component.attendance.filterEndDate.set('2026-01-31');
 
-      expect(component.filteredRawLogs()).toHaveLength(1);
+      expect(component.attendance.filteredRawLogs()).toHaveLength(1);
     });
   });
 });

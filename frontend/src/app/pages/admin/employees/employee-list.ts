@@ -20,7 +20,8 @@ import {
 } from '../../../core/services/credentials.util';
 import { ApiResponse } from '../../../core/models/api-response.model';
 import { EmployeeBase } from '../../../core/models/employee.model';
-import { WebcamCaptureService, readFileAsBase64 } from '../../../core/services/webcam-capture.service';
+import { WebcamCaptureService } from '../../../core/services/webcam-capture.service';
+import { PhotoCaptureStateService } from '../../../core/services/photo-capture-state.service';
 
 @Component({
   selector: 'app-employee-list',
@@ -29,17 +30,26 @@ import { WebcamCaptureService, readFileAsBase64 } from '../../../core/services/w
   templateUrl: './employee-list.html',
   styleUrl: './employee-list.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  providers: [WebcamCaptureService],
+  providers: [WebcamCaptureService, PhotoCaptureStateService],
 })
 export class EmployeeListComponent implements OnInit {
   private http = inject(HttpClient);
   private dialogService = inject(DialogService);
   private usernameCheckService = inject(UsernameCheckService);
-  private webcam = inject(WebcamCaptureService);
 
   videoElement = viewChild<ElementRef<HTMLVideoElement>>('videoElement');
   canvasElement = viewChild<ElementRef<HTMLCanvasElement>>('canvasElement');
   fileInputElement = viewChild<ElementRef<HTMLInputElement>>('fileInputElement');
+
+  readonly photoCapture = inject(PhotoCaptureStateService);
+
+  constructor() {
+    this.photoCapture.configure({
+      videoElement: this.videoElement,
+      canvasElement: this.canvasElement,
+      fileInputElement: this.fileInputElement,
+    });
+  }
 
   employees = signal<EmployeeBase[]>([]);
   searchQuery = signal<string>('');
@@ -64,10 +74,6 @@ export class EmployeeListComponent implements OnInit {
   newIncome = signal<number>(3000);
   newSkills = signal<string>(''); // formatted as "Skill: Desc, Skill2: Desc"
   newProjects = signal<string>(''); // formatted as "Name: Role: Desc"
-  imgBase64 = signal<string>('');
-
-  // Webcam States for modal registration
-  showWebcam = signal<boolean>(false);
 
   // Pagination for employee list
   currentPage = signal<number>(1);
@@ -108,7 +114,7 @@ export class EmployeeListComponent implements OnInit {
   canSubmit = computed(
     () =>
       !!this.newName() &&
-      !!this.imgBase64() &&
+      !!this.photoCapture.imgBase64() &&
       !!this.newUsername().trim() &&
       this.usernameStatus() === 'available' &&
       this.passwordValid(),
@@ -156,7 +162,7 @@ export class EmployeeListComponent implements OnInit {
   }
 
   closeAddModal(): void {
-    this.stopWebcam();
+    this.photoCapture.stopWebcam();
     this.showAddModal.set(false);
   }
 
@@ -172,8 +178,7 @@ export class EmployeeListComponent implements OnInit {
     this.newIncome.set(3000);
     this.newSkills.set('');
     this.newProjects.set('');
-    this.imgBase64.set('');
-    this.showWebcam.set(false);
+    this.photoCapture.reset();
   }
 
   onUsernameInput(value: string): void {
@@ -198,50 +203,8 @@ export class EmployeeListComponent implements OnInit {
     this.showNewPassword.set(true);
   }
 
-  async startWebcam(): Promise<void> {
-    this.showWebcam.set(true);
-    try {
-      const stream = await this.webcam.start();
-      setTimeout(() => {
-        if (this.videoElement()) {
-          this.videoElement()!.nativeElement.srcObject = stream;
-        }
-      }, 100);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      this.dialogService.alert('LỖI CAMERA', 'Không thể khởi chạy camera: ' + message);
-      this.showWebcam.set(false);
-    }
-  }
-
-  stopWebcam(): void {
-    this.webcam.stop();
-    this.showWebcam.set(false);
-  }
-
-  capturePhoto(): void {
-    const video = this.videoElement()!.nativeElement;
-    const canvas = this.canvasElement()!.nativeElement;
-    const dataUrl = this.webcam.capture(video, canvas, { width: 400, height: 300, quality: 0.95 });
-    if (dataUrl) {
-      this.imgBase64.set(dataUrl);
-      this.stopWebcam();
-    }
-  }
-
-  triggerFileInput(): void {
-    this.fileInputElement()?.nativeElement.click();
-  }
-
-  async handleFileUpload(event: Event): Promise<void> {
-    const input = event.target as HTMLInputElement;
-    if (input.files && input.files[0]) {
-      this.imgBase64.set(await readFileAsBase64(input.files[0]));
-    }
-  }
-
   async submitEmployee(): Promise<void> {
-    if (!this.newName() || !this.imgBase64()) {
+    if (!this.newName() || !this.photoCapture.imgBase64()) {
       await this.dialogService.alert(
         'THIẾU THÔNG TIN',
         'Vui lòng điền tên và chụp/tải lên ảnh chân dung mẫu.',
@@ -299,7 +262,7 @@ export class EmployeeListComponent implements OnInit {
       role: this.newRole(),
       username: this.newUsername().trim(),
       password: this.newPassword() || null,
-      img: this.imgBase64(),
+      img: this.photoCapture.imgBase64(),
       position: this.newPosition() || 'Developer',
       income: this.newIncome(),
       skills: parsedSkills,

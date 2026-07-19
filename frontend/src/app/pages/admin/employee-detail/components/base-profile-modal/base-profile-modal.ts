@@ -14,7 +14,8 @@ import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { DialogService } from '../../../../../core/services/dialog.service';
 import { UsernameCheckService } from '../../../../../core/services/username-check.service';
-import { WebcamCaptureService, readFileAsBase64 } from '../../../../../core/services/webcam-capture.service';
+import { WebcamCaptureService } from '../../../../../core/services/webcam-capture.service';
+import { PhotoCaptureStateService } from '../../../../../core/services/photo-capture-state.service';
 import {
   isPasswordValid,
   PASSWORD_HINT,
@@ -30,13 +31,12 @@ import { DetailedEmployee, Skill, Project } from '../../../../../core/models/emp
   imports: [FormsModule],
   templateUrl: './base-profile-modal.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  providers: [WebcamCaptureService],
+  providers: [WebcamCaptureService, PhotoCaptureStateService],
 })
 export class BaseProfileModalComponent implements OnInit {
   private http = inject(HttpClient);
   private dialogService = inject(DialogService);
   private usernameCheckService = inject(UsernameCheckService);
-  private webcam = inject(WebcamCaptureService);
   private readonly apiUrl = 'http://localhost:8000/api';
 
   employee = input.required<DetailedEmployee>();
@@ -50,6 +50,16 @@ export class BaseProfileModalComponent implements OnInit {
   canvasElement = viewChild<ElementRef<HTMLCanvasElement>>('canvasElement');
   fileInputElement = viewChild<ElementRef<HTMLInputElement>>('fileInputElement');
 
+  readonly photoCapture = inject(PhotoCaptureStateService);
+
+  constructor() {
+    this.photoCapture.configure({
+      videoElement: this.videoElement,
+      canvasElement: this.canvasElement,
+      fileInputElement: this.fileInputElement,
+    });
+  }
+
   editName = signal<string>('');
   editAge = signal<number>(30);
   editRole = signal<'staff' | 'admin'>('staff');
@@ -59,9 +69,6 @@ export class BaseProfileModalComponent implements OnInit {
   editPassword = signal<string>('');
   showEditPassword = signal<boolean>(false);
   readonly passwordHint = PASSWORD_HINT;
-
-  imgBase64 = signal<string>('');
-  showWebcam = signal<boolean>(false);
 
   isSaving = signal<boolean>(false);
 
@@ -83,51 +90,9 @@ export class BaseProfileModalComponent implements OnInit {
   }
 
   close(): void {
-    this.stopWebcam();
+    this.photoCapture.stopWebcam();
     clearTimeout(this.usernameCheckTimer);
     this.closed.emit();
-  }
-
-  async startWebcam(): Promise<void> {
-    this.showWebcam.set(true);
-    try {
-      const stream = await this.webcam.start();
-      setTimeout(() => {
-        if (this.videoElement()) {
-          this.videoElement()!.nativeElement.srcObject = stream;
-        }
-      }, 100);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      await this.dialogService.alert('LỖI CAMERA', 'Không thể khởi chạy camera: ' + message);
-      this.showWebcam.set(false);
-    }
-  }
-
-  stopWebcam(): void {
-    this.webcam.stop();
-    this.showWebcam.set(false);
-  }
-
-  capturePhoto(): void {
-    const video = this.videoElement()!.nativeElement;
-    const canvas = this.canvasElement()!.nativeElement;
-    const dataUrl = this.webcam.capture(video, canvas, { width: 400, height: 300, quality: 0.95 });
-    if (dataUrl) {
-      this.imgBase64.set(dataUrl);
-      this.stopWebcam();
-    }
-  }
-
-  triggerFileInput(): void {
-    this.fileInputElement()?.nativeElement.click();
-  }
-
-  async handleFileUpload(event: Event): Promise<void> {
-    const input = event.target as HTMLInputElement;
-    if (input.files && input.files[0]) {
-      this.imgBase64.set(await readFileAsBase64(input.files[0]));
-    }
   }
 
   onUsernameInput(value: string): void {
@@ -177,8 +142,8 @@ export class BaseProfileModalComponent implements OnInit {
       skills: this.employee().skills || [],
       projects: this.employee().projects || [],
     };
-    if (this.imgBase64()) {
-      payload.img = this.imgBase64();
+    if (this.photoCapture.imgBase64()) {
+      payload.img = this.photoCapture.imgBase64();
     }
 
     this.http.put<ApiResponse>(`${this.apiUrl}/employees/${employeeId}`, payload).subscribe({
@@ -186,7 +151,7 @@ export class BaseProfileModalComponent implements OnInit {
         this.isSaving.set(false);
         if (res.success) {
           await this.dialogService.alert('THÀNH CÔNG', 'Cập nhật thông tin cơ bản thành công.');
-          this.stopWebcam();
+          this.photoCapture.stopWebcam();
           clearTimeout(this.usernameCheckTimer);
           this.saved.emit();
         }
