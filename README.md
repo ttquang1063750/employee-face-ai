@@ -46,11 +46,14 @@ graph TD
 ### Setup
 
 ```bash
-# 1. Python backend
+# 1. Environment variables (DB credentials — see .env.example for defaults)
+cp .env.example .env
+
+# 2. Python backend
 python3 -m venv venv
 ./venv/bin/pip install -r requirements.txt
 
-# 2. Frontend dependencies
+# 3. Frontend dependencies
 cd frontend && npm install && cd ..
 ```
 

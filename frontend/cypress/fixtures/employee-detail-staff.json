@@ -3,7 +3,7 @@
   "data": {
     "id": 11,
     "name": "Tăng Thanh Quang",
-    "age": 40,
+    "date_of_birth": "1986-01-01",
     "image_path": "database/11.jpg",
     "role": "staff",
     "username": "quang.tt",

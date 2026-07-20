@@ -1,6 +1,8 @@
 import { Injectable, Signal, signal, computed } from '@angular/core';
 import { AttendanceLog } from '../models/employee.model';
 import { todayLocalDateString, startOfMonthLocalDateString } from '../utils/date.util';
+import { bucketMoodPercentages } from '../utils/mood.util';
+import { buildDonutSegments } from '../utils/donut-chart.util';
 
 /**
  * Owns the attendance date-range filter, pagination, and working-hours
@@ -133,6 +135,24 @@ export class AttendanceSummaryStateService {
   // True when at least one day in the filtered range has an unpaired
   // CHECK_IN, meaning workingHours() under-counts that day.
   hasIncompleteAttendance = computed(() => this.dailyAttendanceSummary().hasIncomplete);
+
+  // Donut chart: mood breakdown across the filtered range, same categories
+  // and colors as the dashboard's own org-wide mood donut.
+  hasMoodData = computed(() => this.filteredRawLogs().length > 0);
+  moodDonutSegments = computed(() => {
+    const m = bucketMoodPercentages(this.filteredRawLogs().map((log) => log.mood));
+    return buildDonutSegments([
+      { key: 'happy', label: 'Vui vẻ 😊', value: m.happy, color: 'var(--color-cyan)' },
+      { key: 'neutral', label: 'Bình thường 😐', value: m.neutral, color: 'var(--color-info)' },
+      { key: 'sad', label: 'Buồn bã 😢', value: m.sad, color: 'var(--color-red)' },
+      {
+        key: 'stressed',
+        label: 'Căng thẳng / Lo lắng 😰',
+        value: m.stressed,
+        color: 'var(--color-orange)',
+      },
+    ]);
+  });
 
   // Default attendance date range: first day of current month -> today
   initializeDateRangeDefaults(): void {

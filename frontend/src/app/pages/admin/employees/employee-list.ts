@@ -28,15 +28,17 @@ import { WebcamCaptureService } from '../../../core/services/webcam-capture.serv
 import { PhotoCaptureStateService } from '../../../core/services/photo-capture-state.service';
 import { EmployeeService } from '../../../core/services/employee.service';
 import { avatarUrl } from '../../../core/utils/image.util';
+import { calculateAge } from '../../../core/utils/birthday.util';
 import {
   HudSelectComponent,
   HudSelectOption,
 } from '../../../core/components/hud-select/hud-select';
+import { DatePickerComponent } from '../../../core/components/date-picker/date-picker';
 
 @Component({
   selector: 'app-employee-list',
   standalone: true,
-  imports: [RouterLink, ReactiveFormsModule, HudSelectComponent],
+  imports: [RouterLink, ReactiveFormsModule, HudSelectComponent, DatePickerComponent],
   templateUrl: './employee-list.html',
   styleUrl: './employee-list.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -81,7 +83,7 @@ export class EmployeeListComponent implements OnInit {
   // New Employee Registration Form
   newEmployeeForm = this.fb.nonNullable.group({
     name: ['', Validators.required],
-    age: [28],
+    date_of_birth: [''],
     position: [''],
     income: [3000],
     role: this.fb.nonNullable.control<EmployeeRole>('staff'),
@@ -153,6 +155,7 @@ export class EmployeeListComponent implements OnInit {
   });
 
   protected readonly avatarUrl = avatarUrl;
+  protected readonly calculateAge = calculateAge;
 
   ngOnInit(): void {
     this.loadEmployees();
@@ -201,7 +204,7 @@ export class EmployeeListComponent implements OnInit {
   resetForm(): void {
     this.newEmployeeForm.reset({
       name: '',
-      age: 28,
+      date_of_birth: '',
       position: '',
       income: 3000,
       role: 'staff',
@@ -220,7 +223,7 @@ export class EmployeeListComponent implements OnInit {
   }
 
   async submitEmployee(): Promise<void> {
-    const { name, age, position, income, role, username, password, skills, projects } =
+    const { name, date_of_birth, position, income, role, username, password, skills, projects } =
       this.newEmployeeForm.getRawValue();
 
     if (!name || !this.photoCapture.imgBase64()) {
@@ -277,7 +280,7 @@ export class EmployeeListComponent implements OnInit {
 
     const payload = {
       name,
-      age,
+      date_of_birth: date_of_birth || null,
       role,
       username: username.trim(),
       password: password || null,

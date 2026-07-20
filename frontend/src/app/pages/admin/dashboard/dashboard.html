@@ -6,7 +6,36 @@
         <button class="retry-btn" (click)="loadDashboardData()">Thử lại</button>
       </div>
     } @else {
-      <!-- 0. Global filter bar — every widget below reacts to this -->
+      <!-- 0a. Birthday alerts — independent of the filter bar below, since a
+           birthday isn't attendance activity. Hidden entirely when there's
+           nothing to show, rather than rendering an empty "no birthdays" card. -->
+      @if (todaysBirthdays().length > 0 || upcomingBirthdays().length > 0) {
+        <div class="birthday-banner">
+          @if (todaysBirthdays().length > 0) {
+            <div class="birthday-today">
+              <span class="birthday-icon">🎂</span>
+              <span>
+                Hôm nay là sinh nhật của
+                <strong>{{ todaysBirthdayNames() }}</strong>
+                — gửi lời chúc mừng nhé!
+              </span>
+            </div>
+          }
+          @if (upcomingBirthdays().length > 0) {
+            <div class="birthday-upcoming">
+              <span class="birthday-icon">🎈</span>
+              <span>Sắp tới:</span>
+              <ul class="birthday-upcoming-list">
+                @for (entry of upcomingBirthdays(); track entry.employee.id) {
+                  <li>{{ entry.employee.name }} (còn {{ entry.daysUntil }} ngày)</li>
+                }
+              </ul>
+            </div>
+          }
+        </div>
+      }
+
+      <!-- 0b. Global filter bar — every widget below reacts to this -->
       <div class="hud-filter-bar">
         <div class="hud-field">
           <span class="hud-label">TỪ NGÀY</span>

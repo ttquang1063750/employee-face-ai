@@ -9,7 +9,7 @@ function makeEmployee(rawLogs: AttendanceLog[]): DetailedEmployee {
   return {
     id: 1,
     name: 'Test Employee',
-    age: 30,
+    date_of_birth: '1996-05-01',
     image_path: '',
     role: 'staff',
     current_position: 'Staff',

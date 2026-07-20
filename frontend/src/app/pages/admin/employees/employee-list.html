@@ -60,7 +60,14 @@
                 <td class="emp-name">{{ emp.name }}</td>
                 <td class="emp-pos">{{ emp.current_position || 'Developer' }}</td>
                 <td class="emp-id">#{{ emp.id }}</td>
-                <td>{{ emp.age }} tuổi</td>
+                <td>
+                  @let age = calculateAge(emp.date_of_birth);
+                  @if (age !== null) {
+                    {{ age }} tuổi
+                  } @else {
+                    —
+                  }
+                </td>
                 <td>
                   <span class="role-badge" [class.admin]="emp.role === 'admin'">
                     {{ emp.role === 'admin' ? 'Admin' : 'Staff' }}
@@ -154,8 +161,11 @@
 
               <div class="form-row">
                 <div class="form-group">
-                  <label for="new-emp-age">TUỔI</label>
-                  <input id="new-emp-age" type="number" formControlName="age" class="hud-input" />
+                  <span class="hud-label">NGÀY SINH</span>
+                  <app-date-picker
+                    formControlName="date_of_birth"
+                    placeholder="Chọn ngày sinh"
+                  ></app-date-picker>
                 </div>
                 <div class="form-group">
                   <label for="new-emp-position">VỊ TRÍ / CHỨC VỤ</label>

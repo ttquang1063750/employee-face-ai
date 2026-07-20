@@ -583,7 +583,7 @@ class EmployeeFaceAIRequestHandler(BaseHTTPRequestHandler):
             data = json.loads(post_data.decode("utf-8"))
 
             name = data.get("name")
-            age = int(data.get("age", 30))
+            date_of_birth = data.get("date_of_birth") or None
             role = data.get("role", "staff")
             username = (data.get("username") or "").strip()
             password = data.get("password")
@@ -647,7 +647,7 @@ class EmployeeFaceAIRequestHandler(BaseHTTPRequestHandler):
 
             # Register base profile
             temp_path = os.path.join(DATABASE_DIR, "temp.jpg")
-            employee_id = db.register_employee(name, age, temp_path, role, password, username)
+            employee_id = db.register_employee(name, date_of_birth, temp_path, role, password, username)
 
             # Final filepath
             final_filepath = os.path.join(DATABASE_DIR, f"{employee_id}.jpg")
@@ -697,7 +697,7 @@ class EmployeeFaceAIRequestHandler(BaseHTTPRequestHandler):
             data = json.loads(post_data.decode("utf-8"))
 
             name = data.get("name")
-            age = int(data.get("age", 30))
+            date_of_birth = data.get("date_of_birth") or None
             role = data.get("role", "staff")
             username = (data.get("username") or "").strip()
             password = data.get("password")
@@ -756,7 +756,7 @@ class EmployeeFaceAIRequestHandler(BaseHTTPRequestHandler):
                     return
 
             # 1. Update Base Details
-            db.update_employee_profile(employee_id, name, age, role, username, password)
+            db.update_employee_profile(employee_id, name, date_of_birth, role, username, password)
             current_detail = db.get_detailed_employee(employee_id)
             today_str = datetime.now().date().isoformat()
 
@@ -1444,7 +1444,10 @@ class EmployeeFaceAIRequestHandler(BaseHTTPRequestHandler):
         )
 
     def send_json_response(self, status_code, payload):
-        response_bytes = json.dumps(payload).encode("utf-8")
+        # default=str covers non-JSON-native values from psycopg2 (e.g. a
+        # `datetime.date` for date_of_birth), serializing them the same way
+        # str() would (a date becomes its 'YYYY-MM-DD' isoformat).
+        response_bytes = json.dumps(payload, default=str).encode("utf-8")
         self.send_response(status_code)
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.end_headers()

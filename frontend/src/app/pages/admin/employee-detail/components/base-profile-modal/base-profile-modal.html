@@ -11,8 +11,11 @@
           <input id="edit-emp-name" type="text" formControlName="name" class="hud-input" />
         </div>
         <div class="form-group">
-          <label for="edit-emp-age">TUỔI</label>
-          <input id="edit-emp-age" type="number" formControlName="age" class="hud-input" />
+          <span class="hud-label">NGÀY SINH</span>
+          <app-date-picker
+            formControlName="date_of_birth"
+            placeholder="Chọn ngày sinh"
+          ></app-date-picker>
         </div>
         <div class="form-group">
           <label for="edit-emp-role">PHÂN QUYỀN HỆ THỐNG</label>

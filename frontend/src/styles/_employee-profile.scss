@@ -964,3 +964,17 @@
     transform: translateY(0);
   }
 }
+
+// ─── Attendance Summary: mood donut chart row ───────────────────────────────
+// app-mood-donut (not its inner .chart-card div) is the actual flex item here,
+// so the sizing has to target the host element directly.
+.donut-charts-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-6);
+  margin-bottom: var(--space-6);
+
+  app-mood-donut {
+    flex: 1 1 100%;
+  }
+}

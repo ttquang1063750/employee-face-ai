@@ -78,3 +78,17 @@
   justify-content: center;
   gap: var(--space-2);
 }
+
+// Hides an element only when printing (e.g. window.print() triggered by an
+// "Xuất PDF" button) — interactive controls (filters, pagination, delete
+// buttons, nav sidebars) that make no sense on a printed page.
+@media print {
+  .no-print,
+  // Any open modal (password/avatar/leave-request/etc.) shouldn't leak into
+  // a print triggered while one happens to be open — .modal-backdrop is the
+  // shared overlay class every modal in the app uses, so this one rule
+  // covers all of them without tagging each modal template individually.
+  .modal-backdrop {
+    display: none !important;
+  }
+}

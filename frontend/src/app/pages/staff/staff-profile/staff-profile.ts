@@ -29,6 +29,7 @@ import { AttendanceSummaryStateService } from '../../../core/services/attendance
 import { EmployeeService } from '../../../core/services/employee.service';
 import { AttendanceSummaryComponent } from '../../admin/employee-detail/components/attendance-summary/attendance-summary';
 import { avatarUrl } from '../../../core/utils/image.util';
+import { calculateAge } from '../../../core/utils/birthday.util';
 import { triggerBlobDownload } from '../../../core/utils/download.util';
 import { environment } from '../../../../environments/environment';
 
@@ -93,6 +94,7 @@ export class StaffProfileComponent implements OnInit, OnDestroy {
 
   private readonly apiUrl = environment.apiBaseUrl;
   protected readonly avatarUrl = avatarUrl;
+  protected readonly calculateAge = calculateAge;
   private pollIntervalId: ReturnType<typeof setInterval> | null = null;
 
   constructor() {

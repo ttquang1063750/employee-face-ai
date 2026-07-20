@@ -1,5 +1,5 @@
 <div class="chart-card mood-card">
-  <h3 class="chart-title">🧠 ĐÁNH GIÁ CHỈ SỐ CẢM XÚC</h3>
+  <h3 class="chart-title">{{ title() }}</h3>
 
   @if (loading()) {
     <div class="donut-wrap">
@@ -48,7 +48,7 @@
           stroke-width="6"
         />
       </svg>
-      <p>Chưa có dữ liệu chấm công trong khoảng thời gian này</p>
+      <p>{{ emptyMessage() }}</p>
     </div>
   }
 </div>

@@ -23,7 +23,7 @@ function makeEmployee(overrides: Partial<EmployeeBase>): EmployeeBase {
   return {
     id: 1,
     name: 'Alice',
-    age: 30,
+    date_of_birth: '1996-05-01',
     image_path: '',
     role: 'staff',
     username: 'alice',
@@ -175,6 +175,45 @@ describe('DashboardComponent', () => {
     });
   });
 
+  describe('todaysBirthdays / todaysBirthdayNames / upcomingBirthdays', () => {
+    // Birth *year* is irrelevant to these computeds (they only compare
+    // month+day against the real "today"), so every date here is pinned to
+    // a fixed 1990 year and only the month/day shift — keeps the test
+    // deterministic regardless of which day it actually runs on.
+    function dobForDaysFromNow(days: number): string {
+      const d = new Date();
+      d.setDate(d.getDate() + days);
+      const pad = (n: number) => n.toString().padStart(2, '0');
+      return `1990-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+    }
+
+    it('finds employees whose birthday is today', () => {
+      component.employees.set([
+        makeEmployee({ id: 1, name: 'Alice', date_of_birth: dobForDaysFromNow(0) }),
+        makeEmployee({ id: 2, name: 'Bob', date_of_birth: dobForDaysFromNow(3) }),
+      ]);
+      expect(component.todaysBirthdays().map((e) => e.id)).toEqual([1]);
+      expect(component.todaysBirthdayNames()).toBe('Alice');
+    });
+
+    it('lists birthdays within the next 7 days, excluding today, sorted soonest first', () => {
+      component.employees.set([
+        makeEmployee({ id: 1, name: 'Alice', date_of_birth: dobForDaysFromNow(0) }),
+        makeEmployee({ id: 2, name: 'Bob', date_of_birth: dobForDaysFromNow(5) }),
+        makeEmployee({ id: 3, name: 'Carol', date_of_birth: dobForDaysFromNow(2) }),
+        makeEmployee({ id: 4, name: 'Dave', date_of_birth: dobForDaysFromNow(10) }),
+        makeEmployee({ id: 5, name: 'Eve', date_of_birth: null }),
+      ]);
+      expect(component.upcomingBirthdays().map((entry) => entry.employee.id)).toEqual([3, 2]);
+    });
+
+    it('reports nothing when no employee has a date_of_birth', () => {
+      component.employees.set([makeEmployee({ id: 1, date_of_birth: null })]);
+      expect(component.todaysBirthdays()).toEqual([]);
+      expect(component.upcomingBirthdays()).toEqual([]);
+    });
+  });
+
   describe('hourlyTimeline / hasHourlyData', () => {
     it('buckets logs by hour of day within the 8h-18h window', () => {
       component.logs.set([
@@ -253,7 +292,12 @@ describe('DashboardComponent', () => {
     beforeEach(() => {
       component.employees.set([
         makeEmployee({ id: 1, name: 'Bob', username: 'bob1', current_position: 'Sales' }),
-        makeEmployee({ id: 2, name: 'Alice', username: 'alice1', current_position: 'JS Developer' }),
+        makeEmployee({
+          id: 2,
+          name: 'Alice',
+          username: 'alice1',
+          current_position: 'JS Developer',
+        }),
         makeEmployee({ id: 3, name: 'Alice', username: 'alice2', current_position: 'HR Manager' }),
       ]);
     });
@@ -315,14 +359,19 @@ describe('DashboardComponent', () => {
     it('loads employees and logs, then clears the loading state', () => {
       component.loadDashboardData();
 
-      httpMock
-        .expectOne(`${environment.apiBaseUrl}/employees`)
-        .flush({
-          success: true,
-          data: [
-            { id: 1, name: 'Alice', age: 30, image_path: '', role: 'staff', current_position: '' },
-          ],
-        });
+      httpMock.expectOne(`${environment.apiBaseUrl}/employees`).flush({
+        success: true,
+        data: [
+          {
+            id: 1,
+            name: 'Alice',
+            date_of_birth: '1996-05-01',
+            image_path: '',
+            role: 'staff',
+            current_position: '',
+          },
+        ],
+      });
       httpMock.expectOne(`${environment.apiBaseUrl}/logs`).flush({ success: true, data: [] });
 
       expect(component.isLoading()).toBe(false);

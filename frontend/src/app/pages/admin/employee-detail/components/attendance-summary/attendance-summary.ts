@@ -5,12 +5,20 @@ import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { DatePickerComponent } from '../../../../../core/components/date-picker/date-picker';
 import { AttendanceLog } from '../../../../../core/models/employee.model';
 import { AuditPhotoButtonComponent } from '../../../../../core/components/audit-photo-button/audit-photo-button';
+import { MoodDonutComponent } from '../../../dashboard/components/mood-donut/mood-donut';
+import { DonutSegment } from '../../../../../core/utils/donut-chart.util';
 import { translateMood } from '../../../../../core/utils/mood.util';
 
 @Component({
   selector: 'app-attendance-summary',
   standalone: true,
-  imports: [ReactiveFormsModule, DatePickerComponent, DatePipe, AuditPhotoButtonComponent],
+  imports: [
+    ReactiveFormsModule,
+    DatePickerComponent,
+    DatePipe,
+    AuditPhotoButtonComponent,
+    MoodDonutComponent,
+  ],
   templateUrl: './attendance-summary.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -26,6 +34,8 @@ export class AttendanceSummaryComponent {
   filterEndDateInput = input.required<string>();
   pageSize = input.required<number>();
   showDeleteButton = input<boolean>(true);
+  moodSegments = input.required<DonutSegment[]>();
+  hasMoodData = input.required<boolean>();
 
   filterStartDateInputChange = output<string>();
   filterEndDateInputChange = output<string>();
@@ -60,4 +70,12 @@ export class AttendanceSummaryComponent {
   }
 
   protected readonly translateMood = translateMood;
+
+  // Prints the page as-is; the host page and this component mark whatever
+  // shouldn't appear on paper (nav sidebar, back button, side panels,
+  // filters/pagination/delete buttons here) with .no-print — no PDF library
+  // needed, the browser's own print-to-PDF handles that.
+  exportPdf(): void {
+    window.print();
+  }
 }

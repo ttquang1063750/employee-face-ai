@@ -18,7 +18,9 @@ import {
 import { ApiResponse } from '../../../core/models/api-response.model';
 import { EmployeeBase } from '../../../core/models/employee.model';
 import { AttendanceLogEntry } from '../../../core/models/attendance-log.model';
-import { translateMood } from '../../../core/utils/mood.util';
+import { translateMood, bucketMoodPercentages } from '../../../core/utils/mood.util';
+import { isBirthdayToday, daysUntilNextBirthday } from '../../../core/utils/birthday.util';
+import { buildDonutSegments } from '../../../core/utils/donut-chart.util';
 import { todayLocalDateString, startOfMonthLocalDateString } from '../../../core/utils/date.util';
 import { triggerBlobDownload } from '../../../core/utils/download.util';
 import { environment } from '../../../../environments/environment';
@@ -100,6 +102,28 @@ export class DashboardComponent implements OnInit, OnDestroy {
   // Computed stats widgets (using overall logs)
   totalEmployees = computed(() => this.employees().length);
 
+  // Birthday alerts — sourced from the full employee directory (not the
+  // filtered logs), since a birthday isn't tied to any attendance activity.
+  todaysBirthdays = computed(() =>
+    this.employees().filter((e) => isBirthdayToday(e.date_of_birth)),
+  );
+  todaysBirthdayNames = computed(() =>
+    this.todaysBirthdays()
+      .map((e) => e.name)
+      .join(', '),
+  );
+
+  upcomingBirthdays = computed(() => {
+    const withinDays = 7;
+    return this.employees()
+      .map((e) => ({ employee: e, daysUntil: daysUntilNextBirthday(e.date_of_birth) }))
+      .filter(
+        (entry): entry is { employee: EmployeeBase; daysUntil: number } =>
+          entry.daysUntil !== null && entry.daysUntil > 0 && entry.daysUntil <= withinDays,
+      )
+      .sort((a, b) => a.daysUntil - b.daysUntil);
+  });
+
   // Computed: Filtered attendance logs in selected time range / employee search / status scope
   filteredLogs = computed(() => {
     const start = this.filterStartDate();
@@ -148,33 +172,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   });
 
   // Calculate mood distribution based on filtered logs
-  moodStats = computed(() => {
-    const stats: Record<string, number> = {
-      happy: 0,
-      neutral: 0,
-      sad: 0,
-      stressed: 0,
-    };
-
-    const logsList = this.filteredLogs();
-    if (logsList.length === 0) return { happy: 0, neutral: 0, sad: 0, stressed: 0 };
-
-    logsList.forEach((log) => {
-      const m = log.mood.toLowerCase();
-      if (m.includes('happy') || m.includes('vui')) stats['happy']++;
-      else if (m.includes('neutral') || m.includes('bình')) stats['neutral']++;
-      else if (m.includes('sad') || m.includes('buồn')) stats['sad']++;
-      else stats['stressed']++;
-    });
-
-    const total = logsList.length;
-    return {
-      happy: Math.round((stats['happy'] / total) * 100),
-      neutral: Math.round((stats['neutral'] / total) * 100),
-      sad: Math.round((stats['sad'] / total) * 100),
-      stressed: Math.round((stats['stressed'] / total) * 100),
-    };
-  });
+  moodStats = computed(() => bucketMoodPercentages(this.filteredLogs().map((log) => log.mood)));
 
   // Donut chart segments for the mood breakdown (cumulative offsets around
   // a circle whose circumference is normalized to 100 units).
@@ -210,7 +208,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   moodDonut = computed(() => {
     const m = this.moodStats();
-    const segments = [
+    return buildDonutSegments([
       { key: 'happy', label: 'Vui vẻ 😊', value: m.happy, color: 'var(--color-cyan)' },
       { key: 'neutral', label: 'Bình thường 😐', value: m.neutral, color: 'var(--color-info)' },
       { key: 'sad', label: 'Buồn bã 😢', value: m.sad, color: 'var(--color-red)' },
@@ -220,13 +218,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         value: m.stressed,
         color: 'var(--color-orange)',
       },
-    ];
-    let acc = 0;
-    return segments.map((seg) => {
-      const offset = -acc;
-      acc += seg.value;
-      return { ...seg, offset };
-    });
+    ]);
   });
 
   // Dynamic SVG Chart Coordinates for Hourly Peaks (08:00 - 18:00) using filtered logs

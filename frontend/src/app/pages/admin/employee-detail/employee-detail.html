@@ -1,7 +1,7 @@
 <div class="detail-layout">
   <div class="detail-content">
-    <div class="back-row">
-      <button class="hud-btn-outline" routerLink="/admin/employees">⬅️ QUAY LẠI DANH SÁCH</button>
+    <div class="page-title-row no-print">
+      <h2 class="tittle">{{ employee()?.name }}</h2>
     </div>
 
     @if (isLoading()) {
@@ -30,7 +30,10 @@
             <p class="title-label text-cyan">{{ emp.current_position }}</p>
             <div class="meta-row">
               <span class="id">ID: #{{ emp.id }}</span>
-              <span class="age">{{ emp.age }} tuổi</span>
+              @let age = calculateAge(emp.date_of_birth);
+              @if (age !== null) {
+                <span class="age">{{ age }} tuổi</span>
+              }
               <span class="role-tag" [class.admin]="emp.role === 'admin'">
                 {{ emp.role === 'admin' ? 'Hệ thống Admin' : 'Nhân sự Staff' }}
               </span>
@@ -38,7 +41,9 @@
           </div>
         </div>
 
-        <button class="hud-btn-primary" (click)="openBaseModal()">⚙️ SỬA THÔNG TIN BẢN THÂN</button>
+        <button class="hud-btn-primary no-print" (click)="openBaseModal()">
+          ⚙️ SỬA THÔNG TIN BẢN THÂN
+        </button>
       </div>
 
       <!-- Attendance summary (left, ~65%) + Lifecycle sections (right, ~35%) -->
@@ -54,6 +59,8 @@
           [filterStartDateInput]="attendance.filterStartDateInput()"
           [filterEndDateInput]="attendance.filterEndDateInput()"
           [pageSize]="attendance.pageSize()"
+          [moodSegments]="attendance.moodDonutSegments()"
+          [hasMoodData]="attendance.hasMoodData()"
           (filterStartDateInputChange)="attendance.filterStartDateInput.set($event)"
           (filterEndDateInputChange)="attendance.filterEndDateInput.set($event)"
           (applyFilter)="attendance.applyDateFilter()"
@@ -63,8 +70,10 @@
           (pageSizeChange)="attendance.onPageSizeChange($event)"
         />
 
-        <!-- Lifecycle side column: Positions, Compensation, Skills, Projects -->
-        <div class="lifecycle-side-col">
+        <!-- Lifecycle side column: Positions, Compensation, Skills, Projects
+             (excluded from print — see attendance-summary's "Xuất PDF" button,
+             the printed report stays focused on the profile + attendance data) -->
+        <div class="lifecycle-side-col no-print">
           <app-positions-timeline
             [positions]="emp.positions"
             [employeeId]="emp.id"

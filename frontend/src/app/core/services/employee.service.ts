@@ -18,7 +18,7 @@ export interface NewEmployeeProjectEntry {
 
 export interface NewEmployeePayload {
   name: string;
-  age: number;
+  date_of_birth: string | null;
   role: string;
   username: string;
   password: string | null;
@@ -31,7 +31,7 @@ export interface NewEmployeePayload {
 
 export interface UpdateEmployeePayload {
   name: string;
-  age: number;
+  date_of_birth: string | null;
   role: string;
   username: string;
   password: string | null;

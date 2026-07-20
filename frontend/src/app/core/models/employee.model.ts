@@ -3,7 +3,7 @@ export type EmployeeRole = 'admin' | 'staff';
 export interface EmployeeBase {
   id: number;
   name: string;
-  age: number;
+  date_of_birth: string | null;
   image_path: string;
   role: string;
   username: string | null;
@@ -54,7 +54,7 @@ export interface MonthlyLogSummary {
 export interface DetailedEmployee {
   id: number;
   name: string;
-  age: number;
+  date_of_birth: string | null;
   image_path: string;
   role: EmployeeRole;
   username?: string | null;

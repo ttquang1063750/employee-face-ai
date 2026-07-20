@@ -1,12 +1,10 @@
 import { Component, ChangeDetectionStrategy, input } from '@angular/core';
+import { DonutSegment } from '../../../../../core/utils/donut-chart.util';
 
-export interface MoodDonutSegment {
-  key: string;
-  label: string;
-  value: number;
-  color: string;
-  offset: number;
-}
+// Re-exported under its historical name so existing imports keep working —
+// it's the same shape as the shared DonutSegment now that the offset-stacking
+// logic moved to donut-chart.util.ts.
+export type MoodDonutSegment = DonutSegment;
 
 @Component({
   selector: 'app-mood-donut',
@@ -17,7 +15,12 @@ export interface MoodDonutSegment {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class MoodDonutComponent {
-  segments = input.required<MoodDonutSegment[]>();
+  // Generic donut chart, not mood-specific despite the component name (kept
+  // for history) — reused for the attendance-summary check-in/out ratio
+  // chart too, hence the configurable title/emptyMessage.
+  title = input<string>('🧠 ĐÁNH GIÁ CHỈ SỐ CẢM XÚC');
+  emptyMessage = input<string>('Chưa có dữ liệu chấm công trong khoảng thời gian này');
+  segments = input.required<DonutSegment[]>();
   hasData = input.required<boolean>();
   loading = input<boolean>(false);
 }

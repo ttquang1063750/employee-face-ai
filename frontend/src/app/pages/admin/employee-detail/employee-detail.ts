@@ -11,6 +11,7 @@ import { HttpClient } from '@angular/common/http';
 import { ApiResponse } from '../../../core/models/api-response.model';
 import { DetailedEmployee } from '../../../core/models/employee.model';
 import { avatarUrl, onImageError } from '../../../core/utils/image.util';
+import { calculateAge } from '../../../core/utils/birthday.util';
 import { environment } from '../../../../environments/environment';
 import { EmployeeService } from '../../../core/services/employee.service';
 import { AttendanceSummaryStateService } from '../../../core/services/attendance-summary-state.service';
@@ -52,6 +53,7 @@ export class EmployeeDetailComponent implements OnInit {
 
   protected readonly onImageError = onImageError;
   protected readonly avatarUrl = avatarUrl;
+  protected readonly calculateAge = calculateAge;
 
   readonly attendance = inject(AttendanceSummaryStateService);
   private readonly rawLogs = computed(() => this.employee()?.raw_logs || []);

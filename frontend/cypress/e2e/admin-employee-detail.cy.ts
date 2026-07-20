@@ -30,15 +30,17 @@ describe('Admin employee detail', () => {
       cy.contains('Username hợp lệ.').should('be.visible');
     });
 
-    it('saves the updated name/age', () => {
+    it('saves the updated name/date of birth', () => {
       cy.wait('@checkUsername');
       cy.intercept('PUT', '**/api/employees/1', (req) => {
-        expect(req.body).to.include({ name: 'HR Admin Updated', age: 40 });
+        expect(req.body.name).to.eq('HR Admin Updated');
+        expect(req.body.date_of_birth).to.match(/^\d{4}-\d{2}-\d{2}$/);
         req.reply({ statusCode: 200, body: { success: true } });
       }).as('saveProfile');
 
       cy.get('#edit-emp-name').clear().type('HR Admin Updated');
-      cy.get('#edit-emp-age').clear().type('40');
+      cy.get('.modal-backdrop .date-trigger').click();
+      cy.contains('button', 'Hôm nay').click();
       cy.contains('button', 'LƯU THAY ĐỔI').should('not.be.disabled').click();
 
       cy.wait('@saveProfile');

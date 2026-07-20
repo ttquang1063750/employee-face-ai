@@ -5,7 +5,7 @@
         <span class="staff-header-eyebrow">EMPLOYEE FACE AI</span>
         <h1>Cổng Thông Tin Nhân Sự</h1>
       </div>
-      <button class="hud-btn-outline" (click)="logout()">⏻ ĐĂNG XUẤT</button>
+      <button class="hud-btn-outline no-print" (click)="logout()">⏻ ĐĂNG XUẤT</button>
     </div>
 
     @if (isLoading()) {
@@ -33,22 +33,27 @@
             <p class="title-label text-cyan">{{ employee()?.current_position }}</p>
             <div class="meta-row">
               <span class="id">ID: #{{ employee()?.id }}</span>
-              <span class="age">{{ employee()?.age }} tuổi</span>
+              @let age = calculateAge(employee()?.date_of_birth);
+              @if (age !== null) {
+                <span class="age">{{ age }} tuổi</span>
+              }
               <span class="role-tag" [class.admin]="employee()?.role === 'admin'">
                 {{ employee()?.role === 'admin' ? 'Hệ thống Admin' : 'Nhân sự Staff' }}
               </span>
             </div>
           </div>
         </div>
-        <div class="profile-actions">
+        <div class="profile-actions no-print">
           <button class="hud-btn-outline" (click)="openAvatarModal()">📷 Đổi ảnh đại diện</button>
           <button class="hud-btn-outline" (click)="openPasswordModal()">🔒 Đổi mật khẩu</button>
           <button class="hud-btn-success" (click)="openLeaveModal()">📝 Xin nghỉ phép</button>
         </div>
       </div>
 
-      <!-- Leave requests submitted by this employee (full width) -->
-      <div class="lifecycle-card">
+      <!-- Leave requests submitted by this employee (full width; excluded
+           from print — see attendance-summary's "Xuất PDF" button, the
+           printed report stays focused on the profile + attendance data) -->
+      <div class="lifecycle-card no-print">
         <div class="section-header-row">
           <h3 class="section-title">🌴 ĐƠN XIN NGHỈ ĐÃ GỬI</h3>
         </div>
@@ -79,8 +84,9 @@
         </div>
       </div>
 
-      <!-- Documents assigned to this employee: broadcast ("chung") + own private ("riêng") -->
-      <div class="lifecycle-card">
+      <!-- Documents assigned to this employee: broadcast ("chung") + own
+           private ("riêng"); excluded from print, same reasoning as above -->
+      <div class="lifecycle-card no-print">
         <div class="section-header-row">
           <h3 class="section-title">📄 TÀI LIỆU CỦA TÔI</h3>
         </div>
@@ -125,6 +131,8 @@
           [filterEndDateInput]="attendance.filterEndDateInput()"
           [pageSize]="attendance.pageSize()"
           [showDeleteButton]="false"
+          [moodSegments]="attendance.moodDonutSegments()"
+          [hasMoodData]="attendance.hasMoodData()"
           (filterStartDateInputChange)="attendance.filterStartDateInput.set($event)"
           (filterEndDateInputChange)="attendance.filterEndDateInput.set($event)"
           (applyFilter)="attendance.applyDateFilter()"
@@ -133,8 +141,9 @@
           (pageSizeChange)="attendance.onPageSizeChange($event)"
         />
 
-        <!-- Lifecycle side column: Positions, Compensation, Skills, Projects (read-only) -->
-        <div class="lifecycle-side-col">
+        <!-- Lifecycle side column: Positions, Compensation, Skills, Projects
+             (read-only; excluded from print, same reasoning as above) -->
+        <div class="lifecycle-side-col no-print">
           <!-- Career positions history -->
           <div class="lifecycle-card">
             <div class="section-header-row">

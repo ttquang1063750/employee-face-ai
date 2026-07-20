@@ -4,7 +4,7 @@
     {
       "id": 1,
       "name": "HR Admin",
-      "age": 36,
+      "date_of_birth": "1990-03-15",
       "image_path": "uploads/database/1.jpg",
       "role": "admin",
       "username": "admin",
@@ -13,7 +13,7 @@
     {
       "id": 11,
       "name": "Tăng Thanh Quang",
-      "age": 40,
+      "date_of_birth": "1986-01-01",
       "image_path": "uploads/database/11.jpg",
       "role": "staff",
       "username": "ttq",

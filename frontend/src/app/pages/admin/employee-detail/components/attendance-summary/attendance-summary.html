@@ -1,8 +1,13 @@
 <div class="lifecycle-card">
-  <h3 class="section-title">📅 THỐNG KÊ CHẤM CÔNG VÀ GIỜ CÔNG</h3>
+  <div class="section-header-row">
+    <h3 class="section-title">📅 THỐNG KÊ CHẤM CÔNG VÀ GIỜ CÔNG</h3>
+    <button type="button" class="hud-btn-outline no-print" (click)="exportPdf()">
+      🖨️ Xuất PDF
+    </button>
+  </div>
 
   <!-- Date range filter bar -->
-  <div class="hud-filter-bar">
+  <div class="hud-filter-bar no-print">
     <div class="hud-field">
       <span class="hud-label">TỪ NGÀY</span>
       <app-date-picker [formControl]="startDateControl"></app-date-picker>
@@ -34,6 +39,15 @@
         </span>
       }
     </div>
+  </div>
+
+  <!-- Mood breakdown for the same filtered range -->
+  <div class="donut-charts-row">
+    <app-mood-donut
+      title="🧠 CẢM XÚC TRONG KHOẢNG ĐÃ CHỌN"
+      [segments]="moodSegments()"
+      [hasData]="hasMoodData()"
+    />
   </div>
 
   <!-- Raw logs timeline table in selected scope -->
@@ -69,7 +83,7 @@
               @if (showDeleteButton()) {
                 <button
                   type="button"
-                  class="hud-btn-mini danger"
+                  class="hud-btn-mini danger no-print"
                   data-tooltip="Xóa lượt chấm công"
                   (click)="deleteLog.emit(log.id)"
                 >
@@ -91,7 +105,7 @@
 
   <!-- Pagination Controls -->
   @if (totalCount() > 0) {
-    <div class="hud-pagination">
+    <div class="hud-pagination no-print">
       <div class="pag-size">
         <label for="attendance-page-size">Hiển thị</label>
         <select id="attendance-page-size" class="pag-size-select" [formControl]="pageSizeControl">

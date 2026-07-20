@@ -36,11 +36,12 @@ import {
   HudSelectComponent,
   HudSelectOption,
 } from '../../../../../core/components/hud-select/hud-select';
+import { DatePickerComponent } from '../../../../../core/components/date-picker/date-picker';
 
 @Component({
   selector: 'app-base-profile-modal',
   standalone: true,
-  imports: [ReactiveFormsModule, HudSelectComponent],
+  imports: [ReactiveFormsModule, HudSelectComponent, DatePickerComponent],
   templateUrl: './base-profile-modal.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [WebcamCaptureService, PhotoCaptureStateService],
@@ -74,7 +75,7 @@ export class BaseProfileModalComponent implements OnInit {
 
   editForm = this.fb.nonNullable.group({
     name: ['', Validators.required],
-    age: [30],
+    date_of_birth: [''],
     role: this.fb.nonNullable.control<EmployeeRole>('staff'),
     username: ['', Validators.required],
     password: ['', passwordComplexityValidator()],
@@ -109,7 +110,7 @@ export class BaseProfileModalComponent implements OnInit {
     const data = this.employee();
     this.editForm.reset({
       name: data.name,
-      age: data.age,
+      date_of_birth: data.date_of_birth || '',
       role: data.role,
       username: data.username || '',
       password: '',
@@ -140,11 +141,11 @@ export class BaseProfileModalComponent implements OnInit {
   save(): void {
     this.isSaving.set(true);
     const employeeId = this.employee().id;
-    const { name, age, role, username, password } = this.editForm.getRawValue();
+    const { name, date_of_birth, role, username, password } = this.editForm.getRawValue();
 
     const payload: UpdateEmployeePayload = {
       name,
-      age,
+      date_of_birth: date_of_birth || null,
       role,
       username: username.trim(),
       password: password || null,

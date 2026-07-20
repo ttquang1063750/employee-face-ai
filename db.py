@@ -1,18 +1,27 @@
 import hashlib
 import hmac
+import os
 import secrets
 import time
 from datetime import datetime, timedelta
 
 import psycopg2
+from dotenv import load_dotenv
 from psycopg2.extras import RealDictCursor
 
+# Loads .env (repo root, gitignored) into os.environ — credentials never live
+# in source, only in this untracked file (see .env.example for the template).
+# Falls back to docker-compose.yml's defaults so a fresh clone still runs
+# without requiring a .env first; anyone who cares about the password not
+# being a checked-in default should create one.
+load_dotenv()
+
 DB_CONFIG = {
-    "host": "localhost",
-    "port": 5432,
-    "user": "postgres",
-    "password": "mysecretpassword",
-    "dbname": "employee_face_ai",
+    "host": os.environ.get("POSTGRES_HOST", "localhost"),
+    "port": int(os.environ.get("POSTGRES_PORT", "5432")),
+    "user": os.environ.get("POSTGRES_USER", "postgres"),
+    "password": os.environ.get("POSTGRES_PASSWORD", "mysecretpassword"),
+    "dbname": os.environ.get("POSTGRES_DB", "employee_face_ai"),
 }
 
 PBKDF2_ITERATIONS = 260_000
@@ -116,7 +125,7 @@ def init_db():
             CREATE TABLE IF NOT EXISTS employees (
                 id SERIAL PRIMARY KEY,
                 name VARCHAR(100) NOT NULL,
-                age INTEGER NOT NULL,
+                date_of_birth DATE,
                 image_path VARCHAR(255) NOT NULL,
                 role VARCHAR(20) DEFAULT 'staff',
                 password VARCHAR(100) DEFAULT NULL,
@@ -128,6 +137,13 @@ def init_db():
         # 1c. Widen password column to fit a PBKDF2 hash (salt + digest), which
         # is longer than the plaintext passwords the column was sized for.
         cur.execute("ALTER TABLE employees ALTER COLUMN password TYPE VARCHAR(255);")
+        # 1d. Migration from the old required `age` (INTEGER) column to a
+        # nullable `date_of_birth` (DATE), needed to support birthday alerts.
+        # There's no reliable way to convert an existing age into a real
+        # birthdate, so existing rows simply get NULL until an admin re-enters
+        # it via the edit-profile form.
+        cur.execute("ALTER TABLE employees ADD COLUMN IF NOT EXISTS date_of_birth DATE;")
+        cur.execute("ALTER TABLE employees DROP COLUMN IF EXISTS age;")
         conn.commit()
         # 2. employee_skills
         cur.execute("""
@@ -262,10 +278,10 @@ def seed_mock_data(conn):
         # 1. Seed Admin
         cur.execute(
             """
-            INSERT INTO employees (name, age, image_path, role, password)
+            INSERT INTO employees (name, date_of_birth, image_path, role, password)
             VALUES (%s, %s, %s, %s, %s) RETURNING id;
         """,
-            ("HR Admin", 36, "uploads/database/1.jpg", "admin", "admin"),
+            ("HR Admin", "1990-03-15", "uploads/database/1.jpg", "admin", "admin"),
         )
         admin_id = cur.fetchone()[0]
 
@@ -303,10 +319,10 @@ def seed_mock_data(conn):
         # 2. Seed Developer (John Doe)
         cur.execute(
             """
-            INSERT INTO employees (name, age, image_path, role, password)
+            INSERT INTO employees (name, date_of_birth, image_path, role, password)
             VALUES (%s, %s, %s, %s, %s) RETURNING id;
         """,
-            ("Nguyễn Văn Trỗi", 29, "uploads/database/2.jpg", "staff", None),
+            ("Nguyễn Văn Trỗi", "1997-11-02", "uploads/database/2.jpg", "staff", None),
         )
         dev_id = cur.fetchone()[0]
 
@@ -401,10 +417,10 @@ def seed_mock_data(conn):
         # 3. Seed another employee (Jane)
         cur.execute(
             """
-            INSERT INTO employees (name, age, image_path, role, password)
+            INSERT INTO employees (name, date_of_birth, image_path, role, password)
             VALUES (%s, %s, %s, %s, %s) RETURNING id;
         """,
-            ("Trần Thị Hương", 26, "uploads/database/3.jpg", "staff", None),
+            ("Trần Thị Hương", "2000-06-20", "uploads/database/3.jpg", "staff", None),
         )
         jane_id = cur.fetchone()[0]
 
@@ -624,16 +640,16 @@ def get_employee_basic(employee_id):
         conn.close()
 
 
-def register_employee(name, age, image_path, role="staff", password=None, username=None):
+def register_employee(name, date_of_birth, image_path, role="staff", password=None, username=None):
     conn = get_connection()
     cur = conn.cursor()
     try:
         cur.execute(
             """
-            INSERT INTO employees (name, age, image_path, role, password, username)
+            INSERT INTO employees (name, date_of_birth, image_path, role, password, username)
             VALUES (%s, %s, %s, %s, %s, %s) RETURNING id;
         """,
-            (name, age, image_path, role, hash_password(password), username),
+            (name, date_of_birth, image_path, role, hash_password(password), username),
         )
         emp_id = cur.fetchone()[0]
         conn.commit()
@@ -726,7 +742,7 @@ def add_employee_income(employee_id, amount, effective_date, change_reason):
         conn.close()
 
 
-def update_employee_profile(employee_id, name, age, role, username, password=None):
+def update_employee_profile(employee_id, name, date_of_birth, role, username, password=None):
     conn = get_connection()
     cur = conn.cursor()
     try:
@@ -734,19 +750,19 @@ def update_employee_profile(employee_id, name, age, role, username, password=Non
             cur.execute(
                 """
                 UPDATE employees
-                SET name = %s, age = %s, role = %s, username = %s, password = %s
+                SET name = %s, date_of_birth = %s, role = %s, username = %s, password = %s
                 WHERE id = %s;
             """,
-                (name, age, role, username, hash_password(password), employee_id),
+                (name, date_of_birth, role, username, hash_password(password), employee_id),
             )
         else:
             cur.execute(
                 """
                 UPDATE employees
-                SET name = %s, age = %s, role = %s, username = %s
+                SET name = %s, date_of_birth = %s, role = %s, username = %s
                 WHERE id = %s;
             """,
-                (name, age, role, username, employee_id),
+                (name, date_of_birth, role, username, employee_id),
             )
         conn.commit()
     except Exception as e:
@@ -1041,7 +1057,7 @@ def get_all_employees():
     try:
         # Select base employee details along with their current position
         cur.execute("""
-            SELECT e.id, e.name, e.age, e.image_path, e.role, e.username,
+            SELECT e.id, e.name, e.date_of_birth, e.image_path, e.role, e.username,
                    (SELECT title FROM employee_positions WHERE employee_id = e.id AND end_date IS NULL LIMIT 1) as current_position
             FROM employees e
             ORDER BY e.id DESC;
@@ -1059,7 +1075,7 @@ def get_detailed_employee(employee_id):
         cur = conn.cursor(cursor_factory=RealDictCursor)
         cur.execute(
             """
-            SELECT id, name, age, image_path, role, username
+            SELECT id, name, date_of_birth, image_path, role, username
             FROM employees WHERE id = %s;
         """,
             (employee_id,),
