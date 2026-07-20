@@ -120,12 +120,15 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   totalLogsInRange = computed(() => this.filteredLogs().length);
 
-  // Computed: Unique employee name suggestions filtered by current input
+  // Computed: Employee suggestions filtered by current input — sourced from
+  // the full employee directory (not just names seen in logs) so the
+  // dropdown can show current_position/username alongside a name, since
+  // names alone aren't unique enough to tell two employees apart.
   employeeSuggestions = computed(() => {
     const q = this.filterEmployeeName().toLowerCase().trim();
-    const allNames = Array.from(new Set(this.logs().map((l) => l.employee_name))).sort();
-    if (!q) return allNames.slice(0, 8);
-    return allNames.filter((n) => n.toLowerCase().includes(q)).slice(0, 8);
+    const sorted = [...this.employees()].sort((a, b) => a.name.localeCompare(b.name));
+    if (!q) return sorted.slice(0, 8);
+    return sorted.filter((emp) => emp.name.toLowerCase().includes(q)).slice(0, 8);
   });
 
   // Computed: Pagination variables
@@ -366,8 +369,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.currentPage.set(1);
   }
 
-  selectSuggestion(name: string): void {
-    this.nameControl.setValue(name);
+  selectSuggestion(emp: EmployeeBase): void {
+    this.nameControl.setValue(emp.name);
     this.showSuggestions.set(false);
     this.currentPage.set(1);
   }

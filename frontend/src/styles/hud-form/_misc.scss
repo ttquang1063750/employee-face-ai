@@ -69,12 +69,12 @@
 // Trailing icon-button "action" column shared by attendance/log tables
 // (attendance-summary, logs-table).
 .action-col-header {
-  width: 80px;
   text-align: center;
 }
 
 .action-col-cell {
   text-align: center;
   display: flex;
+  justify-content: center;
   gap: var(--space-2);
 }

@@ -44,10 +44,7 @@
           <th>Thời gian</th>
           <th>Hành động</th>
           <th>Cảm xúc</th>
-          <th>Ảnh</th>
-          @if (showDeleteButton()) {
-            <th class="action-col-header">Hành động</th>
-          }
+          <th class="action-col-header">Hành động</th>
         </tr>
       </thead>
       <tbody>
@@ -66,11 +63,10 @@
             <td>
               <span class="mood-badge">{{ translateMood(log.mood) }}</span>
             </td>
-            <td>
+            <td class="action-col-cell">
               <app-audit-photo-button [imagePath]="log.captured_image_path" />
-            </td>
-            @if (showDeleteButton()) {
-              <td class="action-col-cell">
+
+              @if (showDeleteButton()) {
                 <button
                   type="button"
                   class="hud-btn-mini danger"
@@ -79,8 +75,8 @@
                 >
                   🗑️
                 </button>
-              </td>
-            }
+              }
+            </td>
           </tr>
         } @empty {
           <tr>

@@ -3,6 +3,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { DashboardComponent } from './dashboard';
 import { AttendanceLogEntry } from '../../../core/models/attendance-log.model';
+import { EmployeeBase } from '../../../core/models/employee.model';
 import { environment } from '../../../../environments/environment';
 
 function makeLog(overrides: Partial<AttendanceLogEntry>): AttendanceLogEntry {
@@ -14,6 +15,19 @@ function makeLog(overrides: Partial<AttendanceLogEntry>): AttendanceLogEntry {
     action: 'CHECK_IN',
     mood: 'happy',
     captured_image_path: '',
+    ...overrides,
+  };
+}
+
+function makeEmployee(overrides: Partial<EmployeeBase>): EmployeeBase {
+  return {
+    id: 1,
+    name: 'Alice',
+    age: 30,
+    image_path: '',
+    role: 'staff',
+    username: 'alice',
+    current_position: 'Developer',
     ...overrides,
   };
 }
@@ -237,20 +251,28 @@ describe('DashboardComponent', () => {
 
   describe('employeeSuggestions', () => {
     beforeEach(() => {
-      component.logs.set([
-        makeLog({ id: 1, employee_name: 'Bob' }),
-        makeLog({ id: 2, employee_name: 'Alice' }),
-        makeLog({ id: 3, employee_name: 'Alice' }),
+      component.employees.set([
+        makeEmployee({ id: 1, name: 'Bob', username: 'bob1', current_position: 'Sales' }),
+        makeEmployee({ id: 2, name: 'Alice', username: 'alice1', current_position: 'JS Developer' }),
+        makeEmployee({ id: 3, name: 'Alice', username: 'alice2', current_position: 'HR Manager' }),
       ]);
     });
 
-    it('returns unique, sorted names when there is no query', () => {
-      expect(component.employeeSuggestions()).toEqual(['Alice', 'Bob']);
+    it('returns every employee sorted by name (including same-named ones) when there is no query', () => {
+      expect(component.employeeSuggestions().map((e) => e.id)).toEqual([2, 3, 1]);
     });
 
     it('filters case-insensitively by the current query', () => {
       component.nameControl.setValue('bo');
-      expect(component.employeeSuggestions()).toEqual(['Bob']);
+      expect(component.employeeSuggestions().map((e) => e.id)).toEqual([1]);
+    });
+
+    it('keeps distinguishing fields (username/current_position) for same-named employees', () => {
+      component.nameControl.setValue('alice');
+      const results = component.employeeSuggestions();
+      expect(results).toHaveLength(2);
+      expect(results.map((e) => e.username)).toEqual(['alice1', 'alice2']);
+      expect(results.map((e) => e.current_position)).toEqual(['JS Developer', 'HR Manager']);
     });
   });
 
@@ -271,7 +293,7 @@ describe('DashboardComponent', () => {
       component.currentPage.set(2);
       component.showSuggestions.set(true);
 
-      component.selectSuggestion('Alice');
+      component.selectSuggestion(makeEmployee({ name: 'Alice' }));
 
       expect(component.filterEmployeeName()).toBe('Alice');
       expect(component.showSuggestions()).toBe(false);

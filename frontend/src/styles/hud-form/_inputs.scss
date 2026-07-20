@@ -145,8 +145,31 @@
       opacity: 0.5;
     }
 
-    .ac-name {
+    .ac-info {
       flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+    }
+
+    .ac-name {
+      color: var(--color-text-primary);
+      font-weight: 600;
+    }
+
+    // Disambiguates same-named employees in the dropdown — position + username.
+    .ac-meta {
+      font-size: var(--text-xs);
+      color: var(--color-text-muted);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    &:hover .ac-name,
+    &.active .ac-name {
+      color: var(--color-heading);
     }
 
     em {

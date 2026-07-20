@@ -6,6 +6,7 @@ export interface EmployeeBase {
   age: number;
   image_path: string;
   role: string;
+  username: string | null;
   current_position: string;
 }
 

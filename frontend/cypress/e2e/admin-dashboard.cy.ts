@@ -48,6 +48,14 @@ describe('Admin dashboard', () => {
     cy.contains('.logs-table', 'HR Admin').should('not.exist');
   });
 
+  it('shows current_position and username alongside the name in the autocomplete, to disambiguate same-named employees', () => {
+    cy.get('#dashboard-employee-search').type('Quang');
+    cy.contains('.hud-autocomplete-item', 'Tăng Thanh Quang').within(() => {
+      cy.contains('JS Developer').should('be.visible');
+      cy.contains('@ttq').should('be.visible');
+    });
+  });
+
   it('confirms before deleting a log entry', () => {
     cy.intercept('DELETE', '**/api/logs/101', { statusCode: 200, body: { success: true } }).as(
       'deleteLog',

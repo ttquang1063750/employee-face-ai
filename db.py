@@ -1041,7 +1041,7 @@ def get_all_employees():
     try:
         # Select base employee details along with their current position
         cur.execute("""
-            SELECT e.id, e.name, e.age, e.image_path, e.role,
+            SELECT e.id, e.name, e.age, e.image_path, e.role, e.username,
                    (SELECT title FROM employee_positions WHERE employee_id = e.id AND end_date IS NULL LIMIT 1) as current_position
             FROM employees e
             ORDER BY e.id DESC;
