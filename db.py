@@ -126,7 +126,7 @@ def init_db():
                 id SERIAL PRIMARY KEY,
                 name VARCHAR(100) NOT NULL,
                 date_of_birth DATE,
-                image_path VARCHAR(255) NOT NULL,
+                image_path VARCHAR(255),
                 role VARCHAR(20) DEFAULT 'staff',
                 password VARCHAR(100) DEFAULT NULL,
                 username VARCHAR(50) UNIQUE DEFAULT NULL
@@ -144,6 +144,12 @@ def init_db():
         # it via the edit-profile form.
         cur.execute("ALTER TABLE employees ADD COLUMN IF NOT EXISTS date_of_birth DATE;")
         cur.execute("ALTER TABLE employees DROP COLUMN IF EXISTS age;")
+        # 1e. image_path is no longer required at insert time — the bootstrap
+        # admin account (see bootstrap_admin_account) has no reference photo
+        # until someone captures one via the edit-profile modal. The frontend
+        # already falls back to a placeholder icon for a missing/broken photo
+        # (see avatarUrl()/onImageError() in image.util.ts).
+        cur.execute("ALTER TABLE employees ALTER COLUMN image_path DROP NOT NULL;")
         conn.commit()
         # 2. employee_skills
         cur.execute("""
@@ -243,12 +249,13 @@ def init_db():
         conn.commit()
         print("Database schemas initialized.", flush=True)
 
-        # Seed data if database is empty
-        seed_mock_data(conn)
+        # Bootstrap the initial admin login if the database is empty
+        bootstrap_admin_account(conn)
 
         # Backfill a login username for the admin account so the system stays
         # bootstrappable now that login requires a username (not just ID + password).
-        # Runs after seeding so it also covers databases seeded before this column existed.
+        # Runs after bootstrapping so it also covers databases seeded before this
+        # column existed.
         cur.execute("UPDATE employees SET username = 'admin' WHERE role = 'admin' AND username IS NULL;")
         conn.commit()
 
@@ -264,230 +271,39 @@ def init_db():
         conn.close()
 
 
-def seed_mock_data(conn):
+def bootstrap_admin_account(conn):
+    """Creates the one starting login a fresh instance needs — no demo
+    employees, positions, skills, or projects. Credentials come from
+    ADMIN_USERNAME/ADMIN_PASSWORD (see .env.example), falling back to
+    admin/admin so a fresh clone still runs with zero setup. image_path and
+    date_of_birth are left NULL; the admin fills those in later via the
+    edit-profile modal (avatarUrl()/onImageError() already handle a missing
+    photo)."""
     cur = conn.cursor()
     try:
         cur.execute("SELECT COUNT(*) FROM employees;")
         count = cur.fetchone()[0]
         if count > 0:
-            print("Database already contains data. Skipping seeding.", flush=True)
+            print("Database already contains employees. Skipping admin bootstrap.", flush=True)
             return
 
-        print("Seeding mock employee database with lifecycles...", flush=True)
+        admin_username = os.environ.get("ADMIN_USERNAME", "admin")
+        admin_password = os.environ.get("ADMIN_PASSWORD", "admin")
 
-        # 1. Seed Admin
+        print(f"Bootstrapping initial admin account ('{admin_username}')...", flush=True)
         cur.execute(
             """
-            INSERT INTO employees (name, date_of_birth, image_path, role, password)
-            VALUES (%s, %s, %s, %s, %s) RETURNING id;
-        """,
-            ("HR Admin", "1990-03-15", "uploads/database/1.jpg", "admin", "admin"),
-        )
-        admin_id = cur.fetchone()[0]
-
-        cur.execute(
-            """
-            INSERT INTO employee_positions (employee_id, title, start_date)
-            VALUES (%s, %s, %s);
-        """,
-            (admin_id, "HR Director", "2023-01-01"),
-        )
-
-        cur.execute(
-            """
-            INSERT INTO employee_skills (employee_id, skill_name, description)
-            VALUES (%s, %s, %s), (%s, %s, %s);
-        """,
-            (
-                admin_id,
-                "HR Management",
-                "Over 10 years of human resource planning and lifecycle optimization",
-                admin_id,
-                "Talent Acquisition",
-                "Experienced in hiring elite engineers for high-tech robotics departments",
-            ),
-        )
-
-        cur.execute(
-            """
-            INSERT INTO employee_income_history (employee_id, amount, effective_date, change_reason)
+            INSERT INTO employees (name, role, username, password)
             VALUES (%s, %s, %s, %s);
         """,
-            (admin_id, 7500.00, "2023-01-01", "Initial Offer"),
-        )
-
-        # 2. Seed Developer (John Doe)
-        cur.execute(
-            """
-            INSERT INTO employees (name, date_of_birth, image_path, role, password)
-            VALUES (%s, %s, %s, %s, %s) RETURNING id;
-        """,
-            ("Nguyễn Văn Trỗi", "1997-11-02", "uploads/database/2.jpg", "staff", None),
-        )
-        dev_id = cur.fetchone()[0]
-
-        # Positions history (Promotion)
-        cur.execute(
-            """
-            INSERT INTO employee_positions (employee_id, title, start_date, end_date)
-            VALUES (%s, %s, %s, %s);
-        """,
-            (dev_id, "Junior Web Developer", "2024-01-01", "2025-06-30"),
-        )
-
-        cur.execute(
-            """
-            INSERT INTO employee_positions (employee_id, title, start_date, end_date)
-            VALUES (%s, %s, %s, %s);
-        """,
-            (dev_id, "Senior Web Developer", "2025-07-01", None),
-        )
-
-        # Skills Registry with descriptions
-        cur.execute(
-            """
-            INSERT INTO employee_skills (employee_id, skill_name, description)
-            VALUES
-            (%s, %s, %s),
-            (%s, %s, %s),
-            (%s, %s, %s);
-        """,
-            (
-                dev_id,
-                "Angular",
-                "Expert in Standalone Components, Signal state stores, and Custom RxJS Interceptors.",
-                dev_id,
-                "Python & OpenCV",
-                "Experienced in building high-frequency REST APIs and processing facial computer vision nodes.",
-                dev_id,
-                "PostgreSQL",
-                "Designing normalized database schemas and tuning indexes for fast queries.",
-            ),
-        )
-
-        # Projects Assignment History with descriptions
-        cur.execute(
-            """
-            INSERT INTO employee_projects (employee_id, project_name, role, description, start_date, end_date)
-            VALUES
-            (%s, %s, %s, %s, %s, %s),
-            (%s, %s, %s, %s, %s, %s);
-        """,
-            (
-                dev_id,
-                "Employee Face AI",
-                "Lead Angular Developer",
-                "Engineered the biometric scan kiosk interface using modern Angular signals and SCSS panels.",
-                "2026-06-01",
-                None,
-                dev_id,
-                "Robotics Arm Controller",
-                "Embedded Programmer",
-                "Programmed real-time target-tracking visual filters using OpenCV and C++.",
-                "2024-03-01",
-                "2025-05-01",
-            ),
-        )
-
-        # Income Compensation History (Raises)
-        cur.execute(
-            """
-            INSERT INTO employee_income_history (employee_id, amount, effective_date, change_reason)
-            VALUES
-            (%s, %s, %s, %s),
-            (%s, %s, %s, %s),
-            (%s, %s, %s, %s);
-        """,
-            (
-                dev_id,
-                3200.00,
-                "2024-01-01",
-                "Onboarding Junior Offer",
-                dev_id,
-                3800.00,
-                "2025-01-01",
-                "Annual Performance Review",
-                dev_id,
-                5400.00,
-                "2025-07-01",
-                "Promotion to Senior Web Developer",
-            ),
-        )
-
-        # 3. Seed another employee (Jane)
-        cur.execute(
-            """
-            INSERT INTO employees (name, date_of_birth, image_path, role, password)
-            VALUES (%s, %s, %s, %s, %s) RETURNING id;
-        """,
-            ("Trần Thị Hương", "2000-06-20", "uploads/database/3.jpg", "staff", None),
-        )
-        jane_id = cur.fetchone()[0]
-
-        cur.execute(
-            """
-            INSERT INTO employee_positions (employee_id, title, start_date)
-            VALUES (%s, %s, %s);
-        """,
-            (jane_id, "Robotics Engineer", "2024-06-15"),
-        )
-
-        cur.execute(
-            """
-            INSERT INTO employee_skills (employee_id, skill_name, description)
-            VALUES
-            (%s, %s, %s),
-            (%s, %s, %s);
-        """,
-            (
-                jane_id,
-                "C++ & ROS",
-                "Programming kinetic arm path trajectories using ROS2 Humble and C++.",
-                jane_id,
-                "MATLAB",
-                "Simulating sensor noise and testing Kalman filter tracking matrices.",
-            ),
-        )
-
-        cur.execute(
-            """
-            INSERT INTO employee_projects (employee_id, project_name, role, description, start_date, end_date)
-            VALUES (%s, %s, %s, %s, %s, %s);
-        """,
-            (
-                jane_id,
-                "Warehouse Autonomous AGV",
-                "Kinematics Engineer",
-                "Developed coordinate transform modules for multi-wheel steering AGVs.",
-                "2024-07-01",
-                None,
-            ),
-        )
-
-        cur.execute(
-            """
-            INSERT INTO employee_income_history (employee_id, amount, effective_date, change_reason)
-            VALUES
-            (%s, %s, %s, %s),
-            (%s, %s, %s, %s);
-        """,
-            (
-                jane_id,
-                4000.00,
-                "2024-06-15",
-                "Onboarding Robotics Engineer",
-                jane_id,
-                4500.00,
-                "2025-06-15",
-                "Annual Performance Review",
-            ),
+            ("Admin", "admin", admin_username, hash_password(admin_password)),
         )
 
         conn.commit()
-        print("Mock data seeded successfully.", flush=True)
+        print("Admin account bootstrapped successfully.", flush=True)
     except Exception as e:
         conn.rollback()
-        print(f"Error seeding mock data: {e}", flush=True)
+        print(f"Error bootstrapping admin account: {e}", flush=True)
         raise e
     finally:
         cur.close()

@@ -14,7 +14,20 @@
     <div class="date-panel" [style.top.px]="panelTop()" [style.left.px]="panelLeft()">
       <div class="date-panel-header">
         <button type="button" class="nav-btn" (click)="prevMonth()">‹</button>
-        <span class="month-label">{{ monthLabel() }}</span>
+        <div class="month-year-selects">
+          <app-hud-select
+            #monthSelectRef
+            class="month-select"
+            [options]="monthOptions"
+            [formControl]="monthControl"
+          ></app-hud-select>
+          <app-hud-select
+            #yearSelectRef
+            class="year-select"
+            [options]="yearOptions"
+            [formControl]="yearControl"
+          ></app-hud-select>
+        </div>
         <button type="button" class="nav-btn" (click)="nextMonth()">›</button>
       </div>
       <div class="weekday-row">

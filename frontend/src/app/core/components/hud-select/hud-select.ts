@@ -13,7 +13,7 @@ import {
   inject,
 } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
-import { fromEvent, merge, Subscription } from 'rxjs';
+import { filter, fromEvent, merge, Subscription } from 'rxjs';
 
 export interface HudSelectOption<T> {
   value: T;
@@ -121,11 +121,20 @@ export class HudSelectComponent<T = string>
     }
     this.isOpen.set(true);
     // Scroll (of any ancestor, capture phase) or resize invalidates the
-    // computed position, so just close rather than tracking it live.
+    // computed position, so just close rather than tracking it live — except
+    // scrolling *inside this panel's own option list* (e.g. a long list like
+    // DatePickerComponent's year select), which fires a real 'scroll' event
+    // on the panel itself but doesn't move the trigger, so it shouldn't close.
     this.scrollOrResizeSub = merge(
       fromEvent(window, 'scroll', { capture: true }),
       fromEvent(window, 'resize'),
-    ).subscribe(() => this.closePanel());
+    )
+      .pipe(filter((event) => !this.isInsideOwnPanel(event.target)))
+      .subscribe(() => this.closePanel());
+  }
+
+  private isInsideOwnPanel(target: EventTarget | null): boolean {
+    return target instanceof Node && this.panelRef().nativeElement.contains(target);
   }
 
   private closePanel(): void {

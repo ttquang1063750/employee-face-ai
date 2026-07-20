@@ -84,6 +84,28 @@ describe('DatePickerComponent', () => {
     });
   });
 
+  describe('month/year FormControl bridge (feeds app-hud-select)', () => {
+    it('setting monthControl jumps directly to that month without touching the year', () => {
+      component.viewYear.set(2026);
+      component.viewMonth.set(0);
+
+      component.monthControl.setValue(6);
+
+      expect(component.viewMonth()).toBe(6);
+      expect(component.viewYear()).toBe(2026);
+    });
+
+    it('setting yearControl jumps directly to that year without touching the month, in one step', () => {
+      component.viewYear.set(2026);
+      component.viewMonth.set(4);
+
+      component.yearControl.setValue(1986);
+
+      expect(component.viewYear()).toBe(1986);
+      expect(component.viewMonth()).toBe(4);
+    });
+  });
+
   describe('ControlValueAccessor', () => {
     it('writeValue sets the value and navigates the calendar to that month', () => {
       component.writeValue('2026-03-15');

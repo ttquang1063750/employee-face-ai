@@ -8,11 +8,15 @@ import {
   forwardRef,
   signal,
   computed,
+  effect,
   inject,
+  viewChild,
 } from '@angular/core';
-import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
-import { fromEvent, merge, Subscription } from 'rxjs';
+import { ControlValueAccessor, NG_VALUE_ACCESSOR, FormControl, ReactiveFormsModule } from '@angular/forms';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { filter, fromEvent, merge, Subscription } from 'rxjs';
 import { toLocalDateString } from '../../utils/date.util';
+import { HudSelectComponent, HudSelectOption } from '../hud-select/hud-select';
 
 interface CalendarCell {
   day: number;
@@ -25,7 +29,7 @@ interface CalendarCell {
 @Component({
   selector: 'app-date-picker',
   standalone: true,
-  imports: [],
+  imports: [ReactiveFormsModule, HudSelectComponent],
   templateUrl: './date-picker.html',
   styleUrl: './date-picker.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -42,6 +46,13 @@ export class DatePickerComponent implements ControlValueAccessor, OnDestroy {
 
   private elementRef = inject(ElementRef);
 
+  // The month/year app-hud-select panels are portaled to <body> (see
+  // HudSelectComponent), so they sit outside this.elementRef's own subtree —
+  // onDocumentClick below must check these too, or picking a month/year
+  // closes the whole calendar instead of just that dropdown's own panel.
+  private monthSelectRef = viewChild<HudSelectComponent<number>>('monthSelectRef');
+  private yearSelectRef = viewChild<HudSelectComponent<number>>('yearSelectRef');
+
   value = signal<string>('');
   isOpen = signal<boolean>(false);
   disabled = signal<boolean>(false);
@@ -55,7 +66,43 @@ export class DatePickerComponent implements ControlValueAccessor, OnDestroy {
   private scrollOrResizeSub: Subscription | null = null;
 
   readonly weekdayLabels = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
-  readonly monthLabel = computed(() => `Tháng ${this.viewMonth() + 1} / ${this.viewYear()}`);
+
+  // Direct month/year jump — stepping via prevMonth()/nextMonth() alone took
+  // ~480 clicks to reach a 40-year-old birth date, since it's one click per
+  // month. Range covers a full working lifetime back and a few years forward
+  // (for things like a projected leave/position date), not just birthdates —
+  // this component is shared by every date field in the app, not just date
+  // of birth. Uses app-hud-select (not a native <select>) for the same
+  // themed-dropdown look as the rest of the app.
+  readonly monthOptions: HudSelectOption<number>[] = Array.from({ length: 12 }, (_, i) => ({
+    value: i,
+    label: `Th${i + 1}`,
+  }));
+  private readonly currentYear = new Date().getFullYear();
+  readonly yearOptions: HudSelectOption<number>[] = Array.from({ length: 111 }, (_, i) => {
+    const year = this.currentYear + 10 - i;
+    return { value: year, label: `${year}` };
+  });
+
+  // Bridges viewMonth()/viewYear() (the signals prevMonth()/nextMonth()/
+  // writeValue()/selectToday() all read and write directly, and what the
+  // tests below drive) to the FormControls app-hud-select needs, mirroring
+  // the input()/output()-to-FormControl bridge already used in
+  // attendance-summary.ts.
+  monthControl = new FormControl<number>(0, { nonNullable: true });
+  yearControl = new FormControl<number>(0, { nonNullable: true });
+
+  constructor() {
+    effect(() => this.monthControl.setValue(this.viewMonth(), { emitEvent: false }));
+    effect(() => this.yearControl.setValue(this.viewYear(), { emitEvent: false }));
+
+    this.monthControl.valueChanges
+      .pipe(takeUntilDestroyed())
+      .subscribe((month) => this.viewMonth.set(month));
+    this.yearControl.valueChanges
+      .pipe(takeUntilDestroyed())
+      .subscribe((year) => this.viewYear.set(year));
+  }
 
   displayValue = computed(() => {
     const v = this.value();
@@ -137,11 +184,23 @@ export class DatePickerComponent implements ControlValueAccessor, OnDestroy {
     }
     this.isOpen.set(true);
     // Scroll (of any ancestor, capture phase) or resize invalidates the
-    // computed position, so just close rather than tracking it live.
+    // computed position, so just close rather than tracking it live — except
+    // scrolling *inside* the month/year app-hud-select's own (portaled)
+    // option list, which fires a real 'scroll' event here too but doesn't
+    // move this panel's trigger, so it shouldn't close the whole calendar.
     this.scrollOrResizeSub = merge(
       fromEvent(window, 'scroll', { capture: true }),
       fromEvent(window, 'resize'),
-    ).subscribe(() => this.closePanel());
+    )
+      .pipe(filter((event) => !this.isInsideChildSelectPanel(event.target)))
+      .subscribe(() => this.closePanel());
+  }
+
+  private isInsideChildSelectPanel(target: EventTarget | null): boolean {
+    if (!(target instanceof Node)) return false;
+    const monthPanel = this.monthSelectRef()?.panelRef().nativeElement;
+    const yearPanel = this.yearSelectRef()?.panelRef().nativeElement;
+    return !!(monthPanel?.contains(target) || yearPanel?.contains(target));
   }
 
   private closePanel(): void {
@@ -215,7 +274,10 @@ export class DatePickerComponent implements ControlValueAccessor, OnDestroy {
 
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent): void {
-    if (this.isOpen() && !this.elementRef.nativeElement.contains(event.target)) {
+    if (!this.isOpen()) return;
+    const target = event.target as Node;
+    const insideHost = this.elementRef.nativeElement.contains(target);
+    if (!insideHost && !this.isInsideChildSelectPanel(target)) {
       this.closePanel();
     }
   }
