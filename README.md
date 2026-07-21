@@ -80,145 +80,150 @@ cd frontend
 npm test
 ```
 
-## 📖 Hướng dẫn sử dụng
+## 📖 User guide
 
-> Phần này dành cho người dùng cuối (không cần biết kỹ thuật). Có 3 nhóm
-> người dùng: **mọi nhân viên** chấm công ở kiosk (không cần đăng nhập),
-> **Nhân viên (Staff)** xem hồ sơ/gửi đơn nghỉ/nhắn tin của riêng mình, và
-> **Quản lý (Admin)** quản lý toàn bộ hệ thống.
+> This section is for end users (no technical background needed). There are
+> 3 groups of users: **every employee** clocks in/out at the kiosk (no login
+> needed), **Staff** view their own profile / submit leave requests / send
+> messages, and **Admin** manages the whole system.
 
-### 1. Chấm công tại kiosk (không cần đăng nhập)
+### 1. Clocking in at the kiosk (no login needed)
 
-![Kiosk chấm công](docs/screenshots/kiosk.png)
+![Kiosk check-in](docs/screenshots/kiosk.png)
 
-Mở trình duyệt tại địa chỉ gốc của hệ thống (ví dụ `http://<địa-chỉ-máy-chủ>/`).
+Open a browser at the system's root address (e.g. `http://<server-address>/`).
 
-1. Cho phép trình duyệt truy cập camera khi được hỏi.
-2. Chọn **CHECK IN** (bắt đầu ca) hoặc **CHECK OUT** (kết thúc ca).
-3. Nhấn **BẮT ĐẦU QUÉT KHUÔN MẶT** và nhìn thẳng vào camera.
-4. Hệ thống chụp một ảnh, nhận diện khuôn mặt và tự động ghi nhận tên nhân
-   viên, hành động (check in/out), thời gian, và trạng thái cảm xúc lúc quét
-   — dùng để thống kê chỉ số hạnh phúc trên dashboard Admin, không dùng để
-   đánh giá cá nhân.
-5. Nếu báo lỗi "không nhận diện được", hãy quét lại với ánh sáng tốt hơn,
-   nhìn thẳng vào camera hơn.
+1. Allow the browser to access the camera when prompted.
+2. Choose **CHECK IN** (start of shift) or **CHECK OUT** (end of shift).
+3. Press **BẮT ĐẦU QUÉT KHUÔN MẶT** (start face scan) and look straight at the camera.
+4. The system takes a photo, recognizes the face, and automatically records
+   the employee's name, the action (check in/out), the time, and the mood
+   detected at that moment — used for the happiness-index stats on the Admin
+   dashboard, not for individual performance evaluation.
+5. If it reports "employee not recognized," scan again with better lighting
+   and look more directly at the camera.
 
-> Máy chấm công cần có webcam thật. Nếu server chạy ở một địa chỉ/tên miền
-> thật (không phải `localhost`), trình duyệt chặn quyền camera trừ khi có
-> HTTPS — xem [`deploy/README.md`](deploy/README.md).
+> The kiosk machine needs a real webcam. If the server runs at a real
+> address/domain (not `localhost`), the browser blocks camera access unless
+> HTTPS is enabled — see [`deploy/README.md`](deploy/README.md).
 
-### 2. Đăng nhập
+### 2. Logging in
 
-![Đăng nhập](docs/screenshots/login.png)
+![Login](docs/screenshots/login.png)
 
-Vào `/login`.
+Go to `/login`.
 
-- **Admin**: đăng nhập bằng tài khoản quản trị (username/mật khẩu do người
-  triển khai hệ thống cấp qua `.env` lúc cài đặt).
-- **Nhân viên**: chỉ đăng nhập được nếu Admin đã cấp mật khẩu cho tài khoản đó
-  (mục 3.2 bên dưới) — nhân viên mới tạo mặc định **chưa** có mật khẩu đăng
-  nhập, chỉ chấm công được ở kiosk cho đến khi được cấp.
+- **Admin**: log in with the admin account (username/password set by
+  whoever deployed the system, via `.env` at install time).
+- **Staff**: can only log in once an Admin has set a password for that
+  account (see section 3.2 below) — newly created employees have **no**
+  login password by default and can only clock in at the kiosk until one is set.
 
-Đăng nhập thành công sẽ tự chuyển đến đúng khu vực (Admin → Bảng điều khiển,
-Nhân viên → Trang cá nhân).
+A successful login redirects to the right area automatically (Admin →
+Dashboard, Staff → Personal profile page).
 
-### 3. Dành cho Quản lý (Admin)
+### 3. For Admins
 
-#### 3.1. Bảng thống kê (Dashboard)
+#### 3.1. Dashboard
 
-![Bảng thống kê](docs/screenshots/admin-dashboard.png)
+![Dashboard](docs/screenshots/admin-dashboard.png)
 
-Trang đầu tiên sau khi đăng nhập admin:
-- Lọc theo khoảng ngày, trạng thái, tên nhân viên.
-- Xem tổng số nhân sự, số lượt chấm công, chỉ số hạnh phúc trung bình.
-- Xem biểu đồ giờ cao điểm chấm công và phân bố cảm xúc.
-- Xem danh sách lượt chấm công chi tiết (kèm ảnh chụp lúc quét), xuất báo cáo
-  ra file CSV bằng nút **XUẤT BÁO CÁO CSV**.
+The first page after an admin login:
+- Filter by date range, status, employee name.
+- View total headcount, number of check-ins/outs, average happiness index.
+- View a chart of peak attendance hours and mood distribution.
+- View the detailed attendance log (with the photo captured at scan time),
+  export it as CSV via the **XUẤT BÁO CÁO CSV** (export CSV report) button.
 
-#### 3.2. Quản lý Nhân viên
+#### 3.2. Employee management
 
-![Quản lý nhân viên](docs/screenshots/admin-employee-list.png)
+![Employee management](docs/screenshots/admin-employee-list.png)
 
-- **Xem danh sách**: tìm theo tên, ID hoặc vị trí.
-- **Đăng ký nhân viên mới**: nút **ĐĂNG KÝ NHÂN VIÊN MỚI** — nhập tên, ngày
-  sinh, vị trí, lương khởi điểm, vai trò (Staff/Admin), username, **mật khẩu
-  đăng nhập** (để trống nếu nhân viên đó chỉ cần chấm công, không cần đăng
-  nhập xem hồ sơ), và chụp/tải lên ảnh khuôn mặt để hệ thống nhận diện.
-- **Xem hồ sơ chi tiết** (nút "Xem hồ sơ" trên từng dòng): sửa thông tin cơ
-  bản, đổi ảnh đại diện, đổi mật khẩu đăng nhập, thêm lịch sử thăng tiến/tăng
-  lương, cập nhật kỹ năng và dự án đã tham gia, xem thống kê chấm công riêng
-  của nhân viên đó.
-- **Xóa nhân viên**: nút "Xóa" trên từng dòng (không áp dụng cho tài khoản Admin).
+- **View the list**: search by name, ID, or position.
+- **Register a new employee**: the **ĐĂNG KÝ NHÂN VIÊN MỚI** (register new
+  employee) button — enter name, date of birth, position, starting salary,
+  role (Staff/Admin), username, **login password** (leave blank if this
+  employee only needs to clock in and doesn't need to log in and view their
+  profile), and capture/upload a face photo for recognition.
+- **View full profile** (the "Xem hồ sơ" button on each row): edit basic
+  info, change avatar, change login password, add career-position/raise
+  history, update skills and projects, view that employee's own attendance stats.
+- **Delete an employee**: the "Xóa" button on each row (not available for Admin accounts).
 
-#### 3.3. Đơn xin nghỉ
+#### 3.3. Leave requests
 
-![Đơn xin nghỉ](docs/screenshots/admin-leave-requests.png)
+![Leave requests](docs/screenshots/admin-leave-requests.png)
 
-- Lọc theo trạng thái (Chờ duyệt / Đã duyệt / Từ chối), theo ngày, theo tên/vị trí.
-- Với đơn **đang chờ duyệt**: nút **Duyệt** hoặc **Từ chối** (khi từ chối có
-  thể ghi lý do — nhân viên sẽ thấy lý do này trong trang cá nhân của họ).
+- Filter by status (Pending / Approved / Rejected), by date, by name/position.
+- For a **pending** request: **Duyệt** (Approve) or **Từ chối** (Reject)
+  button (rejecting lets you record a reason — the employee will see it on
+  their own profile page).
 
-#### 3.4. Tài liệu nhân sự
+#### 3.4. HR documents
 
-![Tài liệu nhân sự](docs/screenshots/admin-documents.png)
+![HR documents](docs/screenshots/admin-documents.png)
 
-- Nút **TẢI LÊN TÀI LIỆU MỚI**: chọn nhân viên nhận (hoặc để trống = gửi cho
-  **toàn bộ nhân viên**), tải file lên hoặc dán một đường link, rồi lưu.
-- Danh sách hiển thị ai được xem, ngày tải lên; nhân viên sẽ thấy tài liệu
-  tương ứng trong trang cá nhân của họ.
+- The **TẢI LÊN TÀI LIỆU MỚI** (upload new document) button: choose the
+  recipient employee (or leave it blank to send to **every employee**),
+  upload a file or paste a link, then save.
+- The list shows who can see it and the upload date; employees see the
+  matching document on their own profile page.
 
-#### 3.5. Tin nhắn nội bộ
+#### 3.5. Internal messages
 
-![Tin nhắn nội bộ](docs/screenshots/admin-messages.png)
+![Internal messages](docs/screenshots/admin-messages.png)
 
-- Tab **ĐÃ NHẬN / ĐÃ GỬI** để xem hộp thư.
-- Nút **Soạn tin nhắn mới**: chọn người nhận, loại tin nhắn, tiêu đề, nội
-  dung (có định dạng chữ đậm/nghiêng/tiêu đề/màu chữ/cỡ chữ, chèn ảnh, vẽ
-  hình minh họa). Có thể chọn một **mẫu có sẵn** để tự động điền tiêu đề/nội
-  dung.
-- Xóa một tin nhắn chỉ ẩn nó ở phía bạn — người còn lại vẫn thấy bình thường
-  cho đến khi họ cũng xóa.
+- **ĐÃ NHẬN / ĐÃ GỬI** (Received / Sent) tabs for the inbox.
+- The **Soạn tin nhắn mới** (compose new message) button: pick a recipient,
+  message category, subject, content (supports bold/italic/headings/text
+  color/font size, inserting images, drawing illustrations). A saved
+  **template** can be picked to auto-fill the subject/content.
+- Deleting a message only hides it on your side — the other party still
+  sees it normally until they delete it too.
 
-#### 3.6. Mẫu tin nhắn
+#### 3.6. Message templates
 
-Tạo/sửa/xóa các mẫu nội dung dùng lại nhiều lần (ví dụ "Mẫu báo cáo ngày
-chuẩn") để khi soạn tin nhắn mới có thể chọn nhanh thay vì gõ lại từ đầu.
+Create/edit/delete reusable content templates (e.g. a "standard daily
+report template") so composing a new message can pick one instantly instead
+of typing it from scratch.
 
-### 4. Dành cho Nhân viên (Staff)
+### 4. For Staff
 
-![Trang cá nhân nhân viên](docs/screenshots/staff-profile.png)
+![Staff profile page](docs/screenshots/staff-profile.png)
 
-Sau khi đăng nhập, vào thẳng **Trang cá nhân**, gồm:
+After logging in, staff land straight on their **Personal profile page**, which has:
 
-- **Hồ sơ của tôi**: ảnh đại diện, vị trí, tuổi, có thể tự **đổi ảnh đại
-  diện** và **đổi mật khẩu** đăng nhập (không thể tự sửa lương/chức vụ — chỉ
-  Admin làm được).
-- **Xin nghỉ phép**: nút **Xin nghỉ phép** — chọn từ ngày, đến ngày, lý do,
-  rồi **Gửi đơn**. Theo dõi trạng thái đơn (Chờ duyệt/Đã duyệt/Từ chối, kèm
-  lý do nếu bị từ chối) ngay trong mục **ĐƠN XIN NGHỈ ĐÃ GỬI**.
-- **Tài liệu của tôi**: tài liệu Admin gửi riêng cho bạn hoặc gửi chung cho
-  toàn công ty — bấm để tải xuống hoặc mở link.
-- **Lịch sử thăng tiến / thu nhập / kỹ năng / dự án**: chỉ xem, không sửa được.
-- **Thống kê chấm công**: số ngày công, tổng giờ làm, biểu đồ cảm xúc trong
-  khoảng thời gian đã chọn; có thể lọc theo ngày.
-- **Tin nhắn**: cùng tính năng nhắn tin nội bộ như Admin (mục 3.5), truy cập
-  qua menu bên trái.
+- **My profile**: avatar, position, age; can self-service **change avatar**
+  and **change login password** (cannot edit salary/position themselves —
+  only an Admin can).
+- **Request leave**: the **Xin nghỉ phép** (request leave) button — pick a
+  start date, end date, reason, then **Gửi đơn** (submit). Track the
+  request's status (Pending/Approved/Rejected, with the rejection reason if
+  applicable) right in the **ĐƠN XIN NGHỈ ĐÃ GỬI** (leave requests sent) section.
+- **My documents**: documents an Admin sent just to you or broadcast to the
+  whole company — click to download or open the link.
+- **Career / income / skills / project history**: view-only, cannot be edited.
+- **Attendance stats**: days worked, total hours, a mood chart over the
+  selected time range; can filter by date.
+- **Messages**: the same internal messaging feature as Admin (section 3.5),
+  accessible from the left-hand menu.
 
-### 5. Câu hỏi thường gặp
+### 5. FAQ
 
-**Nhân viên quét mặt ở kiosk nhưng báo "không tìm thấy nhân viên phù hợp"?**
-Nhân viên đó chưa được đăng ký ảnh khuôn mặt, hoặc ảnh đăng ký quá khác so
-với hiện tại — vào **Quản lý Nhân viên → Xem hồ sơ → Đổi ảnh đại diện** để
-chụp lại ảnh rõ mặt hơn.
+**An employee scans their face at the kiosk but gets "employee not recognized"?**
+That employee hasn't registered a face photo yet, or the registered photo
+looks too different from how they look now — go to **Employee management →
+View profile → Change avatar** to capture a clearer photo.
 
-**Nhân viên không đăng nhập được?**
-Kiểm tra xem tài khoản đó đã được Admin cấp **mật khẩu đăng nhập** chưa
-(mục 3.2) — nhân viên mới tạo mặc định không có mật khẩu, chỉ chấm công được.
+**An employee can't log in?**
+Check whether that account has been given a **login password** by an Admin
+yet (section 3.2) — newly created employees have no password by default and
+can only clock in at the kiosk.
 
-**Camera ở kiosk không hoạt động khi mở bằng địa chỉ IP/tên miền thật (không
-phải khi chạy thử ở máy lập trình)?**
-Trình duyệt chặn quyền camera trên kết nối HTTP thường — cần bật HTTPS, xem
-[`deploy/README.md`](deploy/README.md).
+**The kiosk camera doesn't work when opened at a real IP/domain (works fine
+when testing on a dev machine)?**
+Browsers block camera access on a plain HTTP connection — HTTPS needs to be
+enabled, see [`deploy/README.md`](deploy/README.md).
 
 ## 🚢 Deploying to a real server
 
