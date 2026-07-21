@@ -1,0 +1,30 @@
+# Employee Face AI — systemd unit for the Python backend (server.py).
+#
+# install.sh copies this to /etc/systemd/system/, substituting
+# __REPO_ROOT__ and __RUN_USER__. To install by hand instead:
+#   1. cp deploy/employee-face-ai-backend.service /etc/systemd/system/
+#   2. Replace __REPO_ROOT__ with this repo's absolute path on the server,
+#      and __RUN_USER__ with the non-root user that should own the process.
+#   3. systemctl daemon-reload
+#   4. systemctl enable --now employee-face-ai-backend
+#
+# db.py loads DB/admin credentials from __REPO_ROOT__/.env itself via
+# python-dotenv, so no EnvironmentFile= is needed here.
+
+[Unit]
+Description=Employee Face AI backend (server.py)
+After=network.target docker.service
+Requires=docker.service
+
+[Service]
+Type=simple
+User=__RUN_USER__
+WorkingDirectory=__REPO_ROOT__
+ExecStart=__REPO_ROOT__/venv/bin/python -u server.py
+Restart=on-failure
+RestartSec=3
+StandardOutput=append:__REPO_ROOT__/backend.log
+StandardError=append:__REPO_ROOT__/backend.log
+
+[Install]
+WantedBy=multi-user.target

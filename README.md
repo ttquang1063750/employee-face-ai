@@ -80,6 +80,17 @@ cd frontend
 npm test
 ```
 
+## 🚢 Deploying to a real server
+
+`./start.sh` above is for local development only (`ng serve` + `python
+server.py` run directly). For a real server — customer's VPS or an on-prem
+box — see [`deploy/README.md`](deploy/README.md), or just run:
+
+```bash
+sudo ./deploy/install.sh                                   # HTTP only (LAN/internal use)
+sudo ./deploy/install.sh yourdomain.com you@yourdomain.com  # + HTTPS via Let's Encrypt
+```
+
 ## 📁 Project structure
 
 ```

@@ -1,0 +1,49 @@
+# Employee Face AI — Nginx site config template.
+#
+# Serves the Angular production build as static files and reverse-proxies
+# API/upload requests to the Python backend (127.0.0.1:8000) on the SAME
+# origin — this is why environment.ts uses relative URLs ('/api', '') rather
+# than an absolute host: one frontend build then works behind any domain or
+# bare IP without a rebuild.
+#
+# install.sh copies this file to /etc/nginx/sites-available/employee-face-ai,
+# substituting __SERVER_NAME__ and __REPO_ROOT__. To install by hand instead:
+#   1. cp deploy/nginx.conf.example /etc/nginx/sites-available/employee-face-ai
+#   2. Replace __SERVER_NAME__ with your domain (or _ for "any host/bare IP").
+#   3. Replace __REPO_ROOT__ with the absolute path to this repo on the server.
+#   4. ln -s /etc/nginx/sites-available/employee-face-ai /etc/nginx/sites-enabled/
+#   5. nginx -t && systemctl reload nginx
+#
+# For HTTPS, run certbot afterwards (certbot --nginx -d yourdomain.com) — it
+# rewrites this file in place to add the listen 443/ssl_certificate lines.
+# HTTPS is REQUIRED for the kiosk camera to work from any host other than
+# "localhost" — browsers block getUserMedia() on plain HTTP otherwise.
+
+server {
+    listen 80;
+    server_name __SERVER_NAME__;
+
+    client_max_body_size 5G; # matches MAX_DOCUMENT_BYTES in server.py
+
+    root __REPO_ROOT__/frontend/dist/frontend/browser;
+    index index.html;
+
+    # Angular SPA — let client-side routing handle unknown paths.
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    location /api/ {
+        proxy_pass http://127.0.0.1:8000/api/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_read_timeout 300s; # face-recognition requests can be slow on CPU
+    }
+
+    location /uploads/ {
+        proxy_pass http://127.0.0.1:8000/uploads/;
+        proxy_set_header Host $host;
+    }
+}

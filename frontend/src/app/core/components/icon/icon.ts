@@ -2,7 +2,6 @@ import {
   Component,
   computed,
   inject,
-  input,
   ChangeDetectionStrategy,
   ElementRef,
   AfterViewInit,
