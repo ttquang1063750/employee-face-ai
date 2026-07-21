@@ -333,25 +333,30 @@ describe('DashboardComponent', () => {
       expect(component.currentPage()).toBe(1);
     });
 
-    it('selectSuggestion sets the name filter, closes the dropdown, and resets to page 1', () => {
+    it('selectSuggestion resets to page 1', () => {
       component.currentPage.set(2);
-      component.showSuggestions.set(true);
 
-      component.selectSuggestion(makeEmployee({ name: 'Alice' }));
+      component.selectSuggestion();
 
-      expect(component.filterEmployeeName()).toBe('Alice');
-      expect(component.showSuggestions()).toBe(false);
       expect(component.currentPage()).toBe(1);
     });
 
-    it('typing into nameControl opens the dropdown and resets to page 1', () => {
+    it('typing into nameControl resets to page 1', () => {
       component.currentPage.set(2);
 
       component.nameControl.setValue('ali');
 
       expect(component.filterEmployeeName()).toBe('ali');
-      expect(component.showSuggestions()).toBe(true);
       expect(component.currentPage()).toBe(1);
+    });
+
+    it('employeeSuggestionLabel/employeeSuggestionMeta format an <app-hud-autocomplete> row using id, not username', () => {
+      const withPosition = makeEmployee({ id: 7, name: 'Alice', current_position: 'JS Developer' });
+      const withoutPosition = makeEmployee({ id: 9, name: 'Bob', current_position: '' });
+
+      expect(component.employeeSuggestionLabel(withPosition)).toBe('Alice');
+      expect(component.employeeSuggestionMeta(withPosition)).toBe('JS Developer · #7');
+      expect(component.employeeSuggestionMeta(withoutPosition)).toBe('Chưa có chức vụ · #9');
     });
   });
 

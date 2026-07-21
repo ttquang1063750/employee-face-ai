@@ -4,12 +4,17 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { HudSelectComponent, HudSelectOption } from '../../../core/components/hud-select/hud-select';
+import { HudAutocompleteComponent } from '../../../core/components/hud-autocomplete/hud-autocomplete';
 import { RichTextEditor } from '../../../core/components/rich-text-editor/rich-text-editor';
 import { DialogService } from '../../../core/services/dialog.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { EmployeeService } from '../../../core/services/employee.service';
 import { MessageService } from '../../../core/services/message.service';
 import { EmployeeDirectoryEntry } from '../../../core/models/employee.model';
+import {
+  employeeSuggestionLabel as formatEmployeeSuggestionLabel,
+  employeeSuggestionMeta as formatEmployeeSuggestionMeta,
+} from '../../../core/utils/employee-suggestion.util';
 import { MessageCategory, MessageTemplate } from '../../../core/models/message.model';
 import { MESSAGE_CATEGORY_OPTIONS } from '../../../core/utils/message-category.util';
 import { isRichContentEmpty } from '../../../core/utils/rich-content.util';
@@ -17,7 +22,7 @@ import { isRichContentEmpty } from '../../../core/utils/rich-content.util';
 @Component({
   selector: 'app-compose-message-page',
   standalone: true,
-  imports: [ReactiveFormsModule, HudSelectComponent, RichTextEditor],
+  imports: [ReactiveFormsModule, HudSelectComponent, HudAutocompleteComponent, RichTextEditor],
   templateUrl: './compose-message-page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -36,14 +41,20 @@ export class ComposeMessagePage implements OnInit {
   templates = signal<MessageTemplate[]>([]);
   isSubmitting = signal<boolean>(false);
 
-  // Recipient search — same autocomplete shape as the dashboard's employee
-  // name search (FormControl + live-filtered dropdown, not gated behind Apply).
+  // Recipient search — <app-hud-autocomplete>, same shared shape as the
+  // dashboard's employee name search (FormControl + live-filtered dropdown,
+  // not gated behind Apply).
   recipientQueryControl = new FormControl('', { nonNullable: true });
   private recipientQuery = toSignal(this.recipientQueryControl.valueChanges, {
     initialValue: this.recipientQueryControl.value,
   });
-  showRecipientSuggestions = signal<boolean>(false);
   selectedRecipient = signal<EmployeeDirectoryEntry | null>(null);
+
+  // Same shared format as the dashboard's employee-name search (see
+  // employee-suggestion.util.ts) — disambiguates same-named employees by id,
+  // never username (EmployeeDirectoryEntry deliberately excludes it).
+  recipientLabel = formatEmployeeSuggestionLabel;
+  recipientMeta = formatEmployeeSuggestionMeta;
 
   form = this.fb.nonNullable.group({
     category: this.fb.nonNullable.control<MessageCategory>('daily_report'),
@@ -104,17 +115,11 @@ export class ComposeMessagePage implements OnInit {
 
   selectRecipient(emp: EmployeeDirectoryEntry): void {
     this.selectedRecipient.set(emp);
-    this.recipientQueryControl.setValue(emp.name);
-    this.showRecipientSuggestions.set(false);
   }
 
   clearRecipient(): void {
     this.selectedRecipient.set(null);
     this.recipientQueryControl.setValue('');
-  }
-
-  closeSuggestions(): void {
-    setTimeout(() => this.showRecipientSuggestions.set(false), 150);
   }
 
   async submit(): Promise<void> {

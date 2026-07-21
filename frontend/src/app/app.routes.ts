@@ -64,6 +64,14 @@ export const routes: Routes = [
           import('./pages/admin/documents/documents').then((m) => m.DocumentsComponent),
       },
       {
+        path: 'documents/new',
+        title: 'Tải Lên Tài Liệu - HR Control Panel',
+        loadComponent: () =>
+          import('./pages/admin/documents/upload-document-page/upload-document-page').then(
+            (m) => m.UploadDocumentPage,
+          ),
+      },
+      {
         path: 'messages',
         title: 'Tin Nhắn - HR Control Panel',
         loadComponent: () =>

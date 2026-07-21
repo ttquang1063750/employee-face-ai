@@ -29,7 +29,7 @@ import { EmployeeService } from '../../../core/services/employee.service';
 import { AttendanceSummaryComponent } from '../../admin/employee-detail/components/attendance-summary/attendance-summary';
 import { avatarUrl } from '../../../core/utils/image.util';
 import { calculateAge } from '../../../core/utils/birthday.util';
-import { triggerBlobDownload } from '../../../core/utils/download.util';
+import { openEmployeeDocument } from '../../../core/utils/document-action.util';
 import { environment } from '../../../../environments/environment';
 
 @Component({
@@ -360,14 +360,9 @@ export class StaffProfileComponent implements OnInit, OnDestroy {
   }
 
   downloadDocument(doc: EmployeeDocument): void {
-    this.http
-      .get(`${this.apiUrl}/documents/${doc.id}/download`, { responseType: 'blob' })
-      .subscribe({
-        next: (blob) => triggerBlobDownload(blob, doc.file_name),
-        error: async () => {
-          await this.dialogService.alert('LỖI', 'Không thể tải xuống tài liệu.');
-        },
-      });
+    openEmployeeDocument(this.http, this.apiUrl, doc, async () => {
+      await this.dialogService.alert('LỖI', 'Không thể tải xuống tài liệu.');
+    });
   }
 
   leaveStatusLabel(status: string): string {

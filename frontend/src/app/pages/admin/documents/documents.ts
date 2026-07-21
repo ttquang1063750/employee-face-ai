@@ -3,38 +3,31 @@ import {
   OnInit,
   signal,
   computed,
-  ElementRef,
-  viewChild,
   ChangeDetectionStrategy,
   inject,
 } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { DatePipe } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { merge } from 'rxjs';
 import { DialogService } from '../../../core/services/dialog.service';
-import { readFileAsBase64 } from '../../../core/services/webcam-capture.service';
-import { triggerBlobDownload } from '../../../core/utils/download.util';
+import { openEmployeeDocument } from '../../../core/utils/document-action.util';
 import {
   HudSelectComponent,
   HudSelectOption,
 } from '../../../core/components/hud-select/hud-select';
 import { ApiResponse } from '../../../core/models/api-response.model';
-import { EmployeeBase } from '../../../core/models/employee.model';
 import { DocumentVisibility, EmployeeDocument } from '../../../core/models/document.model';
 import { environment } from '../../../../environments/environment';
-import { EmployeeService } from '../../../core/services/employee.service';
 
 type VisibilityFilter = 'all' | DocumentVisibility;
-
-const ALLOWED_EXTENSIONS = ['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.jpg', '.jpeg', '.png'];
-const MAX_FILE_BYTES = 15 * 1024 * 1024;
 
 @Component({
   selector: 'app-documents',
   standalone: true,
-  imports: [ReactiveFormsModule, DatePipe, HudSelectComponent],
+  imports: [ReactiveFormsModule, DatePipe, RouterLink, HudSelectComponent],
   templateUrl: './documents.html',
   styleUrl: './documents.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -42,12 +35,9 @@ const MAX_FILE_BYTES = 15 * 1024 * 1024;
 export class DocumentsComponent implements OnInit {
   private http = inject(HttpClient);
   private dialogService = inject(DialogService);
-  private fb = inject(FormBuilder);
-  private employeeService = inject(EmployeeService);
   private readonly apiUrl = environment.apiBaseUrl;
 
   documents = signal<EmployeeDocument[]>([]);
-  employees = signal<EmployeeBase[]>([]);
   isLoading = signal<boolean>(true);
   errorMsg = signal<string | null>(null);
 
@@ -81,22 +71,6 @@ export class DocumentsComponent implements OnInit {
     )
       .pipe(takeUntilDestroyed())
       .subscribe(() => this.currentPage.set(1));
-
-    // A "chung" (broadcast) doc has no single owner, so the target-employee
-    // field is only required while visibility is "rieng" — mirrors the
-    // employee_id/visibility CHECK constraint enforced server-side.
-    this.uploadForm.controls.visibility.valueChanges
-      .pipe(takeUntilDestroyed())
-      .subscribe((visibility) => {
-        const employeeIdControl = this.uploadForm.controls.employeeId;
-        if (visibility === 'chung') {
-          employeeIdControl.clearValidators();
-          employeeIdControl.setValue(null);
-        } else {
-          employeeIdControl.setValidators(Validators.required);
-        }
-        employeeIdControl.updateValueAndValidity();
-      });
   }
 
   filteredDocuments = computed(() => {
@@ -128,31 +102,8 @@ export class DocumentsComponent implements OnInit {
     return this.filteredDocuments().slice(start, start + this.pageSize());
   });
 
-  // ===================== Upload modal =====================
-  showUploadModal = signal<boolean>(false);
-  isUploading = signal<boolean>(false);
-  selectedFileName = signal<string | null>(null);
-  private selectedFileBase64 = signal<string | null>(null);
-  fileInputElement = viewChild<ElementRef<HTMLInputElement>>('fileInputElement');
-
-  uploadForm = this.fb.group({
-    title: this.fb.nonNullable.control('', Validators.required),
-    visibility: this.fb.nonNullable.control<DocumentVisibility>('rieng'),
-    employeeId: this.fb.control<number | null>(null, Validators.required),
-  });
-  readonly uploadVisibilityOptions: HudSelectOption<DocumentVisibility>[] = [
-    { value: 'rieng', label: 'Riêng (chỉ 1 nhân viên nhận được)' },
-    { value: 'chung', label: 'Chung (toàn bộ nhân viên nhận được)' },
-  ];
-  // computed(), not a plain array — options must re-derive as employees() loads.
-  employeeOptions = computed<HudSelectOption<number | null>[]>(() => [
-    { value: null, label: '-- Chọn nhân viên --' },
-    ...this.employees().map((emp) => ({ value: emp.id, label: `${emp.name} (#${emp.id})` })),
-  ]);
-
   ngOnInit(): void {
     this.loadDocuments();
-    this.loadEmployees();
   }
 
   loadDocuments(): void {
@@ -175,17 +126,6 @@ export class DocumentsComponent implements OnInit {
     });
   }
 
-  loadEmployees(): void {
-    this.employeeService.getAll().subscribe({
-      next: (res) => {
-        if (res.success && res.data) {
-          this.employees.set(res.data);
-        }
-      },
-      error: () => undefined,
-    });
-  }
-
   prevPage(): void {
     if (this.currentPage() > 1) {
       this.currentPage.update((p) => p - 1);
@@ -196,78 +136,6 @@ export class DocumentsComponent implements OnInit {
     if (this.currentPage() < this.totalPages()) {
       this.currentPage.update((p) => p + 1);
     }
-  }
-
-  openUploadModal(): void {
-    this.uploadForm.reset({ title: '', visibility: 'rieng', employeeId: null });
-    this.uploadForm.controls.employeeId.setValidators(Validators.required);
-    this.uploadForm.controls.employeeId.updateValueAndValidity();
-    this.selectedFileName.set(null);
-    this.selectedFileBase64.set(null);
-    this.showUploadModal.set(true);
-  }
-
-  closeUploadModal(): void {
-    this.showUploadModal.set(false);
-  }
-
-  triggerFileInput(): void {
-    this.fileInputElement()?.nativeElement.click();
-  }
-
-  async onFileSelected(event: Event): Promise<void> {
-    const input = event.target as HTMLInputElement;
-    const file = input.files?.[0];
-    if (!file) return;
-
-    const ext = '.' + (file.name.split('.').pop() || '').toLowerCase();
-    if (!ALLOWED_EXTENSIONS.includes(ext)) {
-      await this.dialogService.alert(
-        'ĐỊNH DẠNG KHÔNG HỖ TRỢ',
-        'Chỉ chấp nhận file PDF, Word, Excel hoặc ảnh (JPG/PNG).',
-      );
-      input.value = '';
-      return;
-    }
-    if (file.size > MAX_FILE_BYTES) {
-      await this.dialogService.alert('FILE QUÁ LỚN', 'Dung lượng file tối đa cho phép là 15MB.');
-      input.value = '';
-      return;
-    }
-
-    this.selectedFileName.set(file.name);
-    this.selectedFileBase64.set(await readFileAsBase64(file));
-  }
-
-  async submitUpload(): Promise<void> {
-    if (this.uploadForm.invalid || !this.selectedFileBase64()) return;
-    const { title, visibility, employeeId } = this.uploadForm.getRawValue();
-
-    this.isUploading.set(true);
-    this.http
-      .post<ApiResponse>(`${this.apiUrl}/documents`, {
-        title,
-        visibility,
-        employee_id: visibility === 'chung' ? null : employeeId,
-        file_name: this.selectedFileName(),
-        file: this.selectedFileBase64(),
-      })
-      .subscribe({
-        next: async (res) => {
-          this.isUploading.set(false);
-          if (res.success) {
-            await this.dialogService.alert('THÀNH CÔNG', 'Tải lên tài liệu thành công.');
-            this.closeUploadModal();
-            this.loadDocuments();
-          } else {
-            await this.dialogService.alert('LỖI', res.error || 'Không thể tải lên tài liệu.');
-          }
-        },
-        error: async (err: HttpErrorResponse) => {
-          this.isUploading.set(false);
-          await this.dialogService.alert('LỖI', err.error?.error || 'Lỗi kết nối máy chủ.');
-        },
-      });
   }
 
   async deleteDocument(doc: EmployeeDocument): Promise<void> {
@@ -290,13 +158,8 @@ export class DocumentsComponent implements OnInit {
   }
 
   downloadDocument(doc: EmployeeDocument): void {
-    this.http
-      .get(`${this.apiUrl}/documents/${doc.id}/download`, { responseType: 'blob' })
-      .subscribe({
-        next: (blob) => triggerBlobDownload(blob, doc.file_name),
-        error: async () => {
-          await this.dialogService.alert('LỖI', 'Không thể tải xuống tài liệu.');
-        },
-      });
+    openEmployeeDocument(this.http, this.apiUrl, doc, async () => {
+      await this.dialogService.alert('LỖI', 'Không thể tải xuống tài liệu.');
+    });
   }
 }

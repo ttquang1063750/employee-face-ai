@@ -13,7 +13,9 @@ export interface EmployeeBase {
 // Minimal, non-admin-gated shape from GET /api/employees/directory — just
 // enough to pick a message recipient by name, not the full admin employee
 // list (which also requires role=admin server-side and includes
-// username/role/photo that a recipient picker doesn't need).
+// username/role/photo — `username` deliberately excluded here so any
+// authenticated employee can call this endpoint without leaking login
+// credentials for accounts they can't otherwise see, including admin's).
 export interface EmployeeDirectoryEntry {
   id: number;
   name: string;

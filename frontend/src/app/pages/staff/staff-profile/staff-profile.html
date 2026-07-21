@@ -86,13 +86,18 @@
           @for (doc of documents(); track doc.id) {
             <div class="comp-item">
               <div class="comp-amount text-glow-green">
-                <span>{{ doc.title }}</span>
+                <span>
+                  @if (doc.source_type === 'link') {
+                    🔗
+                  }
+                  {{ doc.title }}
+                </span>
                 <button
                   class="remove-inline-btn"
                   (click)="downloadDocument(doc)"
-                  title="Tải xuống tài liệu này"
+                  [title]="doc.source_type === 'link' ? 'Mở liên kết' : 'Tải xuống tài liệu này'"
                 >
-                  ⬇️
+                  {{ doc.source_type === 'link' ? '🔗' : '⬇️' }}
                 </button>
               </div>
               <div class="comp-details">

@@ -8,33 +8,15 @@
       <div class="form-fields">
         <div class="form-group">
           <label for="compose-recipient">NGƯỜI NHẬN</label>
-          <div class="hud-autocomplete">
-            <div class="hud-search-wrapper">
-              <input
-                id="compose-recipient"
-                type="text"
-                [formControl]="recipientQueryControl"
-                (focus)="showRecipientSuggestions.set(true)"
-                (blur)="closeSuggestions()"
-                placeholder="Tìm kiếm theo tên nhân viên..."
-                class="hud-search-input"
-                autocomplete="off"
-              />
-            </div>
-            @if (showRecipientSuggestions() && recipientSuggestions().length > 0) {
-              <ul class="hud-autocomplete-list">
-                @for (emp of recipientSuggestions(); track emp.id) {
-                  <li class="hud-autocomplete-item" (mousedown)="selectRecipient(emp)">
-                    <span class="ac-icon">👤</span>
-                    <span class="ac-info">
-                      <span class="ac-name">{{ emp.name }}</span>
-                      <span class="ac-meta">{{ emp.current_position || 'Chưa có chức vụ' }}</span>
-                    </span>
-                  </li>
-                }
-              </ul>
-            }
-          </div>
+          <app-hud-autocomplete
+            [inputId]="'compose-recipient'"
+            [formControl]="recipientQueryControl"
+            [suggestions]="recipientSuggestions()"
+            [itemLabel]="recipientLabel"
+            [itemMeta]="recipientMeta"
+            placeholder="Tìm kiếm theo tên nhân viên..."
+            (optionSelected)="selectRecipient($event)"
+          ></app-hud-autocomplete>
           @if (selectedRecipient(); as recipient) {
             <p class="selected-recipient">
               Gửi đến: <strong>{{ recipient.name }}</strong>

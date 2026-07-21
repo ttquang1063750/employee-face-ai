@@ -7,6 +7,8 @@
       "employee_name": "Tăng Thanh Quang",
       "title": "Bảng lương Tháng 7/2026",
       "file_name": "bang-luong-t7-2026.pdf",
+      "source_type": "file",
+      "external_url": null,
       "visibility": "rieng",
       "uploaded_at": "2026-07-15T08:00:00"
     },
@@ -15,7 +17,9 @@
       "employee_id": null,
       "employee_name": null,
       "title": "Thông báo nghỉ lễ Quốc khánh",
-      "file_name": "thong-bao-nghi-le.pdf",
+      "file_name": null,
+      "source_type": "link",
+      "external_url": "https://example.com/video-huong-dan.mp4",
       "visibility": "chung",
       "uploaded_at": "2026-07-10T09:00:00"
     }

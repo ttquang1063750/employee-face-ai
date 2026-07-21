@@ -15,6 +15,7 @@ import {
   HudSelectComponent,
   HudSelectOption,
 } from '../../../core/components/hud-select/hud-select';
+import { HudAutocompleteComponent } from '../../../core/components/hud-autocomplete/hud-autocomplete';
 import { ApiResponse } from '../../../core/models/api-response.model';
 import { EmployeeBase } from '../../../core/models/employee.model';
 import { AttendanceLogEntry } from '../../../core/models/attendance-log.model';
@@ -25,6 +26,10 @@ import { todayLocalDateString, startOfMonthLocalDateString } from '../../../core
 import { triggerBlobDownload } from '../../../core/utils/download.util';
 import { environment } from '../../../../environments/environment';
 import { EmployeeService } from '../../../core/services/employee.service';
+import {
+  employeeSuggestionLabel as formatEmployeeSuggestionLabel,
+  employeeSuggestionMeta as formatEmployeeSuggestionMeta,
+} from '../../../core/utils/employee-suggestion.util';
 import { StatWidgetComponent } from './components/stat-widget/stat-widget';
 import { HourlyChartComponent } from './components/hourly-chart/hourly-chart';
 import { MoodDonutComponent } from './components/mood-donut/mood-donut';
@@ -38,6 +43,7 @@ import { DialogService } from '../../../core/services/dialog.service';
     ReactiveFormsModule,
     DatePickerComponent,
     HudSelectComponent,
+    HudAutocompleteComponent,
     StatWidgetComponent,
     HourlyChartComponent,
     MoodDonutComponent,
@@ -76,8 +82,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
     initialValue: this.nameControl.value,
   });
 
-  // Autocomplete dropdown state
-  showSuggestions = signal<boolean>(false);
+  // Label/meta accessors for <app-hud-autocomplete>, shared with the compose
+  // page's recipient picker (see employee-suggestion.util.ts).
+  employeeSuggestionLabel = formatEmployeeSuggestionLabel;
+  employeeSuggestionMeta = formatEmployeeSuggestionMeta;
 
   // Status filter (all/CHECK_IN/CHECK_OUT) — global, folded into
   // filteredLogs() below like the date range and name search, so every
@@ -361,19 +369,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.currentPage.set(1);
   }
 
-  selectSuggestion(emp: EmployeeBase): void {
-    this.nameControl.setValue(emp.name);
-    this.showSuggestions.set(false);
+  selectSuggestion(): void {
     this.currentPage.set(1);
   }
 
   onSearchInput(): void {
-    this.showSuggestions.set(true);
     this.currentPage.set(1);
-  }
-
-  closeSuggestions(): void {
-    setTimeout(() => this.showSuggestions.set(false), 150);
   }
 
   exportCSV(): void {

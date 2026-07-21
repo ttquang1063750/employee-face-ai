@@ -2,7 +2,7 @@
   <div class="dashboard-content">
     <div class="page-title-row">
       <h2 class="title">📄 QUẢN LÝ TÀI LIỆU NHÂN SỰ</h2>
-      <button class="hud-btn-success" (click)="openUploadModal()">TẢI LÊN TÀI LIỆU MỚI</button>
+      <a class="hud-btn-success" [routerLink]="['new']">TẢI LÊN TÀI LIỆU MỚI</a>
     </div>
 
     <div class="hud-filter-bar">
@@ -56,8 +56,15 @@
             <tbody>
               @for (doc of paginatedDocuments(); track doc.id) {
                 <tr>
-                  <td class="log-name">{{ doc.title }}</td>
-                  <td>{{ doc.employee_name || 'Toàn bộ nhân viên' }}</td>
+                  <td class="log-name">
+                    @if (doc.source_type === 'link') {
+                      🔗
+                    }
+                    {{ doc.title }}
+                  </td>
+                  <td>
+                    {{ doc.employee_name ? doc.employee_name + ' · #' + doc.employee_id : 'Toàn bộ nhân viên' }}
+                  </td>
                   <td>
                     <span
                       class="doc-visibility-badge"
@@ -71,10 +78,10 @@
                     <button
                       type="button"
                       class="hud-btn-mini"
-                      data-tooltip="Tải xuống"
+                      [attr.data-tooltip]="doc.source_type === 'link' ? 'Mở liên kết' : 'Tải xuống'"
                       (click)="downloadDocument(doc)"
                     >
-                      ⬇️
+                      {{ doc.source_type === 'link' ? '🔗' : '⬇️' }}
                     </button>
                     <button
                       type="button"
@@ -127,81 +134,3 @@
     }
   </div>
 </div>
-
-@if (showUploadModal()) {
-  <div class="modal-backdrop">
-    <div class="modal-card mini">
-      <div class="modal-header">
-        <h3>📄 TẢI LÊN TÀI LIỆU MỚI</h3>
-        <button class="close-btn" (click)="closeUploadModal()">✖</button>
-      </div>
-      <div class="modal-body" [formGroup]="uploadForm">
-        <div class="form-fields">
-          <div class="form-group">
-            <label for="doc-title">TIÊU ĐỀ TÀI LIỆU</label>
-            <input
-              id="doc-title"
-              type="text"
-              formControlName="title"
-              placeholder="VD: Bảng lương Tháng 7/2026"
-              class="hud-input"
-            />
-          </div>
-
-          <div class="form-group">
-            <label for="doc-visibility">LOẠI TÀI LIỆU</label>
-            <app-hud-select
-              [selectId]="'doc-visibility'"
-              [options]="uploadVisibilityOptions"
-              formControlName="visibility"
-            ></app-hud-select>
-          </div>
-
-          @if (uploadForm.controls.visibility.value === 'rieng') {
-            <div class="form-group">
-              <label for="doc-employee">NHÂN VIÊN NHẬN TÀI LIỆU</label>
-              <app-hud-select
-                [selectId]="'doc-employee'"
-                [options]="employeeOptions()"
-                formControlName="employeeId"
-              ></app-hud-select>
-            </div>
-          }
-
-          <div class="form-group">
-            <span class="hud-label">FILE TÀI LIỆU (PDF, Word, Excel, ảnh — tối đa 15MB)</span>
-            <input
-              #fileInputElement
-              type="file"
-              (change)="onFileSelected($event)"
-              class="visually-hidden-input"
-              accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png"
-            />
-            <div class="filter-actions-row">
-              <button type="button" class="hud-btn-outline" (click)="triggerFileInput()">
-                📁 CHỌN FILE
-              </button>
-              @if (selectedFileName()) {
-                <span class="selected-file-name">{{ selectedFileName() }}</span>
-              }
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button
-          class="hud-btn-success"
-          [disabled]="isUploading() || uploadForm.invalid || !selectedFileName()"
-          (click)="submitUpload()"
-        >
-          @if (isUploading()) {
-            <div class="loader"></div>
-          } @else {
-            <span>TẢI LÊN</span>
-          }
-        </button>
-        <button class="hud-btn-secondary" (click)="closeUploadModal()">HỦY</button>
-      </div>
-    </div>
-  </div>
-}

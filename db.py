@@ -252,6 +252,21 @@ def init_db():
                 )
             );
         """)
+        # A document is either an uploaded file (source_type='file', the
+        # original behavior) or a pasted external link (source_type='link',
+        # e.g. a video hosted elsewhere) — file_name/file_path are only
+        # populated for the former, external_url only for the latter. Kept
+        # as a Python-side invariant (handle_create_document), not a new DB
+        # CHECK, mirroring how visibility/employee_id is already validated
+        # in both places — adding a CHECK to a live table needs a
+        # pg_constraint existence guard that isn't worth the risk here.
+        cur.execute(
+            "ALTER TABLE employee_documents ADD COLUMN IF NOT EXISTS source_type VARCHAR(10) NOT NULL DEFAULT 'file';"
+        )
+        cur.execute("ALTER TABLE employee_documents ADD COLUMN IF NOT EXISTS external_url VARCHAR(2048);")
+        cur.execute("ALTER TABLE employee_documents ALTER COLUMN file_name DROP NOT NULL;")
+        cur.execute("ALTER TABLE employee_documents ALTER COLUMN file_path DROP NOT NULL;")
+        conn.commit()
         conn.commit()
         # 10. employee_messages — free-form internal messages between any two
         # employees (not just staff->admin), with a fixed `category` enum
@@ -272,8 +287,12 @@ def init_db():
         # Per-side soft delete: each party can hide the message from their own
         # list without affecting the other party's copy. Once both sides have
         # deleted it, the row itself is purged (see delete_message_for_employee).
-        cur.execute("ALTER TABLE employee_messages ADD COLUMN IF NOT EXISTS deleted_by_sender BOOLEAN NOT NULL DEFAULT FALSE;")
-        cur.execute("ALTER TABLE employee_messages ADD COLUMN IF NOT EXISTS deleted_by_recipient BOOLEAN NOT NULL DEFAULT FALSE;")
+        cur.execute(
+            "ALTER TABLE employee_messages ADD COLUMN IF NOT EXISTS deleted_by_sender BOOLEAN NOT NULL DEFAULT FALSE;"
+        )
+        cur.execute(
+            "ALTER TABLE employee_messages ADD COLUMN IF NOT EXISTS deleted_by_recipient BOOLEAN NOT NULL DEFAULT FALSE;"
+        )
         # 11. message_templates — global (no employee_id): any employee can use
         # any template when composing, but only an admin can create/edit/delete
         # one (enforced in server.py, not here).
@@ -759,16 +778,17 @@ def update_leave_request_status(request_id, status, rejection_reason=None):
         conn.close()
 
 
-def create_document(title, file_name, visibility, employee_id=None):
+def create_document(title, file_name, visibility, employee_id=None, source_type="file", external_url=None):
     conn = get_connection()
     cur = conn.cursor()
     try:
         cur.execute(
             """
-            INSERT INTO employee_documents (employee_id, title, file_name, file_path, visibility)
-            VALUES (%s, %s, %s, '', %s) RETURNING id;
+            INSERT INTO employee_documents
+                (employee_id, title, file_name, file_path, visibility, source_type, external_url)
+            VALUES (%s, %s, %s, '', %s, %s, %s) RETURNING id;
         """,
-            (employee_id, title, file_name, visibility),
+            (employee_id, title, file_name, visibility, source_type, external_url),
         )
         document_id = cur.fetchone()[0]
         conn.commit()
@@ -801,7 +821,7 @@ def get_all_documents():
     try:
         cur.execute("""
             SELECT d.id, d.employee_id, e.name AS employee_name, d.title, d.file_name,
-                   d.visibility, d.uploaded_at
+                   d.source_type, d.external_url, d.visibility, d.uploaded_at
             FROM employee_documents d
             LEFT JOIN employees e ON d.employee_id = e.id
             ORDER BY d.uploaded_at DESC;
@@ -822,7 +842,7 @@ def get_documents_for_employee(employee_id):
         cur.execute(
             """
             SELECT d.id, d.employee_id, e.name AS employee_name, d.title, d.file_name,
-                   d.visibility, d.uploaded_at
+                   d.source_type, d.external_url, d.visibility, d.uploaded_at
             FROM employee_documents d
             LEFT JOIN employees e ON d.employee_id = e.id
             WHERE d.visibility = 'chung' OR d.employee_id = %s
@@ -845,7 +865,8 @@ def get_document(document_id):
     try:
         cur.execute(
             """
-            SELECT id, employee_id, title, file_name, file_path, visibility, uploaded_at
+            SELECT id, employee_id, title, file_name, file_path, source_type, external_url,
+                   visibility, uploaded_at
             FROM employee_documents WHERE id = %s;
         """,
             (document_id,),
@@ -1143,9 +1164,12 @@ def get_all_employees():
 
 def get_employee_directory():
     """Minimal, non-admin-gated employee list — just enough for picking a
-    message recipient by name (id, name, current position). Deliberately
-    excludes username/role/photo, unlike get_all_employees() above (Admin
-    only), so this can safely be exposed to any authenticated employee."""
+    message recipient by name (id, name, current position; `id` also lets the
+    picker disambiguate same-named employees without exposing anyone's
+    username — half of a login credential — to every authenticated
+    employee). Deliberately excludes username/role/photo, unlike
+    get_all_employees() above (Admin only), so this can safely be exposed to
+    any authenticated employee."""
     conn = get_connection()
     cur = conn.cursor(cursor_factory=RealDictCursor)
     try:

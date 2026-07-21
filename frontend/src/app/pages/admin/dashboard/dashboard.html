@@ -63,38 +63,15 @@
         <!-- Autocomplete employee name search -->
         <div class="hud-field grow-3">
           <label class="hud-label" for="dashboard-employee-search">TÊN NHÂN VIÊN</label>
-          <div class="hud-autocomplete">
-            <div class="hud-search-wrapper">
-              <input
-                id="dashboard-employee-search"
-                type="text"
-                [formControl]="nameControl"
-                (focus)="showSuggestions.set(true)"
-                (blur)="closeSuggestions()"
-                placeholder="Tìm kiếm tên nhân viên..."
-                class="hud-search-input"
-                autocomplete="off"
-              />
-            </div>
-            @if (showSuggestions() && employeeSuggestions().length > 0) {
-              <ul class="hud-autocomplete-list">
-                @for (emp of employeeSuggestions(); track emp.id) {
-                  <li class="hud-autocomplete-item" (mousedown)="selectSuggestion(emp)">
-                    <span class="ac-icon">👤</span>
-                    <span class="ac-info">
-                      <span class="ac-name">{{ emp.name }}</span>
-                      <span class="ac-meta">
-                        {{ emp.current_position || 'Chưa có chức vụ' }}
-                        @if (emp.username) {
-                          · &#64;{{ emp.username }}
-                        }
-                      </span>
-                    </span>
-                  </li>
-                }
-              </ul>
-            }
-          </div>
+          <app-hud-autocomplete
+            [inputId]="'dashboard-employee-search'"
+            [formControl]="nameControl"
+            [suggestions]="employeeSuggestions()"
+            [itemLabel]="employeeSuggestionLabel"
+            [itemMeta]="employeeSuggestionMeta"
+            placeholder="Tìm kiếm tên nhân viên..."
+            (optionSelected)="selectSuggestion()"
+          ></app-hud-autocomplete>
         </div>
       </div>
 

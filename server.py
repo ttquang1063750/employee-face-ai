@@ -9,6 +9,7 @@ import csv
 import io
 import json
 import re
+import shutil
 import tempfile
 import threading
 import time
@@ -17,6 +18,7 @@ from datetime import datetime
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlparse
 
+import multipart
 from deepface import DeepFace
 
 import db
@@ -150,10 +152,13 @@ MOOD_TRANSLATION = {
 # stall a DeepFace call (detection/embedding time scales with image size).
 MAX_IMAGE_BYTES = 8 * 1024 * 1024  # 8 MB
 
-# HR documents (payroll slips, contracts, etc.) aren't run through DeepFace and
-# can legitimately be a few MB (a scanned PDF), so they get their own, larger
-# cap rather than sharing MAX_IMAGE_BYTES.
-MAX_DOCUMENT_BYTES = 15 * 1024 * 1024  # 15 MB
+# HR documents (payroll slips, contracts, videos, etc.) aren't run through
+# DeepFace and can legitimately be large (a scanned PDF, a short video), so
+# they get their own, much larger cap rather than sharing MAX_IMAGE_BYTES.
+# Documents are the one upload path streamed via real multipart/form-data
+# (see handle_create_document) rather than base64-in-JSON, specifically so
+# a cap this size doesn't mean holding the whole payload in RAM at once.
+MAX_DOCUMENT_BYTES = 5 * 1024 * 1024 * 1024  # 5 GB
 
 DOCUMENTS_DIR = os.path.join(UPLOADS_ROOT, "documents")
 os.makedirs(DOCUMENTS_DIR, exist_ok=True)
@@ -172,7 +177,15 @@ DOCUMENT_CONTENT_TYPES = {
     ".jpg": "image/jpeg",
     ".jpeg": "image/jpeg",
     ".png": "image/png",
+    ".mp4": "video/mp4",
+    ".webm": "video/webm",
+    ".mov": "video/quicktime",
 }
+
+# Allowed URL schemes for a "link"-source document (see handle_create_document)
+# — deliberately excludes javascript:/data:/file: etc., since external_url is
+# later handed straight to the browser as a link target (window.open/href).
+ALLOWED_EXTERNAL_URL_SCHEMES = ("http://", "https://")
 
 
 def base64_within_size_limit(base64_str, max_bytes):
@@ -381,15 +394,18 @@ class EmployeeFaceAIRequestHandler(BaseHTTPRequestHandler):
             return
 
         try:
+            file_size = os.path.getsize(requested_path)
             with open(requested_path, "rb") as f:
-                content = f.read()
-            self.send_response(200)
-            self.send_header("Content-Type", content_type)
-            self.send_header("Content-Length", str(len(content)))
-            if download_name:
-                self.send_header("Content-Disposition", f'attachment; filename="{download_name}"')
-            self.end_headers()
-            self.wfile.write(content)
+                self.send_response(200)
+                self.send_header("Content-Type", content_type)
+                self.send_header("Content-Length", str(file_size))
+                if download_name:
+                    self.send_header("Content-Disposition", f'attachment; filename="{download_name}"')
+                self.end_headers()
+                # Chunked copy (not f.read() into memory) — documents can now
+                # be gigabytes (see MAX_DOCUMENT_BYTES), so the whole file
+                # must never be buffered in RAM at once for a download either.
+                shutil.copyfileobj(f, self.wfile, length=1024 * 1024)
         except FileNotFoundError:
             self.send_error(404, "File Not Found")
 
@@ -1410,59 +1426,160 @@ class EmployeeFaceAIRequestHandler(BaseHTTPRequestHandler):
 
     def handle_create_document(self):
         # Admin-only: upload a new HR document, broadcast ("chung") or scoped
-        # to one employee ("rieng").
+        # to one employee ("rieng") — either an uploaded file or a pasted
+        # external link. Streamed via real multipart/form-data (python-multipart),
+        # the one exception to this app's base64-in-JSON upload convention,
+        # since documents can legitimately be gigabytes (MAX_DOCUMENT_BYTES) —
+        # holding the whole payload in memory the way every other upload does
+        # isn't viable at that size.
         user = self.get_authenticated_user()
         if not user or user["role"] != "admin":
             self.send_json_response(401, {"success": False, "error": "Unauthorized access"})
             return
+
+        content_type_header = self.headers.get("Content-Type", "")
+        if "multipart/form-data" not in content_type_header:
+            self.send_json_response(
+                400, {"success": False, "error": "Yêu cầu không hợp lệ (thiếu multipart/form-data)."}
+            )
+            return
+
         try:
-            content_length = int(self.headers["Content-Length"])
-            post_data = self.rfile.read(content_length)
-            data = json.loads(post_data.decode("utf-8"))
+            content_length = int(self.headers.get("Content-Length", 0))
+        except ValueError:
+            self.send_json_response(400, {"success": False, "error": "Thiếu Content-Length hợp lệ."})
+            return
 
-            title = (data.get("title") or "").strip()
-            visibility = data.get("visibility")
-            employee_id = data.get("employee_id")
-            file_name = data.get("file_name") or ""
-            file_data = data.get("file")
+        # Cheap upfront rejection before streaming a single byte to disk — a
+        # multipart request is Content-Length + a little overhead (boundaries,
+        # part headers) larger than the file itself, so this generous margin
+        # still catches anything meaningfully over the real cap.
+        if content_length > MAX_DOCUMENT_BYTES + (1024 * 1024):
+            self.send_json_response(
+                400, {"success": False, "error": "File tài liệu vượt quá dung lượng cho phép (5GB)."}
+            )
+            return
 
-            if not title:
-                self.send_json_response(400, {"success": False, "error": "Thiếu tiêu đề tài liệu."})
-                return
-            if visibility not in ("chung", "rieng"):
-                self.send_json_response(400, {"success": False, "error": "Loại tài liệu không hợp lệ."})
-                return
-            if visibility == "rieng" and not employee_id:
-                self.send_json_response(
-                    400, {"success": False, "error": "Vui lòng chọn nhân viên nhận tài liệu riêng."}
-                )
-                return
-            if visibility == "chung":
+        fields = {}
+        uploaded_file = {}
+
+        def on_field(field):
+            name = field.field_name.decode("utf-8")
+            fields[name] = field.value.decode("utf-8") if field.value is not None else ""
+
+        def on_file(file):
+            uploaded_file["file"] = file
+
+        try:
+            parser = multipart.create_form_parser(
+                {"Content-Type": content_type_header.encode("utf-8")},
+                on_field,
+                on_file,
+                config={"MAX_MEMORY_FILE_SIZE": 1024 * 1024, "UPLOAD_DELETE_TMP": False},
+            )
+            bytes_read = 0
+            while bytes_read < content_length:
+                chunk = self.rfile.read(min(1024 * 1024, content_length - bytes_read))
+                if not chunk:
+                    break
+                parser.write(chunk)
+                bytes_read += len(chunk)
+            parser.finalize()
+        except Exception as e:
+            self.send_json_response(400, {"success": False, "error": f"Không thể phân tích dữ liệu tải lên: {e}"})
+            return
+
+        uploaded = uploaded_file.get("file")
+
+        title = (fields.get("title") or "").strip()
+        visibility = fields.get("visibility")
+        employee_id = fields.get("employee_id") or None
+        source_type = fields.get("source_type") or "file"
+        external_url = (fields.get("external_url") or "").strip()
+
+        if employee_id is not None:
+            try:
+                employee_id = int(employee_id)
+            except ValueError:
                 employee_id = None
 
-            ext = os.path.splitext(file_name)[1].lower()
-            if ext not in DOCUMENT_CONTENT_TYPES:
-                self.send_json_response(400, {"success": False, "error": "Định dạng file không được hỗ trợ."})
-                return
-            if not file_data or not base64_within_size_limit(file_data, MAX_DOCUMENT_BYTES):
+        if not title:
+            self.send_json_response(400, {"success": False, "error": "Thiếu tiêu đề tài liệu."})
+            return
+        if visibility not in ("chung", "rieng"):
+            self.send_json_response(400, {"success": False, "error": "Loại tài liệu không hợp lệ."})
+            return
+        if visibility == "rieng" and not employee_id:
+            self.send_json_response(400, {"success": False, "error": "Vui lòng chọn nhân viên nhận tài liệu riêng."})
+            return
+        if visibility == "chung":
+            employee_id = None
+        if source_type not in ("file", "link"):
+            self.send_json_response(400, {"success": False, "error": "Nguồn tài liệu không hợp lệ."})
+            return
+
+        if source_type == "link":
+            if uploaded is not None:
+                uploaded.close()
+            if not external_url.lower().startswith(ALLOWED_EXTERNAL_URL_SCHEMES):
                 self.send_json_response(
-                    400,
-                    {"success": False, "error": "File tài liệu trống hoặc vượt quá dung lượng cho phép (15MB)."},
+                    400, {"success": False, "error": "Liên kết phải bắt đầu bằng http:// hoặc https://."}
                 )
                 return
+            try:
+                document_id = db.create_document(
+                    title, None, visibility, employee_id, source_type="link", external_url=external_url
+                )
+                self.send_json_response(
+                    200, {"success": True, "message": "Đã thêm liên kết tài liệu.", "id": document_id}
+                )
+            except Exception as e:
+                self.send_json_response(500, {"success": False, "error": str(e)})
+            return
 
-            document_id = db.create_document(title, file_name, visibility, employee_id)
+        # source_type == "file"
+        if uploaded is None or not uploaded.file_name:
+            self.send_json_response(400, {"success": False, "error": "File tài liệu trống hoặc không hợp lệ."})
+            return
+
+        file_name = uploaded.file_name.decode("utf-8")
+        ext = os.path.splitext(file_name)[1].lower()
+        if ext not in DOCUMENT_CONTENT_TYPES:
+            uploaded.close()
+            if not uploaded.in_memory:
+                os.remove(uploaded.actual_file_name.decode("utf-8"))
+            self.send_json_response(400, {"success": False, "error": "Định dạng file không được hỗ trợ."})
+            return
+        if uploaded.size == 0 or uploaded.size > MAX_DOCUMENT_BYTES:
+            uploaded.close()
+            if not uploaded.in_memory:
+                os.remove(uploaded.actual_file_name.decode("utf-8"))
+            self.send_json_response(
+                400,
+                {"success": False, "error": "File tài liệu trống hoặc vượt quá dung lượng cho phép (5GB)."},
+            )
+            return
+
+        document_id = None
+        try:
+            document_id = db.create_document(title, file_name, visibility, employee_id, source_type="file")
             output_path = os.path.join(DOCUMENTS_DIR, f"{document_id}{ext}")
-            if not save_base64_file(file_data, output_path, MAX_DOCUMENT_BYTES):
-                db.delete_document(document_id)
-                self.send_json_response(400, {"success": False, "error": "Không thể lưu file tài liệu."})
-                return
+            if uploaded.in_memory:
+                data = uploaded.file_object.getvalue()
+                uploaded.close()
+                with open(output_path, "wb") as out:
+                    out.write(data)
+            else:
+                uploaded.close()
+                shutil.move(uploaded.actual_file_name.decode("utf-8"), output_path)
             db.set_document_file_path(document_id, output_path)
 
             self.send_json_response(
                 200, {"success": True, "message": "Tải lên tài liệu thành công.", "id": document_id}
             )
         except Exception as e:
+            if document_id is not None:
+                db.delete_document(document_id)
             self.send_json_response(500, {"success": False, "error": str(e)})
 
     def handle_delete_document(self):
@@ -1507,9 +1624,7 @@ class EmployeeFaceAIRequestHandler(BaseHTTPRequestHandler):
                 return
 
             message_id = db.create_message(user["employee_id"], recipient_id, category, subject, content)
-            self.send_json_response(
-                200, {"success": True, "message": "Gửi tin nhắn thành công.", "id": message_id}
-            )
+            self.send_json_response(200, {"success": True, "message": "Gửi tin nhắn thành công.", "id": message_id})
         except Exception as e:
             self.send_json_response(500, {"success": False, "error": str(e)})
 
@@ -1587,9 +1702,7 @@ class EmployeeFaceAIRequestHandler(BaseHTTPRequestHandler):
             # A message the caller has soft-deleted from their own side is
             # gone as far as they're concerned, even though the other party
             # may still see it.
-            if (is_sender and message["deleted_by_sender"]) or (
-                is_recipient and message["deleted_by_recipient"]
-            ):
+            if (is_sender and message["deleted_by_sender"]) or (is_recipient and message["deleted_by_recipient"]):
                 self.send_json_response(404, {"success": False, "error": "Không tìm thấy tin nhắn."})
                 return
             message.pop("deleted_by_sender", None)
@@ -1738,6 +1851,14 @@ class EmployeeFaceAIRequestHandler(BaseHTTPRequestHandler):
         is_broadcast = document["visibility"] == "chung"
         if user["role"] != "admin" and not is_owner and not is_broadcast:
             self.send_error(401, "Unauthorized")
+            return
+
+        if document["source_type"] == "link":
+            # No local file to serve — redirect to the external URL, still
+            # gated behind the same authorization checks above.
+            self.send_response(302)
+            self.send_header("Location", document["external_url"])
+            self.end_headers()
             return
 
         self._serve_local_file(

@@ -1,6 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { provideRouter } from '@angular/router';
 import { DocumentsComponent } from './documents';
 import { EmployeeDocument } from '../../../core/models/document.model';
 
@@ -11,6 +12,8 @@ function makeDoc(overrides: Partial<EmployeeDocument>): EmployeeDocument {
     employee_name: 'Tăng Thanh Quang',
     title: 'Bảng lương Tháng 7',
     file_name: 'bang-luong-t7.pdf',
+    source_type: 'file',
+    external_url: null,
     visibility: 'rieng',
     uploaded_at: '2026-07-15T08:00:00',
     ...overrides,
@@ -24,7 +27,7 @@ describe('DocumentsComponent', () => {
   beforeEach(() => {
     TestBed.resetTestingModule();
     TestBed.configureTestingModule({
-      providers: [provideHttpClient(), provideHttpClientTesting()],
+      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])],
     });
     const fixture = TestBed.createComponent(DocumentsComponent);
     component = fixture.componentInstance;
@@ -130,27 +133,6 @@ describe('DocumentsComponent', () => {
       component.currentPage.set(1);
       component.nextPage();
       expect(component.currentPage()).toBe(2);
-    });
-  });
-
-  describe('upload form visibility/employeeId validator toggle', () => {
-    it('requires employeeId when visibility is "rieng" (the default)', () => {
-      expect(component.uploadForm.controls.employeeId.hasError('required')).toBe(true);
-    });
-
-    it('clears the employeeId requirement and value when visibility switches to "chung"', () => {
-      component.uploadForm.controls.employeeId.setValue(11);
-      component.uploadForm.controls.visibility.setValue('chung');
-
-      expect(component.uploadForm.controls.employeeId.value).toBeNull();
-      expect(component.uploadForm.controls.employeeId.valid).toBe(true);
-    });
-
-    it('re-requires employeeId when visibility switches back to "rieng"', () => {
-      component.uploadForm.controls.visibility.setValue('chung');
-      component.uploadForm.controls.visibility.setValue('rieng');
-
-      expect(component.uploadForm.controls.employeeId.hasError('required')).toBe(true);
     });
   });
 

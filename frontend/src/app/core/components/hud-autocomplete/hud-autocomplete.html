@@ -1,0 +1,31 @@
+<div class="hud-autocomplete">
+  <div class="hud-search-wrapper">
+    <input
+      [attr.id]="inputId() || null"
+      type="text"
+      [value]="value()"
+      (input)="onInput($any($event.target).value)"
+      (focus)="openPanel()"
+      (blur)="closePanel()"
+      [placeholder]="placeholder()"
+      [disabled]="disabled()"
+      class="hud-search-input"
+      autocomplete="off"
+    />
+  </div>
+  @if (isOpen() && suggestions().length > 0) {
+    <ul class="hud-autocomplete-list">
+      @for (item of suggestions(); track $index) {
+        <li class="hud-autocomplete-item" (mousedown)="selectOption(item)">
+          <span class="ac-icon">{{ icon() }}</span>
+          <span class="ac-info">
+            <span class="ac-name">{{ itemLabel()(item) }}</span>
+            @if (itemMeta()(item); as meta) {
+              <span class="ac-meta">{{ meta }}</span>
+            }
+          </span>
+        </li>
+      }
+    </ul>
+  }
+</div>

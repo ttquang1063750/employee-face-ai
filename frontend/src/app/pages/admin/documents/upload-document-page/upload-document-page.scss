@@ -1,0 +1,21 @@
+.selected-file-name {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+}
+
+// Upload progress bar — inline SVG (not a CSS [style.width] binding, rule 28)
+// so the fill width is a plain SVG attribute like the dashboard's other
+// no-external-chart-library visuals (hourly-chart's <rect> bars).
+.upload-progress-track {
+  display: block;
+  width: 100%;
+  height: 6px;
+  border-radius: var(--radius-sm);
+  background: rgba(var(--color-border-rgb), 0.3);
+  overflow: hidden;
+}
+
+.upload-progress-fill {
+  fill: var(--color-cyan);
+  transition: var(--transition-fast);
+}
