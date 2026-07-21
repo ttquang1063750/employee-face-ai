@@ -3,6 +3,44 @@
     <button
       type="button"
       class="hud-btn-mini"
+      data-tooltip="Tiêu đề 1"
+      [class.active]="toolbarState().headingLevel === 1"
+      (click)="setHeading(1)"
+    >
+      H1
+    </button>
+    <button
+      type="button"
+      class="hud-btn-mini"
+      data-tooltip="Tiêu đề 2"
+      [class.active]="toolbarState().headingLevel === 2"
+      (click)="setHeading(2)"
+    >
+      H2
+    </button>
+    <button
+      type="button"
+      class="hud-btn-mini"
+      data-tooltip="Tiêu đề 3"
+      [class.active]="toolbarState().headingLevel === 3"
+      (click)="setHeading(3)"
+    >
+      H3
+    </button>
+
+    <div class="rich-editor-font-size">
+      <app-hud-select
+        [options]="fontSizeOptions"
+        [formControl]="fontSizeControl"
+        placeholder="Cỡ chữ"
+      ></app-hud-select>
+    </div>
+
+    <span class="rich-editor-toolbar-divider"></span>
+
+    <button
+      type="button"
+      class="hud-btn-mini"
       data-tooltip="Đậm"
       [class.active]="toolbarState().bold"
       (click)="toggleBold()"
@@ -27,6 +65,40 @@
     >
       <span class="underline-label">U</span>
     </button>
+    <button
+      type="button"
+      class="hud-btn-mini"
+      data-tooltip="Mã inline"
+      [class.active]="toolbarState().code"
+      (click)="toggleCode()"
+    >
+      &lt;/&gt;
+    </button>
+    <button
+      type="button"
+      class="hud-btn-mini"
+      data-tooltip="Khối mã"
+      [class.active]="toolbarState().codeBlock"
+      (click)="toggleCodeBlock()"
+    >
+      &#123;&#125;
+    </button>
+    <button
+      type="button"
+      class="hud-btn-mini rich-editor-color-picker"
+      data-tooltip="Màu chữ"
+      (click)="triggerColorPicker()"
+    >
+      🖌️
+      <span class="rich-editor-color-indicator" [style.background]="currentColor()"></span>
+    </button>
+    <input
+      #colorPickerInput
+      type="color"
+      [value]="currentColor()"
+      (input)="onColorPicked($event)"
+      class="visually-hidden-input"
+    />
 
     <span class="rich-editor-toolbar-divider"></span>
 
