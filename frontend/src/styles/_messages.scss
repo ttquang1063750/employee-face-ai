@@ -326,12 +326,22 @@
 }
 
 .rich-editor-content {
-  padding: var(--space-3) var(--space-4);
-  min-height: 220px;
-  outline: none;
   font-family: 'Inter', sans-serif;
   font-size: var(--text-base);
   color: var(--color-heading);
+
+  // Tiptap mounts its own contenteditable (.tiptap.ProseMirror) as a CHILD
+  // of this element rather than turning this element itself into the
+  // editable surface — it only grows to fit its own content. Padding/
+  // min-height belong on that child, not here: put them here instead and
+  // clicking the "empty" space below a short paragraph lands on this
+  // element's own padding box, not the contenteditable, so no cursor
+  // appears (exactly the bug this fixes).
+  .tiptap {
+    padding: var(--space-3) var(--space-4);
+    min-height: 220px;
+    outline: none;
+  }
 }
 
 // Shared typography for both the live editor surface and the read-only
