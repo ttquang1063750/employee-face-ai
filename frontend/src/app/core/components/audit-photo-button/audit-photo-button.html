@@ -1,7 +1,7 @@
 <button
   type="button"
   class="hud-btn-mini"
-  data-tooltip="Xem ảnh chấm công"
+  [attr.data-tooltip]="'auditPhoto.viewTooltip' | translate"
   [disabled]="!imagePath() || isLoading()"
   (click)="view()"
 >
@@ -13,22 +13,18 @@
 </button>
 
 @if (loadFailed()) {
-  <span
-    class="audit-photo-error"
-    title="Không thể tải ảnh — có thể đã bị xóa theo chính sách lưu trữ 90 ngày."
-    >⚠️</span
-  >
+  <span class="audit-photo-error" [attr.title]="'auditPhoto.loadFailed' | translate">⚠️</span>
 }
 
 @if (photoUrl(); as url) {
   <div class="modal-backdrop">
     <div class="modal-card mini">
       <div class="modal-header">
-        <h3>📸 ẢNH CHẤM CÔNG</h3>
+        <h3>{{ 'auditPhoto.modalTitle' | translate }}</h3>
         <button class="close-btn" (click)="close()">✖</button>
       </div>
       <div class="modal-body">
-        <img [src]="url" alt="Ảnh chấm công" class="audit-photo-full" />
+        <img [src]="url" [attr.alt]="'auditPhoto.imageAlt' | translate" class="audit-photo-full" />
       </div>
     </div>
   </div>

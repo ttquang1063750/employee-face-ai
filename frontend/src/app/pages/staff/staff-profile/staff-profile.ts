@@ -12,12 +12,10 @@ import {
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { AuthService } from '../../../core/services/auth.service';
 import { DialogService } from '../../../core/services/dialog.service';
-import {
-  PASSWORD_HINT,
-  passwordComplexityValidator,
-} from '../../../core/services/credentials.util';
+import { passwordComplexityValidator } from '../../../core/services/credentials.util';
 import { DatePickerComponent } from '../../../core/components/date-picker/date-picker';
 import { DetailedEmployee } from '../../../core/models/employee.model';
 import { LeaveRequest } from '../../../core/models/leave-request.model';
@@ -35,7 +33,13 @@ import { environment } from '../../../../environments/environment';
 @Component({
   selector: 'app-staff-profile',
   standalone: true,
-  imports: [ReactiveFormsModule, CommonModule, DatePickerComponent, AttendanceSummaryComponent],
+  imports: [
+    ReactiveFormsModule,
+    CommonModule,
+    DatePickerComponent,
+    AttendanceSummaryComponent,
+    TranslatePipe,
+  ],
   templateUrl: './staff-profile.html',
   styleUrl: './staff-profile.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -47,6 +51,7 @@ export class StaffProfileComponent implements OnInit, OnDestroy {
   private dialogService = inject(DialogService);
   private fb = inject(FormBuilder);
   private employeeService = inject(EmployeeService);
+  private translate = inject(TranslateService);
 
   videoElement = viewChild<ElementRef<HTMLVideoElement>>('videoElement');
   canvasElement = viewChild<ElementRef<HTMLCanvasElement>>('canvasElement');
@@ -68,7 +73,6 @@ export class StaffProfileComponent implements OnInit, OnDestroy {
   showCurrentPassword = signal<boolean>(false);
   showNewStaffPassword = signal<boolean>(false);
   isSavingPassword = signal<boolean>(false);
-  readonly passwordHint = PASSWORD_HINT;
 
   // --- Change avatar ---
   showAvatarModal = signal<boolean>(false);
@@ -176,12 +180,12 @@ export class StaffProfileComponent implements OnInit, OnDestroy {
           this.employee.set(res.data);
           this.attendance.initializeDateRangeDefaults();
         } else {
-          this.errorMsg.set(res.error || 'Không thể lấy thông tin hồ sơ.');
+          this.errorMsg.set(res.error || this.translate.instant('staffProfile.fetchError'));
         }
       },
       error: () => {
         this.isLoading.set(false);
-        this.errorMsg.set('Lỗi kết nối máy chủ API.');
+        this.errorMsg.set(this.translate.instant('staffProfile.connectionError'));
       },
     });
   }
@@ -213,17 +217,23 @@ export class StaffProfileComponent implements OnInit, OnDestroy {
     const { current, newPassword, confirm } = this.passwordForm.getRawValue();
 
     if (!current) {
-      await this.dialogService.alert('THIẾU THÔNG TIN', 'Vui lòng nhập mật khẩu hiện tại.');
+      await this.dialogService.alert(
+        this.translate.instant('staffProfile.missingCurrentPasswordTitle'),
+        this.translate.instant('staffProfile.missingCurrentPasswordMessage'),
+      );
       return;
     }
     if (this.passwordForm.controls.newPassword.hasError('passwordComplexity')) {
-      await this.dialogService.alert('MẬT KHẨU KHÔNG HỢP LỆ', this.passwordHint);
+      await this.dialogService.alert(
+        this.translate.instant('staffProfile.invalidPasswordTitle'),
+        this.translate.instant('common.passwordHint'),
+      );
       return;
     }
     if (newPassword !== confirm) {
       await this.dialogService.alert(
-        'MẬT KHẨU KHÔNG KHỚP',
-        'Mật khẩu mới và xác nhận mật khẩu không giống nhau.',
+        this.translate.instant('staffProfile.passwordMismatchTitle'),
+        this.translate.instant('staffProfile.passwordMismatchMessage'),
       );
       return;
     }
@@ -233,15 +243,24 @@ export class StaffProfileComponent implements OnInit, OnDestroy {
       next: async (res) => {
         this.isSavingPassword.set(false);
         if (res.success) {
-          await this.dialogService.alert('THÀNH CÔNG', 'Đổi mật khẩu thành công.');
+          await this.dialogService.alert(
+            this.translate.instant('staffProfile.passwordChangedTitle'),
+            this.translate.instant('staffProfile.passwordChangedMessage'),
+          );
           this.closePasswordModal();
         } else {
-          await this.dialogService.alert('LỖI', res.error || 'Không thể đổi mật khẩu.');
+          await this.dialogService.alert(
+            this.translate.instant('common.error'),
+            res.error || this.translate.instant('staffProfile.passwordChangeError'),
+          );
         }
       },
       error: async (err: HttpErrorResponse) => {
         this.isSavingPassword.set(false);
-        await this.dialogService.alert('LỖI', err.error?.error || 'Lỗi kết nối máy chủ.');
+        await this.dialogService.alert(
+          this.translate.instant('common.error'),
+          err.error?.error || this.translate.instant('staffProfile.genericServerError'),
+        );
       },
     });
   }
@@ -266,11 +285,17 @@ export class StaffProfileComponent implements OnInit, OnDestroy {
       next: async (res) => {
         this.isSavingAvatar.set(false);
         if (res.success) {
-          await this.dialogService.alert('THÀNH CÔNG', 'Cập nhật ảnh đại diện thành công.');
+          await this.dialogService.alert(
+            this.translate.instant('staffProfile.avatarUpdatedTitle'),
+            this.translate.instant('staffProfile.avatarUpdatedMessage'),
+          );
           this.closeAvatarModal();
           this.loadOwnProfile();
         } else {
-          await this.dialogService.alert('LỖI', res.error || 'Không thể cập nhật ảnh đại diện.');
+          await this.dialogService.alert(
+            this.translate.instant('common.error'),
+            res.error || this.translate.instant('staffProfile.avatarUpdateError'),
+          );
         }
       },
       error: async (err: HttpErrorResponse) => {
@@ -311,11 +336,17 @@ export class StaffProfileComponent implements OnInit, OnDestroy {
     const { startDate, endDate, reason } = this.leaveForm.getRawValue();
 
     if (!startDate || !endDate || !reason.trim()) {
-      await this.dialogService.alert('THIẾU THÔNG TIN', 'Vui lòng nhập đầy đủ ngày nghỉ và lý do.');
+      await this.dialogService.alert(
+        this.translate.instant('staffProfile.missingLeaveInfoTitle'),
+        this.translate.instant('staffProfile.missingLeaveInfoMessage'),
+      );
       return;
     }
     if (endDate < startDate) {
-      await this.dialogService.alert('NGÀY KHÔNG HỢP LỆ', 'Ngày kết thúc phải sau ngày bắt đầu.');
+      await this.dialogService.alert(
+        this.translate.instant('staffProfile.invalidDateTitle'),
+        this.translate.instant('staffProfile.invalidDateMessage'),
+      );
       return;
     }
 
@@ -330,11 +361,17 @@ export class StaffProfileComponent implements OnInit, OnDestroy {
         next: async (res) => {
           this.isSavingLeave.set(false);
           if (res.success) {
-            await this.dialogService.alert('THÀNH CÔNG', 'Gửi đơn xin nghỉ thành công.');
+            await this.dialogService.alert(
+              this.translate.instant('staffProfile.leaveSubmittedTitle'),
+              this.translate.instant('staffProfile.leaveSubmittedMessage'),
+            );
             this.closeLeaveModal();
             this.loadLeaveRequests();
           } else {
-            await this.dialogService.alert('LỖI', res.error || 'Không thể gửi đơn xin nghỉ.');
+            await this.dialogService.alert(
+              this.translate.instant('common.error'),
+              res.error || this.translate.instant('staffProfile.leaveSubmitError'),
+            );
           }
         },
         error: async (err: HttpErrorResponse) => {
@@ -361,18 +398,21 @@ export class StaffProfileComponent implements OnInit, OnDestroy {
 
   downloadDocument(doc: EmployeeDocument): void {
     openEmployeeDocument(this.http, this.apiUrl, doc, async () => {
-      await this.dialogService.alert('LỖI', 'Không thể tải xuống tài liệu.');
+      await this.dialogService.alert(
+        this.translate.instant('common.error'),
+        this.translate.instant('staffProfile.downloadError'),
+      );
     });
   }
 
   leaveStatusLabel(status: string): string {
     switch (status) {
       case 'approved':
-        return 'Đã duyệt';
+        return this.translate.instant('leaveRequests.statusApproved');
       case 'rejected':
-        return 'Từ chối';
+        return this.translate.instant('leaveRequests.statusRejected');
       default:
-        return 'Chờ duyệt';
+        return this.translate.instant('leaveRequests.statusPending');
     }
   }
 }

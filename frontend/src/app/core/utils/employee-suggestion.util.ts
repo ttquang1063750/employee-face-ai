@@ -14,7 +14,12 @@ export function employeeSuggestionLabel(e: EmployeeSuggestionLike): string {
   return e.name;
 }
 
-export function employeeSuggestionMeta(e: EmployeeSuggestionLike): string {
-  const position = e.current_position || 'Chưa có chức vụ';
+const NO_POSITION_LABEL: Record<'vi' | 'en', string> = {
+  vi: 'Chưa có chức vụ',
+  en: 'No position yet',
+};
+
+export function employeeSuggestionMeta(e: EmployeeSuggestionLike, lang: 'vi' | 'en' = 'vi'): string {
+  const position = e.current_position || NO_POSITION_LABEL[lang];
   return `${position} · #${e.id}`;
 }

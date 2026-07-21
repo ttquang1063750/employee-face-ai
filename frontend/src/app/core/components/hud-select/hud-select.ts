@@ -14,6 +14,7 @@ import {
 } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { filter, fromEvent, merge, Subscription } from 'rxjs';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
 export interface HudSelectOption<T> {
   value: T;
@@ -28,7 +29,7 @@ export interface HudSelectOption<T> {
 @Component({
   selector: 'app-hud-select',
   standalone: true,
-  imports: [],
+  imports: [TranslatePipe],
   templateUrl: './hud-select.html',
   styleUrl: './hud-select.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -44,10 +45,16 @@ export class HudSelectComponent<T = string>
   implements ControlValueAccessor, AfterViewInit, OnDestroy
 {
   options = input<HudSelectOption<T>[]>([]);
-  placeholder = input<string>('-- Chọn --');
+  placeholder = input<string | undefined>(undefined);
   selectId = input<string>('');
 
   private elementRef = inject(ElementRef);
+  private translate = inject(TranslateService);
+
+  displayPlaceholder = computed(() => {
+    this.translate.currentLang(); // recompute when the language changes
+    return this.placeholder() ?? this.translate.instant('common.selectPlaceholder');
+  });
 
   // The panel is moved to <body> in ngAfterViewInit (see below) rather than
   // conditionally rendered in place, so it stays permanently outside this

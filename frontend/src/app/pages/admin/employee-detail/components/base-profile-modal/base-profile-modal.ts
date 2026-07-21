@@ -14,6 +14,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { map } from 'rxjs';
 import { HttpErrorResponse } from '@angular/common/http';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { DialogService } from '../../../../../core/services/dialog.service';
 import {
   UsernameCheckService,
@@ -26,7 +27,6 @@ import {
   UpdateEmployeePayload,
 } from '../../../../../core/services/employee.service';
 import {
-  PASSWORD_HINT,
   generateRandomPassword,
   passwordComplexityValidator,
 } from '../../../../../core/services/credentials.util';
@@ -41,13 +41,14 @@ import { DatePickerComponent } from '../../../../../core/components/date-picker/
 @Component({
   selector: 'app-base-profile-modal',
   standalone: true,
-  imports: [ReactiveFormsModule, HudSelectComponent, DatePickerComponent],
+  imports: [ReactiveFormsModule, HudSelectComponent, DatePickerComponent, TranslatePipe],
   templateUrl: './base-profile-modal.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [WebcamCaptureService, PhotoCaptureStateService],
 })
 export class BaseProfileModalComponent implements OnInit {
   private dialogService = inject(DialogService);
+  private translate = inject(TranslateService);
   private usernameCheckService = inject(UsernameCheckService);
   private fb = inject(FormBuilder);
   private employeeService = inject(EmployeeService);
@@ -85,12 +86,14 @@ export class BaseProfileModalComponent implements OnInit {
     { initialValue: this.editForm.getRawValue() },
   );
   usernameStatus = usernameStatusSignal(this.editForm.controls.username);
-  readonly roleOptions: HudSelectOption<EmployeeRole>[] = [
-    { value: 'staff', label: 'Nhân sự (Staff)' },
-    { value: 'admin', label: 'Quản lý (Admin)' },
-  ];
+  roleOptions = computed<HudSelectOption<EmployeeRole>[]>(() => {
+    this.translate.currentLang(); // recompute labels when the language changes
+    return [
+      { value: 'staff', label: this.translate.instant('employees.roleStaff') },
+      { value: 'admin', label: this.translate.instant('employees.roleAdmin') },
+    ];
+  });
   showEditPassword = signal<boolean>(false);
-  readonly passwordHint = PASSWORD_HINT;
 
   isSaving = signal<boolean>(false);
 
@@ -162,7 +165,10 @@ export class BaseProfileModalComponent implements OnInit {
       next: async (res) => {
         this.isSaving.set(false);
         if (res.success) {
-          await this.dialogService.alert('THÀNH CÔNG', 'Cập nhật thông tin cơ bản thành công.');
+          await this.dialogService.alert(
+            this.translate.instant('baseProfileModal.successTitle'),
+            this.translate.instant('baseProfileModal.successMessage'),
+          );
           this.photoCapture.stopWebcam();
           this.saved.emit();
         }
@@ -170,8 +176,8 @@ export class BaseProfileModalComponent implements OnInit {
       error: async (err: HttpErrorResponse) => {
         this.isSaving.set(false);
         await this.dialogService.alert(
-          'LỖI CẬP NHẬT',
-          'Lỗi lưu thông tin cơ bản: ' + (err.error?.error || err.message),
+          this.translate.instant('baseProfileModal.errorTitle'),
+          this.translate.instant('baseProfileModal.errorPrefix') + (err.error?.error || err.message),
         );
       },
     });

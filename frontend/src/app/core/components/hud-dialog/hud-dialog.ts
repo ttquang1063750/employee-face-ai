@@ -1,11 +1,12 @@
 import { Component, ChangeDetectionStrategy, inject } from '@angular/core';
 import { DialogService } from '../../services/dialog.service';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
+import { TranslatePipe } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-hud-dialog',
   standalone: true,
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, TranslatePipe],
   templateUrl: './hud-dialog.html',
   styleUrl: './hud-dialog.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

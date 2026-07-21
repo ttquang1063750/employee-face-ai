@@ -26,9 +26,10 @@ import {
   employeeSuggestionMeta as formatEmployeeSuggestionMeta,
 } from '../../../core/utils/employee-suggestion.util';
 import { MessageCategory, MessageTemplate } from '../../../core/models/message.model';
-import { MESSAGE_CATEGORY_OPTIONS } from '../../../core/utils/message-category.util';
+import { messageCategoryOptions } from '../../../core/utils/message-category.util';
 import { isRichContentEmpty } from '../../../core/utils/rich-content.util';
 import { IconComponent } from '../../../core/components/icon/icon';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-compose-message-page',
@@ -39,6 +40,7 @@ import { IconComponent } from '../../../core/components/icon/icon';
     HudAutocompleteComponent,
     RichTextEditor,
     IconComponent,
+    TranslatePipe,
   ],
   templateUrl: './compose-message-page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -51,8 +53,11 @@ export class ComposeMessagePage implements OnInit {
   private messageService = inject(MessageService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
+  private translate = inject(TranslateService);
 
-  readonly categoryOptions = MESSAGE_CATEGORY_OPTIONS;
+  categoryOptions = computed<HudSelectOption<MessageCategory>[]>(() =>
+    messageCategoryOptions(this.translate.currentLang() === 'en' ? 'en' : 'vi'),
+  );
 
   employees = signal<EmployeeDirectoryEntry[]>([]);
   templates = signal<MessageTemplate[]>([]);
@@ -71,7 +76,8 @@ export class ComposeMessagePage implements OnInit {
   // employee-suggestion.util.ts) — disambiguates same-named employees by id,
   // never username (EmployeeDirectoryEntry deliberately excludes it).
   recipientLabel = formatEmployeeSuggestionLabel;
-  recipientMeta = formatEmployeeSuggestionMeta;
+  recipientMeta = (e: EmployeeDirectoryEntry) =>
+    formatEmployeeSuggestionMeta(e, this.translate.currentLang() === 'en' ? 'en' : 'vi');
 
   form = this.fb.nonNullable.group({
     category: this.fb.nonNullable.control<MessageCategory>('daily_report'),
@@ -161,14 +167,17 @@ export class ComposeMessagePage implements OnInit {
           if (res.success) {
             this.router.navigate(['../'], { relativeTo: this.route });
           } else {
-            await this.dialogService.alert('LỖI', res.error || 'Không thể gửi tin nhắn.');
+            await this.dialogService.alert(
+              this.translate.instant('common.error'),
+              res.error || this.translate.instant('compose.sendError'),
+            );
           }
         },
         error: async (err: HttpErrorResponse) => {
           this.isSubmitting.set(false);
           await this.dialogService.alert(
-            'LỖI GỬI TIN NHẮN',
-            err.error?.error || 'Lỗi kết nối máy chủ.',
+            this.translate.instant('compose.sendErrorTitle'),
+            err.error?.error || this.translate.instant('compose.genericServerError'),
           );
         },
       });

@@ -1,6 +1,7 @@
 import { Component, ChangeDetectionStrategy, signal, input, output, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { DatePickerComponent } from '../../../../../core/components/date-picker/date-picker';
 import { DialogService } from '../../../../../core/services/dialog.service';
 import { EmployeeService } from '../../../../../core/services/employee.service';
@@ -10,7 +11,7 @@ import { todayLocalDateString } from '../../../../../core/utils/date.util';
 @Component({
   selector: 'app-projects-panel',
   standalone: true,
-  imports: [ReactiveFormsModule, DatePickerComponent],
+  imports: [ReactiveFormsModule, DatePickerComponent, TranslatePipe],
   templateUrl: './projects-panel.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -18,6 +19,7 @@ export class ProjectsPanelComponent {
   private dialogService = inject(DialogService);
   private fb = inject(FormBuilder);
   private employeeService = inject(EmployeeService);
+  private translate = inject(TranslateService);
 
   projects = input.required<Project[]>();
   employeeId = input.required<number>();
@@ -86,7 +88,10 @@ export class ProjectsPanelComponent {
       next: async (res) => {
         this.isSaving.set(false);
         if (res.success) {
-          await this.dialogService.alert('THÀNH CÔNG', 'Cập nhật lịch sử dự án thành công.');
+          await this.dialogService.alert(
+            this.translate.instant('projectsPanel.successTitle'),
+            this.translate.instant('projectsPanel.successMessage'),
+          );
           this.closeModal();
           this.changed.emit();
         }
@@ -94,8 +99,8 @@ export class ProjectsPanelComponent {
       error: async (err: HttpErrorResponse) => {
         this.isSaving.set(false);
         await this.dialogService.alert(
-          'LỖI CẬP NHẬT',
-          'Lỗi cập nhật lịch sử dự án: ' + (err.error?.error || err.message),
+          this.translate.instant('projectsPanel.errorTitle'),
+          this.translate.instant('projectsPanel.errorPrefix') + (err.error?.error || err.message),
         );
       },
     });

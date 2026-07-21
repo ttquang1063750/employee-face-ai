@@ -1,7 +1,9 @@
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { provideTranslateService } from '@ngx-translate/core';
 import { DashboardComponent } from './dashboard';
+import { StaticTranslateLoader } from '../../../core/i18n/translate-loader';
 import { AttendanceLogEntry } from '../../../core/models/attendance-log.model';
 import { EmployeeBase } from '../../../core/models/employee.model';
 import { environment } from '../../../../environments/environment';
@@ -39,7 +41,11 @@ describe('DashboardComponent', () => {
   beforeEach(() => {
     TestBed.resetTestingModule();
     TestBed.configureTestingModule({
-      providers: [provideHttpClient(), provideHttpClientTesting()],
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        provideTranslateService({ loader: StaticTranslateLoader, lang: 'vi', fallbackLang: 'vi' }),
+      ],
     });
     const fixture = TestBed.createComponent(DashboardComponent);
     component = fixture.componentInstance;

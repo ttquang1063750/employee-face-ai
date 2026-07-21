@@ -1,0 +1,37 @@
+:host {
+  display: inline-flex;
+}
+
+.language-switcher {
+  display: inline-flex;
+  border: 1px solid rgba(var(--color-cyan-rgb), 0.4);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.lang-btn {
+  background: transparent;
+  border: none;
+  color: var(--color-text-secondary);
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  padding: 0.35rem 0.6rem;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:not(:last-child) {
+    border-right: 1px solid rgba(var(--color-cyan-rgb), 0.4);
+  }
+
+  &:hover {
+    color: var(--color-cyan);
+    background: rgba(var(--color-cyan-rgb), 0.08);
+  }
+
+  &.active {
+    color: var(--color-heading);
+    background: var(--color-cyan);
+  }
+}

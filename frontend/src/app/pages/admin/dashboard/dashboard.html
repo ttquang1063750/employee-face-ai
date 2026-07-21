@@ -3,7 +3,9 @@
     @if (errorMsg()) {
       <div class="error-state">
         <p class="err-text">⚠️ {{ errorMsg() }}</p>
-        <button class="retry-btn" (click)="loadDashboardData()">Thử lại</button>
+        <button class="retry-btn" (click)="loadDashboardData()">
+          {{ 'dashboard.retry' | translate }}
+        </button>
       </div>
     } @else {
       <!-- 0a. Birthday alerts — independent of the filter bar below, since a
@@ -15,19 +17,23 @@
             <div class="birthday-today">
               <span class="birthday-icon">🎂</span>
               <span>
-                Hôm nay là sinh nhật của
+                {{ 'dashboard.birthdayToday' | translate }}
                 <strong>{{ todaysBirthdayNames() }}</strong>
-                — gửi lời chúc mừng nhé!
+                {{ 'dashboard.birthdaySendWishes' | translate }}
               </span>
             </div>
           }
           @if (upcomingBirthdays().length > 0) {
             <div class="birthday-upcoming">
               <span class="birthday-icon">🎈</span>
-              <span>Sắp tới:</span>
+              <span>{{ 'dashboard.birthdayUpcoming' | translate }}</span>
               <ul class="birthday-upcoming-list">
                 @for (entry of upcomingBirthdays(); track entry.employee.id) {
-                  <li>{{ entry.employee.name }} (còn {{ entry.daysUntil }} ngày)</li>
+                  <li>
+                    {{ entry.employee.name }} ({{
+                      'dashboard.birthdayDaysLeft' | translate: { days: entry.daysUntil }
+                    }})
+                  </li>
                 }
               </ul>
             </div>
@@ -38,38 +44,44 @@
       <!-- 0b. Global filter bar — every widget below reacts to this -->
       <div class="hud-filter-bar">
         <div class="hud-field">
-          <span class="hud-label">TỪ NGÀY</span>
+          <span class="hud-label">{{ 'dashboard.fromDate' | translate }}</span>
           <app-date-picker [formControl]="filterStartDateInput"></app-date-picker>
         </div>
         <div class="hud-field">
-          <span class="hud-label">ĐẾN NGÀY</span>
+          <span class="hud-label">{{ 'dashboard.toDate' | translate }}</span>
           <app-date-picker [formControl]="filterEndDateInput"></app-date-picker>
         </div>
         <div class="hud-field filter-apply-field">
-          <button class="hud-btn-outline" (click)="applyDateFilter()">ÁP DỤNG</button>
+          <button class="hud-btn-outline" (click)="applyDateFilter()">
+            {{ 'common.apply' | translate }}
+          </button>
         </div>
 
         <!-- Status filter — applies instantly like the name search below,
              not gated behind ÁP DỤNG (rule 10 exempts non-date-range filters) -->
         <div class="hud-field">
-          <label class="hud-label" for="dashboard-status-filter">TRẠNG THÁI</label>
+          <label class="hud-label" for="dashboard-status-filter">{{
+            'dashboard.statusFilter' | translate
+          }}</label>
           <app-hud-select
             [selectId]="'dashboard-status-filter'"
-            [options]="statusOptions"
+            [options]="statusOptions()"
             [formControl]="statusControl"
           ></app-hud-select>
         </div>
 
         <!-- Autocomplete employee name search -->
         <div class="hud-field grow-3">
-          <label class="hud-label" for="dashboard-employee-search">TÊN NHÂN VIÊN</label>
+          <label class="hud-label" for="dashboard-employee-search">{{
+            'dashboard.employeeName' | translate
+          }}</label>
           <app-hud-autocomplete
             [inputId]="'dashboard-employee-search'"
             [formControl]="nameControl"
             [suggestions]="employeeSuggestions()"
             [itemLabel]="employeeSuggestionLabel"
             [itemMeta]="employeeSuggestionMeta"
-            placeholder="Tìm kiếm tên nhân viên..."
+            [placeholder]="'dashboard.employeeSearchPlaceholder' | translate"
             (optionSelected)="selectSuggestion()"
           ></app-hud-autocomplete>
         </div>
@@ -79,23 +91,23 @@
       <div class="stats-grid">
         <app-stat-widget
           icon="Σ"
-          label="TỔNG NHÂN SỰ"
+          [label]="'dashboard.totalEmployees' | translate"
           [value]="totalEmployees()"
-          footer="Active Accounts"
+          [footer]="'dashboard.totalEmployeesFooter' | translate"
           [loading]="isLoading()"
         />
         <app-stat-widget
           icon="✓"
-          label="LƯỢT CHẤM CÔNG"
+          [label]="'dashboard.totalLogs' | translate"
           [value]="totalLogsInRange()"
-          footer="Lượt quét trong khoảng đã chọn"
+          [footer]="'dashboard.totalLogsFooter' | translate"
           [loading]="isLoading()"
         />
         <app-stat-widget
           icon="☺"
-          label="CHỈ SỐ HẠNH PHÚC"
+          [label]="'dashboard.happinessIndex' | translate"
           [value]="hasMoodData() ? moodStats().happy + '%' : '--'"
-          footer="Cảm xúc tích cực · mục tiêu ≥ 60%"
+          [footer]="'dashboard.happinessFooter' | translate"
           [statusLabel]="happinessStatusLabel()"
           [kind]="happinessLevel()"
           [loading]="isLoading()"
@@ -110,6 +122,8 @@
           [loading]="isLoading()"
         />
         <app-mood-donut
+          [title]="'mood.donutTitleOverview' | translate"
+          [emptyMessage]="'mood.donutEmpty' | translate"
           [segments]="moodDonut()"
           [hasData]="hasMoodData()"
           [loading]="isLoading()"

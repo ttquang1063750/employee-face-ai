@@ -6,7 +6,7 @@
     [class.disabled]="disabled()"
     [disabled]="disabled()"
   >
-    <span [class.placeholder]="!displayValue()">{{ displayValue() || placeholder() }}</span>
+    <span [class.placeholder]="!displayValue()">{{ displayValue() || displayPlaceholder() }}</span>
     <span class="cal-icon">📅</span>
   </button>
 
@@ -18,7 +18,7 @@
           <app-hud-select
             #monthSelectRef
             class="month-select"
-            [options]="monthOptions"
+            [options]="monthOptions()"
             [formControl]="monthControl"
           ></app-hud-select>
           <app-hud-select
@@ -31,7 +31,7 @@
         <button type="button" class="nav-btn" (click)="nextMonth()">›</button>
       </div>
       <div class="weekday-row">
-        @for (wd of weekdayLabels; track wd) {
+        @for (wd of weekdayLabels(); track wd) {
           <span class="weekday">{{ wd }}</span>
         }
       </div>
@@ -54,9 +54,13 @@
         }
       </div>
       <div class="date-panel-footer">
-        <button type="button" class="today-btn" (click)="selectToday()">Hôm nay</button>
+        <button type="button" class="today-btn" (click)="selectToday()">
+          {{ 'common.today' | translate }}
+        </button>
         @if (value()) {
-          <button type="button" class="today-btn clear-btn" (click)="clear()">Xóa</button>
+          <button type="button" class="today-btn clear-btn" (click)="clear()">
+            {{ 'common.clear' | translate }}
+          </button>
         }
       </div>
     </div>

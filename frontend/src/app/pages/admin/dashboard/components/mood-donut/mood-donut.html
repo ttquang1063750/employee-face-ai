@@ -1,5 +1,5 @@
 <div class="chart-card mood-card">
-  <h3 class="chart-title">{{ title() }}</h3>
+  <h3 class="chart-title">{{ displayTitle() }}</h3>
 
   @if (loading()) {
     <div class="donut-wrap">
@@ -48,7 +48,7 @@
           stroke-width="6"
         />
       </svg>
-      <p>{{ emptyMessage() }}</p>
+      <p>{{ displayEmptyMessage() }}</p>
     </div>
   }
 </div>

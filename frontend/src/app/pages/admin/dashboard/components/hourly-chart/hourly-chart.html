@@ -1,5 +1,5 @@
 <div class="chart-card">
-  <h3 class="chart-title">📈 GIỜ CAO ĐIỂM CHẤM CÔNG (TẦN SUẤT / GIỜ)</h3>
+  <h3 class="chart-title">{{ 'dashboard.hourlyChartTitle' | translate }}</h3>
 
   @if (loading()) {
     <div class="svg-chart-container skeleton-bars">
@@ -34,7 +34,7 @@
 
         @if (!hasData()) {
           <text x="250" y="90" class="svg-empty-text" text-anchor="middle">
-            Chưa có dữ liệu chấm công trong khoảng thời gian này
+            {{ 'mood.donutEmpty' | translate }}
           </text>
         }
       </svg>

@@ -8,7 +8,7 @@
     [attr.aria-expanded]="isOpen()"
     (click)="toggleOpen()"
   >
-    <span [class.placeholder]="!selectedLabel()">{{ selectedLabel() || placeholder() }}</span>
+    <span [class.placeholder]="!selectedLabel()">{{ selectedLabel() || displayPlaceholder() }}</span>
     <span class="select-caret" [class.open]="isOpen()">▾</span>
   </button>
 
@@ -37,7 +37,7 @@
         {{ opt.label }}
       </li>
     } @empty {
-      <li class="hud-select-empty">Không có lựa chọn.</li>
+      <li class="hud-select-empty">{{ 'common.noOptions' | translate }}</li>
     }
   </ul>
 </div>

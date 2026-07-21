@@ -20,8 +20,31 @@ import {
 } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { filter, fromEvent, merge, Subscription } from 'rxjs';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { toLocalDateString } from '../../utils/date.util';
 import { HudSelectComponent, HudSelectOption } from '../hud-select/hud-select';
+
+const WEEKDAY_LABELS: Record<'vi' | 'en', string[]> = {
+  vi: ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'],
+  en: ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'],
+};
+const MONTH_LABELS: Record<'vi' | 'en', string[]> = {
+  vi: Array.from({ length: 12 }, (_, i) => `Th${i + 1}`),
+  en: [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ],
+};
 
 interface CalendarCell {
   day: number;
@@ -34,7 +57,7 @@ interface CalendarCell {
 @Component({
   selector: 'app-date-picker',
   standalone: true,
-  imports: [ReactiveFormsModule, HudSelectComponent],
+  imports: [ReactiveFormsModule, HudSelectComponent, TranslatePipe],
   templateUrl: './date-picker.html',
   styleUrl: './date-picker.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -47,9 +70,15 @@ interface CalendarCell {
   ],
 })
 export class DatePickerComponent implements ControlValueAccessor, OnDestroy {
-  placeholder = input<string>('Chọn ngày');
+  placeholder = input<string | undefined>(undefined);
 
   private elementRef = inject(ElementRef);
+  private translate = inject(TranslateService);
+
+  displayPlaceholder = computed(() => {
+    this.translate.currentLang(); // recompute when the language changes
+    return this.placeholder() ?? this.translate.instant('common.selectDate');
+  });
 
   // The month/year app-hud-select panels are portaled to <body> (see
   // HudSelectComponent), so they sit outside this.elementRef's own subtree —
@@ -70,7 +99,10 @@ export class DatePickerComponent implements ControlValueAccessor, OnDestroy {
   panelLeft = signal<number>(0);
   private scrollOrResizeSub: Subscription | null = null;
 
-  readonly weekdayLabels = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
+  weekdayLabels = computed(() => {
+    const lang = this.translate.currentLang() === 'en' ? 'en' : 'vi';
+    return WEEKDAY_LABELS[lang];
+  });
 
   // Direct month/year jump — stepping via prevMonth()/nextMonth() alone took
   // ~480 clicks to reach a 40-year-old birth date, since it's one click per
@@ -79,10 +111,10 @@ export class DatePickerComponent implements ControlValueAccessor, OnDestroy {
   // this component is shared by every date field in the app, not just date
   // of birth. Uses app-hud-select (not a native <select>) for the same
   // themed-dropdown look as the rest of the app.
-  readonly monthOptions: HudSelectOption<number>[] = Array.from({ length: 12 }, (_, i) => ({
-    value: i,
-    label: `Th${i + 1}`,
-  }));
+  monthOptions = computed<HudSelectOption<number>[]>(() => {
+    const lang = this.translate.currentLang() === 'en' ? 'en' : 'vi';
+    return MONTH_LABELS[lang].map((label, i) => ({ value: i, label }));
+  });
   private readonly currentYear = new Date().getFullYear();
   readonly yearOptions: HudSelectOption<number>[] = Array.from({ length: 111 }, (_, i) => {
     const year = this.currentYear + 10 - i;

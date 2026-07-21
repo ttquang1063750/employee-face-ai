@@ -1,10 +1,15 @@
 import { TestBed } from '@angular/core/testing';
+import { provideTranslateService } from '@ngx-translate/core';
 import { App } from './app';
+import { StaticTranslateLoader } from './core/i18n/translate-loader';
 
 describe('App', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [App],
+      providers: [
+        provideTranslateService({ loader: StaticTranslateLoader, lang: 'vi', fallbackLang: 'vi' }),
+      ],
     }).compileComponents();
   });
 

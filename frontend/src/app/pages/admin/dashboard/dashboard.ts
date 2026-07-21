@@ -10,6 +10,7 @@ import {
 import { HttpClient } from '@angular/common/http';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { DatePickerComponent } from '../../../core/components/date-picker/date-picker';
 import {
   HudSelectComponent,
@@ -48,6 +49,7 @@ import { DialogService } from '../../../core/services/dialog.service';
     HourlyChartComponent,
     MoodDonutComponent,
     LogsTableComponent,
+    TranslatePipe,
   ],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss',
@@ -57,6 +59,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private http = inject(HttpClient);
   private dialogService = inject(DialogService);
   private employeeService = inject(EmployeeService);
+  private translate = inject(TranslateService);
 
   constructor() {
     this.nameControl.valueChanges.pipe(takeUntilDestroyed()).subscribe(() => this.onSearchInput());
@@ -85,7 +88,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
   // Label/meta accessors for <app-hud-autocomplete>, shared with the compose
   // page's recipient picker (see employee-suggestion.util.ts).
   employeeSuggestionLabel = formatEmployeeSuggestionLabel;
-  employeeSuggestionMeta = formatEmployeeSuggestionMeta;
+  employeeSuggestionMeta = (e: EmployeeBase) =>
+    formatEmployeeSuggestionMeta(e, this.translate.currentLang() === 'en' ? 'en' : 'vi');
 
   // Status filter (all/CHECK_IN/CHECK_OUT) — global, folded into
   // filteredLogs() below like the date range and name search, so every
@@ -94,11 +98,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
   // instantly like the name search, not gated behind ÁP DỤNG (rule 10
   // exempts non-date-range filters).
   statusControl = new FormControl<'all' | 'CHECK_IN' | 'CHECK_OUT'>('all', { nonNullable: true });
-  readonly statusOptions: HudSelectOption<'all' | 'CHECK_IN' | 'CHECK_OUT'>[] = [
-    { value: 'all', label: 'Tất cả' },
-    { value: 'CHECK_IN', label: 'Vào ca' },
-    { value: 'CHECK_OUT', label: 'Ra ca' },
-  ];
+  statusOptions = computed<HudSelectOption<'all' | 'CHECK_IN' | 'CHECK_OUT'>[]>(() => {
+    this.translate.currentLang(); // recompute labels when the language changes
+    return [
+      { value: 'all', label: this.translate.instant('dashboard.statusAll') },
+      { value: 'CHECK_IN', label: this.translate.instant('dashboard.statusCheckIn') },
+      { value: 'CHECK_OUT', label: this.translate.instant('dashboard.statusCheckOut') },
+    ];
+  });
   private filterStatus = toSignal(this.statusControl.valueChanges, {
     initialValue: this.statusControl.value,
   });
@@ -202,27 +209,34 @@ export class DashboardComponent implements OnInit, OnDestroy {
   });
 
   happinessStatusLabel = computed(() => {
+    this.translate.currentLang(); // recompute label when the language changes
     switch (this.happinessLevel()) {
       case 'success':
-        return 'Đạt mục tiêu';
+        return this.translate.instant('dashboard.happinessGoalMet');
       case 'warning':
-        return 'Thấp';
+        return this.translate.instant('dashboard.happinessLow');
       case 'danger':
-        return 'Rất thấp';
+        return this.translate.instant('dashboard.happinessVeryLow');
       default:
-        return 'Chưa có dữ liệu';
+        return this.translate.instant('dashboard.happinessNoData');
     }
   });
 
   moodDonut = computed(() => {
+    this.translate.currentLang(); // recompute labels when the language changes
     const m = this.moodStats();
     return buildDonutSegments([
-      { key: 'happy', label: 'Vui vẻ 😊', value: m.happy, color: 'var(--color-cyan)' },
-      { key: 'neutral', label: 'Bình thường 😐', value: m.neutral, color: 'var(--color-info)' },
-      { key: 'sad', label: 'Buồn bã 😢', value: m.sad, color: 'var(--color-red)' },
+      { key: 'happy', label: this.translate.instant('mood.happy'), value: m.happy, color: 'var(--color-cyan)' },
+      {
+        key: 'neutral',
+        label: this.translate.instant('mood.neutral'),
+        value: m.neutral,
+        color: 'var(--color-info)',
+      },
+      { key: 'sad', label: this.translate.instant('mood.sad'), value: m.sad, color: 'var(--color-red)' },
       {
         key: 'stressed',
-        label: 'Căng thẳng / Lo lắng 😰',
+        label: this.translate.instant('mood.stressed'),
         value: m.stressed,
         color: 'var(--color-orange)',
       },
@@ -334,14 +348,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
             },
             error: () => {
               this.isLoading.set(false);
-              this.errorMsg.set('Không thể tải nhật ký chấm công.');
+              this.errorMsg.set(this.translate.instant('dashboard.loadLogsError'));
             },
           });
         }
       },
       error: () => {
         this.isLoading.set(false);
-        this.errorMsg.set('Không thể kết nối đến máy chủ API.');
+        this.errorMsg.set(this.translate.instant('dashboard.loadServerError'));
       },
     });
   }
@@ -382,12 +396,18 @@ export class DashboardComponent implements OnInit, OnDestroy {
     if (data.length === 0) return;
 
     // CSV headers matching HUD grid layout
-    const headers = ['Thời gian chấm công', 'Nhân viên (ID)', 'Trạng thái', 'Cảm xúc (Mood)'];
+    const lang = this.translate.currentLang() === 'en' ? 'en' : 'vi';
+    const headers = [
+      this.translate.instant('dashboard.csvHeaderTime'),
+      this.translate.instant('dashboard.csvHeaderEmployee'),
+      this.translate.instant('dashboard.csvHeaderStatus'),
+      this.translate.instant('dashboard.csvHeaderMood'),
+    ];
     const rows = data.map((log) => [
       log.timestamp,
       `${log.employee_name} (#${log.employee_id})`,
       log.action === 'CHECK_IN' ? 'CHECK-IN' : 'CHECK-OUT',
-      translateMood(log.mood),
+      translateMood(log.mood, lang),
     ]);
 
     // CSV UTF-8 BOM so Excel decodes Vietnamese characters correctly
@@ -399,17 +419,18 @@ export class DashboardComponent implements OnInit, OnDestroy {
       ].join('\n');
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const filenamePrefix = this.translate.instant('dashboard.csvFilenamePrefix');
     triggerBlobDownload(
       blob,
-      `bao_cao_tong_hop_${this.filterStartDate()}_to_${this.filterEndDate()}.csv`,
+      `${filenamePrefix}_${this.filterStartDate()}_to_${this.filterEndDate()}.csv`,
     );
   }
 
   onDeleteLog(id: number): void {
     this.dialogService
       .confirm(
-        'XÁC NHẬN XÓA',
-        'Bạn có chắc chắn muốn xóa lượt chấm công này? Thao tác này không thể hoàn tác.',
+        this.translate.instant('dashboard.deleteLogConfirmTitle'),
+        this.translate.instant('dashboard.deleteLogConfirmMessage'),
       )
       .then((confirmed) => {
         if (confirmed) {
@@ -424,11 +445,17 @@ export class DashboardComponent implements OnInit, OnDestroy {
                   },
                 });
               } else {
-                this.dialogService.alert('LỖI', res.error || 'Không thể xóa lượt chấm công.');
+                this.dialogService.alert(
+                  this.translate.instant('common.error'),
+                  res.error || this.translate.instant('dashboard.deleteLogError'),
+                );
               }
             },
             error: () => {
-              this.dialogService.alert('LỖI', 'Lỗi kết nối máy chủ.');
+              this.dialogService.alert(
+                this.translate.instant('common.error'),
+                this.translate.instant('dashboard.serverConnectionError'),
+              );
             },
           });
         }

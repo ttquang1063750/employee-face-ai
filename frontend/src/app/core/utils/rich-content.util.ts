@@ -14,15 +14,23 @@ export function richContentRequiredValidator(control: AbstractControl): Validati
   return isRichContentEmpty(control.value) ? { required: true } : null;
 }
 
+const IMAGE_ONLY_LABEL: Record<'vi' | 'en', string> = {
+  vi: '[Hình ảnh]',
+  en: '[Image]',
+};
+
 // Plain-text summary for table-cell previews (message templates list) —
 // rendering raw HTML in a truncated cell would show literal tags or
 // mis-sized inline images, so strip markup down to its text content instead.
-export function stripRichContentPreview(html: string | null | undefined): string {
+export function stripRichContentPreview(
+  html: string | null | undefined,
+  lang: 'vi' | 'en' = 'vi',
+): string {
   if (!html) return '';
   const text = html
     .replace(/<[^>]*>/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
   if (text) return text;
-  return /<img\b/i.test(html) ? '[Hình ảnh]' : '';
+  return /<img\b/i.test(html) ? IMAGE_ONLY_LABEL[lang] : '';
 }

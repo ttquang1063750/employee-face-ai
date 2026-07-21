@@ -1,4 +1,5 @@
-import { Injectable, Signal, signal, computed } from '@angular/core';
+import { Injectable, Signal, signal, computed, inject } from '@angular/core';
+import { TranslateService } from '@ngx-translate/core';
 import { AttendanceLog } from '../models/employee.model';
 import { todayLocalDateString, startOfMonthLocalDateString } from '../utils/date.util';
 import { bucketMoodPercentages } from '../utils/mood.util';
@@ -18,6 +19,7 @@ import { buildDonutSegments } from '../utils/donut-chart.util';
  */
 @Injectable()
 export class AttendanceSummaryStateService {
+  private translate = inject(TranslateService);
   private rawLogs: Signal<AttendanceLog[]> = signal([]);
 
   configure(rawLogs: Signal<AttendanceLog[]>): void {
@@ -140,14 +142,20 @@ export class AttendanceSummaryStateService {
   // and colors as the dashboard's own org-wide mood donut.
   hasMoodData = computed(() => this.filteredRawLogs().length > 0);
   moodDonutSegments = computed(() => {
+    this.translate.currentLang(); // recompute labels when the language changes
     const m = bucketMoodPercentages(this.filteredRawLogs().map((log) => log.mood));
     return buildDonutSegments([
-      { key: 'happy', label: 'Vui vẻ 😊', value: m.happy, color: 'var(--color-cyan)' },
-      { key: 'neutral', label: 'Bình thường 😐', value: m.neutral, color: 'var(--color-info)' },
-      { key: 'sad', label: 'Buồn bã 😢', value: m.sad, color: 'var(--color-red)' },
+      { key: 'happy', label: this.translate.instant('mood.happy'), value: m.happy, color: 'var(--color-cyan)' },
+      {
+        key: 'neutral',
+        label: this.translate.instant('mood.neutral'),
+        value: m.neutral,
+        color: 'var(--color-info)',
+      },
+      { key: 'sad', label: this.translate.instant('mood.sad'), value: m.sad, color: 'var(--color-red)' },
       {
         key: 'stressed',
-        label: 'Căng thẳng / Lo lắng 😰',
+        label: this.translate.instant('mood.stressed'),
         value: m.stressed,
         color: 'var(--color-orange)',
       },

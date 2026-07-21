@@ -1,7 +1,7 @@
 <div class="modal-backdrop">
   <div class="modal-card full">
     <div class="modal-header">
-      <h3>✏️ VẼ HÌNH</h3>
+      <h3>{{ 'shapeDrawing.title' | translate }}</h3>
       <button class="close-btn" (click)="cancel()">✖</button>
     </div>
     <div class="modal-body">
@@ -9,7 +9,7 @@
         <button
           type="button"
           class="hud-btn-mini"
-          data-tooltip="Chọn / Di chuyển"
+          [attr.data-tooltip]="'shapeDrawing.selectMove' | translate"
           [class.active]="activeTool() === 'select'"
           (click)="selectTool('select')"
         >
@@ -18,7 +18,7 @@
         <button
           type="button"
           class="hud-btn-mini"
-          data-tooltip="Hình chữ nhật"
+          [attr.data-tooltip]="'shapeDrawing.rectangle' | translate"
           [class.active]="activeTool() === 'rectangle'"
           (click)="selectTool('rectangle')"
         >
@@ -27,7 +27,7 @@
         <button
           type="button"
           class="hud-btn-mini"
-          data-tooltip="Hình tròn"
+          [attr.data-tooltip]="'shapeDrawing.ellipse' | translate"
           [class.active]="activeTool() === 'ellipse'"
           (click)="selectTool('ellipse')"
         >
@@ -36,7 +36,7 @@
         <button
           type="button"
           class="hud-btn-mini"
-          data-tooltip="Đường thẳng"
+          [attr.data-tooltip]="'shapeDrawing.line' | translate"
           [class.active]="activeTool() === 'line'"
           (click)="selectTool('line')"
         >
@@ -45,7 +45,7 @@
         <button
           type="button"
           class="hud-btn-mini"
-          data-tooltip="Mũi tên"
+          [attr.data-tooltip]="'shapeDrawing.arrow' | translate"
           [class.active]="activeTool() === 'arrow'"
           (click)="selectTool('arrow')"
         >
@@ -54,7 +54,7 @@
         <button
           type="button"
           class="hud-btn-mini"
-          data-tooltip="Chèn chữ"
+          [attr.data-tooltip]="'shapeDrawing.insertText' | translate"
           (click)="selectTool('text')"
         >
           T
@@ -62,7 +62,7 @@
         <button
           type="button"
           class="hud-btn-mini"
-          data-tooltip="Cắt hình (crop)"
+          [attr.data-tooltip]="'shapeDrawing.crop' | translate"
           [class.active]="activeTool() === 'crop'"
           (click)="selectTool('crop')"
         >
@@ -78,14 +78,14 @@
             [class.active]="strokeColor() === color"
             [style.background]="color"
             [attr.data-tooltip]="color"
-            [attr.aria-label]="'Chọn màu ' + color"
+            [attr.aria-label]="('shapeDrawing.chooseColorPrefix' | translate) + ' ' + color"
             (click)="setColor(color)"
           ></button>
         }
         <button
           type="button"
           class="hud-btn-mini shape-color-picker"
-          data-tooltip="Chọn màu tuỳ ý"
+          [attr.data-tooltip]="'shapeDrawing.customColor' | translate"
           (click)="triggerColorPicker()"
         >
           🖌️
@@ -104,7 +104,7 @@
         <button
           type="button"
           class="hud-btn-mini danger"
-          data-tooltip="Xóa vùng chọn"
+          [attr.data-tooltip]="'shapeDrawing.deleteSelection' | translate"
           (click)="deleteSelected()"
         >
           🗑
@@ -113,7 +113,7 @@
           <button
             type="button"
             class="hud-btn-mini"
-            data-tooltip="Áp dụng crop"
+            [attr.data-tooltip]="'shapeDrawing.applyCrop' | translate"
             (click)="applyCrop()"
           >
             ⛶✔
@@ -121,7 +121,7 @@
           <button
             type="button"
             class="hud-btn-mini danger"
-            data-tooltip="Bỏ vùng cắt"
+            [attr.data-tooltip]="'shapeDrawing.discardCrop' | translate"
             (click)="clearCrop()"
           >
             ⛶✖
@@ -130,7 +130,7 @@
         <button
           type="button"
           class="hud-btn-mini danger"
-          data-tooltip="Xóa toàn bộ"
+          [attr.data-tooltip]="'shapeDrawing.clearAll' | translate"
           (click)="clearCanvas()"
         >
           ⟲
@@ -146,9 +146,11 @@
         @if (isUploading()) {
           <div class="loader"></div>
         }
-        <span>CHÈN VÀO NỘI DUNG</span>
+        <span>{{ 'shapeDrawing.insertIntoContent' | translate }}</span>
       </button>
-      <button class="hud-btn-secondary" (click)="cancel()">HỦY</button>
+      <button class="hud-btn-secondary" (click)="cancel()">
+        {{ 'shapeDrawing.cancel' | translate }}
+      </button>
     </div>
   </div>
 </div>

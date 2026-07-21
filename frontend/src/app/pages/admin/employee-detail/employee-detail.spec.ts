@@ -2,7 +2,9 @@ import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { ActivatedRoute } from '@angular/router';
+import { provideTranslateService } from '@ngx-translate/core';
 import { EmployeeDetailComponent } from './employee-detail';
+import { StaticTranslateLoader } from '../../../core/i18n/translate-loader';
 import { AttendanceLog, DetailedEmployee } from '../../../core/models/employee.model';
 
 function makeEmployee(rawLogs: AttendanceLog[]): DetailedEmployee {
@@ -35,6 +37,7 @@ describe('EmployeeDetailComponent', () => {
       providers: [
         provideHttpClient(),
         provideHttpClientTesting(),
+        provideTranslateService({ loader: StaticTranslateLoader, lang: 'vi', fallbackLang: 'vi' }),
         { provide: ActivatedRoute, useValue: { snapshot: { paramMap: { get: () => '1' } } } },
       ],
     });

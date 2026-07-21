@@ -1,7 +1,13 @@
 <div class="lifecycle-card">
   <div class="section-header-row">
-    <h3 class="section-title">💵 LỊCH SỬ THU NHẬP (COMPENSATION)</h3>
-    <button class="hud-btn-mini" (click)="openModal()" data-tooltip="ĐIỀU CHỈNH LƯƠNG">⚙️</button>
+    <h3 class="section-title">{{ 'incomeHistory.title' | translate }}</h3>
+    <button
+      class="hud-btn-mini"
+      (click)="openModal()"
+      [attr.data-tooltip]="'incomeHistory.addTooltip' | translate"
+    >
+      ⚙️
+    </button>
   </div>
   <div class="comp-list">
     @for (inc of incomeHistory(); track inc.id) {
@@ -11,7 +17,7 @@
           <button
             class="remove-inline-btn"
             (click)="deleteIncome(inc.id)"
-            title="Xóa mốc lương này"
+            [attr.title]="'incomeHistory.deleteTooltip' | translate"
           >
             ✖
           </button>
@@ -29,32 +35,32 @@
   <div class="modal-backdrop">
     <div class="modal-card mini">
       <div class="modal-header">
-        <h3>💵 ĐIỀU CHỈNH MỨC LƯƠNG</h3>
+        <h3>{{ 'incomeHistory.modalTitle' | translate }}</h3>
         <button class="close-btn" (click)="closeModal()">✖</button>
       </div>
       <div class="modal-body" [formGroup]="newIncomeForm">
         <div class="form-fields">
           <div class="form-group">
-            <label for="new-inc-amount">MỨC LƯƠNG MỚI (USD/Tháng)</label>
+            <label for="new-inc-amount">{{ 'incomeHistory.amountLabel' | translate }}</label>
             <input
               id="new-inc-amount"
               type="number"
               formControlName="amount"
-              placeholder="Nhập số tiền"
+              [placeholder]="'incomeHistory.amountPlaceholder' | translate"
               class="hud-input"
             />
           </div>
           <div class="form-group">
-            <span>NGÀY HIỆU LỰC MỚI</span>
+            <span>{{ 'incomeHistory.effectiveDateLabel' | translate }}</span>
             <app-date-picker formControlName="effectiveDate"></app-date-picker>
           </div>
           <div class="form-group">
-            <label for="new-inc-reason">LÝ DO ĐIỀU CHỈNH</label>
+            <label for="new-inc-reason">{{ 'incomeHistory.reasonLabel' | translate }}</label>
             <input
               id="new-inc-reason"
               type="text"
               formControlName="reason"
-              placeholder="Ví dụ: Annual Review, Promotion Raise"
+              [placeholder]="'incomeHistory.reasonPlaceholder' | translate"
               class="hud-input"
             />
           </div>
@@ -69,9 +75,11 @@
           @if (isSaving()) {
             <div class="loader"></div>
           }
-          <span>CẬP NHẬT LƯƠNG</span>
+          <span>{{ 'incomeHistory.submit' | translate }}</span>
         </button>
-        <button class="hud-btn-secondary" (click)="closeModal()">HỦY</button>
+        <button class="hud-btn-secondary" (click)="closeModal()">
+          {{ 'incomeHistory.cancel' | translate }}
+        </button>
       </div>
     </div>
   </div>

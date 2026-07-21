@@ -13,6 +13,7 @@ import { Canvas, Rect, Ellipse, Line, Triangle, Textbox, Group } from 'fabric';
 import { MessageService } from '../../services/message.service';
 import { DialogService } from '../../services/dialog.service';
 import { environment } from '../../../../environments/environment';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
 type ShapeTool = 'select' | 'rectangle' | 'ellipse' | 'line' | 'arrow' | 'text' | 'crop';
 
@@ -23,13 +24,14 @@ const CANVAS_HEIGHT = 480;
 @Component({
   selector: 'app-shape-drawing-modal',
   standalone: true,
-  imports: [],
+  imports: [TranslatePipe],
   templateUrl: './shape-drawing-modal.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ShapeDrawingModal implements AfterViewInit, OnDestroy {
   private messageService = inject(MessageService);
   private dialogService = inject(DialogService);
+  private translate = inject(TranslateService);
 
   insert = output<string>();
   cancelled = output<void>();
@@ -326,7 +328,10 @@ export class ShapeDrawingModal implements AfterViewInit, OnDestroy {
     if (!this.canvas) return;
     const contentObjects = this.canvas.getObjects().filter((obj) => obj !== this.cropRect);
     if (contentObjects.length === 0) {
-      await this.dialogService.alert('THÔNG BÁO', 'Vui lòng vẽ ít nhất một hình trước khi chèn.');
+      await this.dialogService.alert(
+        this.translate.instant('shapeDrawing.noShapeTitle'),
+        this.translate.instant('shapeDrawing.noShapeMessage'),
+      );
       return;
     }
 
@@ -351,12 +356,18 @@ export class ShapeDrawingModal implements AfterViewInit, OnDestroy {
         if (res.success && res.data?.url) {
           this.insert.emit(`${environment.serverBaseUrl}${res.data.url}`);
         } else {
-          await this.dialogService.alert('LỖI', res.error || 'Không thể tải hình vẽ lên.');
+          await this.dialogService.alert(
+            this.translate.instant('common.error'),
+            res.error || this.translate.instant('shapeDrawing.uploadError'),
+          );
         }
       },
       error: async () => {
         this.isUploading.set(false);
-        await this.dialogService.alert('LỖI', 'Lỗi kết nối máy chủ.');
+        await this.dialogService.alert(
+          this.translate.instant('common.error'),
+          this.translate.instant('shapeDrawing.genericServerError'),
+        );
       },
     });
   }

@@ -1,12 +1,13 @@
 <div class="login-container">
   <div class="glow-bg"></div>
+  <app-language-switcher class="login-lang-switcher"></app-language-switcher>
   <div class="hud-login-box">
     <div class="hud-header">
       <div class="corner-dot top-left"></div>
       <div class="corner-dot top-right"></div>
       <img class="login-logo-img" src="logo.svg" alt="Employee Face AI Logo" />
-      <h2 class="title">MAINFRAME AUTHENTICATION</h2>
-      <p class="subtitle">Employee Face AI System</p>
+      <h2 class="title">{{ 'login.title' | translate }}</h2>
+      <p class="subtitle">{{ 'login.subtitle' | translate }}</p>
     </div>
 
     @if (errorMsg()) {
@@ -18,13 +19,13 @@
 
     <form [formGroup]="form" (ngSubmit)="onSubmit()" class="login-form">
       <div class="form-group">
-        <label for="emp-username">USERNAME</label>
+        <label for="emp-username">{{ 'login.username' | translate }}</label>
         <div class="input-wrapper">
           <input
             type="text"
             id="emp-username"
             formControlName="username"
-            placeholder="Nhập username"
+            [placeholder]="'login.usernamePlaceholder' | translate"
             autocomplete="username"
             class="hud-input"
           />
@@ -33,7 +34,7 @@
       </div>
 
       <div class="form-group">
-        <label for="emp-password">MẬT KHẨU</label>
+        <label for="emp-password">{{ 'login.password' | translate }}</label>
         <div class="input-wrapper">
           <input
             type="password"
@@ -49,9 +50,9 @@
       <button type="submit" class="hud-btn-primary" [disabled]="isLoading()">
         @if (isLoading()) {
           <div class="loader"></div>
-          <span>ĐANG XÁC THỰC...</span>
+          <span>{{ 'login.submitting' | translate }}</span>
         } @else {
-          <span>ĐĂNG NHẬP MAINFRAME</span>
+          <span>{{ 'login.submit' | translate }}</span>
         }
       </button>
     </form>
@@ -59,7 +60,7 @@
     <div class="hud-footer">
       <div class="corner-dot bottom-left"></div>
       <div class="corner-dot bottom-right"></div>
-      <a class="kiosk-link" href="/kiosk">Trở về Chấm công</a>
+      <a class="kiosk-link" href="/kiosk">{{ 'login.backToKiosk' | translate }}</a>
     </div>
   </div>
 </div>

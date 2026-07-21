@@ -9,6 +9,7 @@ import {
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { DialogService } from '../../../core/services/dialog.service';
 import { DatePickerComponent } from '../../../core/components/date-picker/date-picker';
 import {
@@ -26,7 +27,13 @@ type StatusFilter = 'all' | 'pending' | 'approved' | 'rejected';
 @Component({
   selector: 'app-leave-requests',
   standalone: true,
-  imports: [ReactiveFormsModule, DatePickerComponent, HudSelectComponent, IconComponent],
+  imports: [
+    ReactiveFormsModule,
+    DatePickerComponent,
+    HudSelectComponent,
+    IconComponent,
+    TranslatePipe,
+  ],
   templateUrl: './leave-requests.html',
   styleUrl: './leave-requests.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -35,6 +42,7 @@ export class LeaveRequestsComponent implements OnInit {
   private http = inject(HttpClient);
   private dialogService = inject(DialogService);
   private realtimeService = inject(RealtimeService);
+  private translate = inject(TranslateService);
 
   // The full list is shared app-wide via RealtimeService (single poller for
   // /api/leave-requests, also driving admin-shell's sidebar badge) rather
@@ -48,12 +56,20 @@ export class LeaveRequestsComponent implements OnInit {
   });
   // computed(), not a plain array — the "Chờ duyệt" label embeds the live
   // pendingCount and must re-render as it changes.
-  statusOptions = computed<HudSelectOption<StatusFilter>[]>(() => [
-    { value: 'pending', label: `Chờ duyệt (${this.pendingCount()})` },
-    { value: 'approved', label: 'Đã duyệt' },
-    { value: 'rejected', label: 'Từ chối' },
-    { value: 'all', label: 'Tất cả' },
-  ]);
+  statusOptions = computed<HudSelectOption<StatusFilter>[]>(() => {
+    this.translate.currentLang(); // recompute labels when the language changes
+    return [
+      {
+        value: 'pending',
+        label: this.translate.instant('leaveRequests.statusPendingWithCount', {
+          count: this.pendingCount(),
+        }),
+      },
+      { value: 'approved', label: this.translate.instant('leaveRequests.statusApproved') },
+      { value: 'rejected', label: this.translate.instant('leaveRequests.statusRejected') },
+      { value: 'all', label: this.translate.instant('leaveRequests.statusAll') },
+    ];
+  });
   // Free-text search is exempt from the explicit-Apply rule (rule 10) — it
   // live-filters, so its value is bridged into a signal for filteredRequests.
   searchQuery = new FormControl('', { nonNullable: true });
@@ -141,12 +157,12 @@ export class LeaveRequestsComponent implements OnInit {
         if (res.success && res.data) {
           this.realtimeService.leaveRequests.set(res.data);
         } else {
-          this.errorMsg.set(res.error || 'Không thể tải danh sách đơn xin nghỉ.');
+          this.errorMsg.set(res.error || this.translate.instant('leaveRequests.loadListError'));
         }
       },
       error: () => {
         this.isLoading.set(false);
-        this.errorMsg.set('Lỗi kết nối máy chủ API.');
+        this.errorMsg.set(this.translate.instant('leaveRequests.connectionError'));
       },
     });
   }
@@ -167,9 +183,13 @@ export class LeaveRequestsComponent implements OnInit {
 
   async approve(req: LeaveRequest): Promise<void> {
     const confirmed = await this.dialogService.confirm(
-      'DUYỆT ĐƠN NGHỈ',
-      `Duyệt đơn xin nghỉ của ${req.employee_name} (${req.start_date} → ${req.end_date})?`,
-      'DUYỆT',
+      this.translate.instant('leaveRequests.approveDialogTitle'),
+      this.translate.instant('leaveRequests.approveDialogMessage', {
+        name: req.employee_name,
+        start: req.start_date,
+        end: req.end_date,
+      }),
+      this.translate.instant('leaveRequests.approveConfirmButton'),
     );
     if (confirmed) {
       this.updateStatus(req, 'approved');
@@ -178,9 +198,9 @@ export class LeaveRequestsComponent implements OnInit {
 
   async reject(req: LeaveRequest): Promise<void> {
     const reason = await this.dialogService.prompt(
-      'TỪ CHỐI ĐƠN NGHỈ',
-      `Nhập lý do từ chối đơn xin nghỉ của ${req.employee_name}:`,
-      'VD: Dự án đang gấp, chưa sắp xếp được nhân sự thay thế...',
+      this.translate.instant('leaveRequests.rejectDialogTitle'),
+      this.translate.instant('leaveRequests.rejectDialogMessage', { name: req.employee_name }),
+      this.translate.instant('leaveRequests.rejectDialogPlaceholder'),
     );
     if (reason !== null) {
       this.updateStatus(req, 'rejected', reason.trim());
@@ -203,13 +223,16 @@ export class LeaveRequestsComponent implements OnInit {
             this.loadRequests();
           } else {
             await this.dialogService.alert(
-              'LỖI',
-              res.error || 'Không thể cập nhật trạng thái đơn nghỉ.',
+              this.translate.instant('common.error'),
+              res.error || this.translate.instant('leaveRequests.updateError'),
             );
           }
         },
         error: async (err: HttpErrorResponse) => {
-          await this.dialogService.alert('LỖI', err.error?.error || 'Lỗi kết nối máy chủ.');
+          await this.dialogService.alert(
+            this.translate.instant('common.error'),
+            err.error?.error || this.translate.instant('leaveRequests.genericServerError'),
+          );
         },
       });
   }
@@ -217,11 +240,11 @@ export class LeaveRequestsComponent implements OnInit {
   leaveStatusLabel(status: string): string {
     switch (status) {
       case 'approved':
-        return 'Đã duyệt';
+        return this.translate.instant('leaveRequests.statusApproved');
       case 'rejected':
-        return 'Từ chối';
+        return this.translate.instant('leaveRequests.statusRejected');
       default:
-        return 'Chờ duyệt';
+        return this.translate.instant('leaveRequests.statusPending');
     }
   }
 

@@ -12,6 +12,7 @@ import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { HttpClient, HttpErrorResponse, HttpEventType } from '@angular/common/http';
 import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { DialogService } from '../../../../core/services/dialog.service';
 import {
   HudSelectComponent,
@@ -51,7 +52,13 @@ const EXTERNAL_URL_PATTERN = /^https?:\/\//i;
 @Component({
   selector: 'app-upload-document-page',
   standalone: true,
-  imports: [ReactiveFormsModule, HudSelectComponent, HudAutocompleteComponent, IconComponent],
+  imports: [
+    ReactiveFormsModule,
+    HudSelectComponent,
+    HudAutocompleteComponent,
+    IconComponent,
+    TranslatePipe,
+  ],
   templateUrl: './upload-document-page.html',
   styleUrl: './upload-document-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -63,6 +70,7 @@ export class UploadDocumentPage implements OnInit {
   private employeeService = inject(EmployeeService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
+  private translate = inject(TranslateService);
   private readonly apiUrl = environment.apiBaseUrl;
 
   employees = signal<EmployeeBase[]>([]);
@@ -79,14 +87,20 @@ export class UploadDocumentPage implements OnInit {
     sourceType: this.fb.nonNullable.control<DocumentSourceType>('file'),
     externalUrl: this.fb.nonNullable.control(''),
   });
-  readonly uploadVisibilityOptions: HudSelectOption<DocumentVisibility>[] = [
-    { value: 'rieng', label: 'Riêng (chỉ 1 nhân viên nhận được)' },
-    { value: 'chung', label: 'Chung (toàn bộ nhân viên nhận được)' },
-  ];
-  readonly sourceTypeOptions: HudSelectOption<DocumentSourceType>[] = [
-    { value: 'file', label: 'Tải lên file' },
-    { value: 'link', label: 'Liên kết ngoài' },
-  ];
+  uploadVisibilityOptions = computed<HudSelectOption<DocumentVisibility>[]>(() => {
+    this.translate.currentLang(); // recompute labels when the language changes
+    return [
+      { value: 'rieng', label: this.translate.instant('uploadDocument.visibilityPrivate') },
+      { value: 'chung', label: this.translate.instant('uploadDocument.visibilityBroadcast') },
+    ];
+  });
+  sourceTypeOptions = computed<HudSelectOption<DocumentSourceType>[]>(() => {
+    this.translate.currentLang(); // recompute labels when the language changes
+    return [
+      { value: 'file', label: this.translate.instant('uploadDocument.sourceFile') },
+      { value: 'link', label: this.translate.instant('uploadDocument.sourceLink') },
+    ];
+  });
 
   // <app-hud-autocomplete> recipient picker — same shared shape as the
   // dashboard/compose employee pickers (see employee-suggestion.util.ts).
@@ -103,7 +117,8 @@ export class UploadDocumentPage implements OnInit {
     return sorted.filter((emp) => emp.name.toLowerCase().includes(q)).slice(0, 8);
   });
   employeeSuggestionLabel = formatEmployeeSuggestionLabel;
-  employeeSuggestionMeta = formatEmployeeSuggestionMeta;
+  employeeSuggestionMeta = (e: EmployeeBase) =>
+    formatEmployeeSuggestionMeta(e, this.translate.currentLang() === 'en' ? 'en' : 'vi');
 
   constructor() {
     // A "chung" (broadcast) doc has no single owner, so the target-employee
@@ -173,14 +188,17 @@ export class UploadDocumentPage implements OnInit {
     const ext = '.' + (file.name.split('.').pop() || '').toLowerCase();
     if (!ALLOWED_EXTENSIONS.includes(ext)) {
       await this.dialogService.alert(
-        'ĐỊNH DẠNG KHÔNG HỖ TRỢ',
-        'Chỉ chấp nhận file PDF, Word, Excel, ảnh (JPG/PNG) hoặc video (MP4/WEBM/MOV).',
+        this.translate.instant('uploadDocument.unsupportedFormatTitle'),
+        this.translate.instant('uploadDocument.unsupportedFormatMessage'),
       );
       input.value = '';
       return;
     }
     if (file.size > MAX_FILE_BYTES) {
-      await this.dialogService.alert('FILE QUÁ LỚN', 'Dung lượng file tối đa cho phép là 5GB.');
+      await this.dialogService.alert(
+        this.translate.instant('uploadDocument.fileTooLargeTitle'),
+        this.translate.instant('uploadDocument.fileTooLargeMessage'),
+      );
       input.value = '';
       return;
     }
@@ -231,16 +249,25 @@ export class UploadDocumentPage implements OnInit {
             const res = event.body;
             this.isUploading.set(false);
             if (res?.success) {
-              await this.dialogService.alert('THÀNH CÔNG', 'Tải lên tài liệu thành công.');
+              await this.dialogService.alert(
+                this.translate.instant('uploadDocument.successTitle'),
+                this.translate.instant('uploadDocument.successMessage'),
+              );
               this.router.navigate(['../'], { relativeTo: this.route });
             } else {
-              await this.dialogService.alert('LỖI', res?.error || 'Không thể tải lên tài liệu.');
+              await this.dialogService.alert(
+                this.translate.instant('common.error'),
+                res?.error || this.translate.instant('uploadDocument.uploadErrorMessage'),
+              );
             }
           }
         },
         error: async (err: HttpErrorResponse) => {
           this.isUploading.set(false);
-          await this.dialogService.alert('LỖI', err.error?.error || 'Lỗi kết nối máy chủ.');
+          await this.dialogService.alert(
+            this.translate.instant('common.error'),
+            err.error?.error || this.translate.instant('uploadDocument.genericServerError'),
+          );
         },
       });
   }

@@ -1,0 +1,12 @@
+<div class="language-switcher" role="group" [attr.aria-label]="'language.label' | translate">
+  @for (option of languageService.options; track option.code) {
+    <button
+      type="button"
+      class="lang-btn"
+      [class.active]="languageService.currentLang() === option.code"
+      (click)="select(option.code)"
+    >
+      {{ option.code.toUpperCase() }}
+    </button>
+  }
+</div>

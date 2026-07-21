@@ -1,13 +1,22 @@
 import { Component, ChangeDetectionStrategy, computed, inject, OnInit } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { TranslatePipe } from '@ngx-translate/core';
 import { AuthService } from '../../services/auth.service';
 import { RealtimeService } from '../../services/realtime.service';
 import { IconComponent } from '../icon/icon';
+import { LanguageSwitcherComponent } from '../language-switcher/language-switcher';
 
 @Component({
   selector: 'app-admin-shell',
   standalone: true,
-  imports: [RouterLink, RouterLinkActive, RouterOutlet, IconComponent],
+  imports: [
+    RouterLink,
+    RouterLinkActive,
+    RouterOutlet,
+    IconComponent,
+    LanguageSwitcherComponent,
+    TranslatePipe,
+  ],
   templateUrl: './admin-shell.html',
   styleUrl: './admin-shell.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

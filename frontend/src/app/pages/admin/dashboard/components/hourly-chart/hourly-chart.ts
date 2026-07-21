@@ -1,4 +1,5 @@
 import { Component, ChangeDetectionStrategy, input } from '@angular/core';
+import { TranslatePipe } from '@ngx-translate/core';
 
 export interface HourlyPoint {
   x: number;
@@ -10,7 +11,7 @@ export interface HourlyPoint {
 @Component({
   selector: 'app-hourly-chart',
   standalone: true,
-  imports: [],
+  imports: [TranslatePipe],
   templateUrl: './hourly-chart.html',
   styleUrl: './hourly-chart.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

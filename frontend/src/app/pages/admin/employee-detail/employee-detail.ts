@@ -8,6 +8,7 @@ import {
 } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { ApiResponse } from '../../../core/models/api-response.model';
 import { DetailedEmployee } from '../../../core/models/employee.model';
 import { avatarUrl, onImageError } from '../../../core/utils/image.util';
@@ -34,6 +35,7 @@ import { DialogService } from '../../../core/services/dialog.service';
     SkillsPanelComponent,
     ProjectsPanelComponent,
     BaseProfileModalComponent,
+    TranslatePipe,
   ],
   templateUrl: './employee-detail.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -44,6 +46,7 @@ export class EmployeeDetailComponent implements OnInit {
   private http = inject(HttpClient);
   private dialogService = inject(DialogService);
   private employeeService = inject(EmployeeService);
+  private translate = inject(TranslateService);
 
   employee = signal<DetailedEmployee | null>(null);
   isLoading = signal<boolean>(true);
@@ -100,13 +103,13 @@ export class EmployeeDetailComponent implements OnInit {
             this.attendance.initializeDateRangeDefaults();
           }
         } else if (!silent) {
-          this.errorMsg.set(res.error || 'Không thể lấy thông tin chi tiết nhân sự.');
+          this.errorMsg.set(res.error || this.translate.instant('employeeDetail.fetchError'));
         }
       },
       error: () => {
         if (!silent) {
           this.isLoading.set(false);
-          this.errorMsg.set('Lỗi kết nối máy chủ API.');
+          this.errorMsg.set(this.translate.instant('employeeDetail.connectionError'));
         }
       },
     });
@@ -128,8 +131,8 @@ export class EmployeeDetailComponent implements OnInit {
   onDeleteLog(id: number): void {
     this.dialogService
       .confirm(
-        'XÁC NHẬN XÓA',
-        'Bạn có chắc chắn muốn xóa lượt chấm công này? Thao tác này không thể hoàn tác.',
+        this.translate.instant('dashboard.deleteLogConfirmTitle'),
+        this.translate.instant('dashboard.deleteLogConfirmMessage'),
       )
       .then((confirmed) => {
         if (confirmed) {
@@ -138,11 +141,17 @@ export class EmployeeDetailComponent implements OnInit {
               if (res.success) {
                 this.loadEmployeeDetails(true);
               } else {
-                this.dialogService.alert('LỖI', res.error || 'Không thể xóa lượt chấm công.');
+                this.dialogService.alert(
+                  this.translate.instant('common.error'),
+                  res.error || this.translate.instant('dashboard.deleteLogError'),
+                );
               }
             },
             error: () => {
-              this.dialogService.alert('LỖI', 'Lỗi kết nối máy chủ.');
+              this.dialogService.alert(
+                this.translate.instant('common.error'),
+                this.translate.instant('dashboard.serverConnectionError'),
+              );
             },
           });
         }

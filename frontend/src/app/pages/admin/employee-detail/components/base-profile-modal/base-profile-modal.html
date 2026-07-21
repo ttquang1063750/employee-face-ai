@@ -1,32 +1,32 @@
 <div class="modal-backdrop">
   <div class="modal-card mini">
     <div class="modal-header">
-      <h3>⚙️ CẬP NHẬT HỒ SƠ CƠ BẢN</h3>
+      <h3>{{ 'baseProfileModal.title' | translate }}</h3>
       <button class="close-btn" (click)="close()">✖</button>
     </div>
     <div class="modal-body" [formGroup]="editForm">
       <div class="form-fields">
         <div class="form-group">
-          <label for="edit-emp-name">HỌ VÀ TÊN</label>
+          <label for="edit-emp-name">{{ 'employees.fullName' | translate }}</label>
           <input id="edit-emp-name" type="text" formControlName="name" class="hud-input" />
         </div>
         <div class="form-group">
-          <span class="hud-label">NGÀY SINH</span>
+          <span class="hud-label">{{ 'employees.dateOfBirth' | translate }}</span>
           <app-date-picker
             formControlName="date_of_birth"
-            placeholder="Chọn ngày sinh"
+            [placeholder]="'employees.dateOfBirthPlaceholder' | translate"
           ></app-date-picker>
         </div>
         <div class="form-group">
-          <label for="edit-emp-role">PHÂN QUYỀN HỆ THỐNG</label>
+          <label for="edit-emp-role">{{ 'employees.systemRole' | translate }}</label>
           <app-hud-select
             [selectId]="'edit-emp-role'"
-            [options]="roleOptions"
+            [options]="roleOptions()"
             formControlName="role"
           ></app-hud-select>
         </div>
         <div class="form-group">
-          <label for="edit-emp-username">USERNAME *</label>
+          <label for="edit-emp-username">{{ 'employees.username' | translate }}</label>
           <input
             id="edit-emp-username"
             type="text"
@@ -35,15 +35,15 @@
             class="hud-input"
           />
           @if (usernameStatus() === 'checking') {
-            <p class="field-hint">⏳ Đang kiểm tra username...</p>
+            <p class="field-hint">{{ 'employees.usernameChecking' | translate }}</p>
           } @else if (usernameStatus() === 'taken') {
-            <p class="field-hint error">✖ Username đã tồn tại.</p>
+            <p class="field-hint error">{{ 'employees.usernameTaken' | translate }}</p>
           } @else if (usernameStatus() === 'available') {
-            <p class="field-hint success">✔ Username hợp lệ.</p>
+            <p class="field-hint success">{{ 'employees.usernameAvailable' | translate }}</p>
           }
         </div>
         <div class="form-group">
-          <label for="edit-emp-password">MẬT KHẨU MỚI (Để trống nếu giữ nguyên)</label>
+          <label for="edit-emp-password">{{ 'baseProfileModal.newPasswordLabel' | translate }}</label>
           <div class="input-with-actions">
             <input
               id="edit-emp-password"
@@ -55,7 +55,7 @@
             <button
               type="button"
               class="hud-btn-mini"
-              data-tooltip="Hiện/ẩn mật khẩu"
+              [attr.data-tooltip]="'employees.togglePasswordTooltip' | translate"
               (click)="showEditPassword.set(!showEditPassword())"
             >
               {{ showEditPassword() ? '🙈' : '👁' }}
@@ -63,7 +63,7 @@
             <button
               type="button"
               class="hud-btn-mini"
-              data-tooltip="Tạo mật khẩu ngẫu nhiên"
+              [attr.data-tooltip]="'employees.generatePasswordTooltip' | translate"
               (click)="generatePassword()"
             >
               🎲
@@ -73,25 +73,25 @@
             editForm.controls.password.value &&
             editForm.controls.password.hasError('passwordComplexity')
           ) {
-            <p class="field-hint error">✖ {{ passwordHint }}</p>
+            <p class="field-hint error">✖ {{ 'common.passwordHint' | translate }}</p>
           }
         </div>
 
         <!-- Avatar Update Section -->
         <div class="form-camera-zone">
-          <span class="camera-label">ẢNH CHÂN DUNG ĐỐI CHIẾU (MẪU)</span>
+          <span class="camera-label">{{ 'employees.referencePhoto' | translate }}</span>
 
           <div class="camera-viewport-frame">
             @if (photoCapture.showWebcam()) {
               <video #videoElement autoplay playsinline class="modal-video"></video>
               <button class="camera-cap-btn" (click)="photoCapture.capturePhoto()">
-                📸 CHỤP ẢNH MẪU
+                {{ 'employees.capturePhoto' | translate }}
               </button>
             } @else {
               @if (photoCapture.imgBase64()) {
                 <img
                   [src]="photoCapture.imgBase64()"
-                  alt="Ảnh chân dung đã chụp"
+                  [attr.alt]="'employees.capturedAlt' | translate"
                   class="captured-preview-img"
                 />
               } @else {
@@ -104,7 +104,7 @@
               }
               <div class="photo-controls">
                 <button class="hud-btn-outline" (click)="photoCapture.startWebcam()">
-                  📸 CAMERA CHỤP TRỰC TIẾP
+                  {{ 'employees.liveCameraCapture' | translate }}
                 </button>
                 <input
                   #fileInputElement
@@ -114,7 +114,7 @@
                   accept="image/*"
                 />
                 <button class="hud-btn-outline" (click)="photoCapture.triggerFileInput()">
-                  📁 TẢI LÊN FILE ẢNH
+                  {{ 'employees.uploadPhotoFile' | translate }}
                 </button>
               </div>
             }
@@ -128,9 +128,11 @@
         @if (isSaving()) {
           <div class="loader"></div>
         }
-        <span>LƯU THAY ĐỔI</span>
+        <span>{{ 'baseProfileModal.save' | translate }}</span>
       </button>
-      <button class="hud-btn-secondary" (click)="close()">HỦY</button>
+      <button class="hud-btn-secondary" (click)="close()">
+        {{ 'baseProfileModal.cancel' | translate }}
+      </button>
     </div>
   </div>
 </div>

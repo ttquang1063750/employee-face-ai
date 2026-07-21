@@ -1,4 +1,5 @@
 import { Injectable, Signal, ElementRef, signal, inject } from '@angular/core';
+import { TranslateService } from '@ngx-translate/core';
 import { WebcamCaptureService, readFileAsBase64 } from './webcam-capture.service';
 import { DialogService } from './dialog.service';
 
@@ -25,6 +26,7 @@ interface PhotoCaptureRefs {
 export class PhotoCaptureStateService {
   private webcam = inject(WebcamCaptureService);
   private dialogService = inject(DialogService);
+  private translate = inject(TranslateService);
 
   private refs: PhotoCaptureRefs = {
     videoElement: signal(undefined),
@@ -56,7 +58,10 @@ export class PhotoCaptureStateService {
       }, 100);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
-      await this.dialogService.alert('LỖI CAMERA', 'Không thể khởi chạy camera: ' + message);
+      await this.dialogService.alert(
+        this.translate.instant('common.cameraErrorTitle'),
+        this.translate.instant('common.cameraErrorPrefix') + message,
+      );
       this.showWebcam.set(false);
     }
   }

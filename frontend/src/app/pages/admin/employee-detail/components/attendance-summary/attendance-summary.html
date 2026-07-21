@@ -1,41 +1,47 @@
 <div class="lifecycle-card">
   <div class="section-header-row">
-    <h3 class="section-title">📅 THỐNG KÊ CHẤM CÔNG VÀ GIỜ CÔNG</h3>
+    <h3 class="section-title">{{ 'attendanceSummary.title' | translate }}</h3>
     <button type="button" class="hud-btn-outline no-print" (click)="exportPdf()">
-      🖨️ Xuất PDF
+      {{ 'attendanceSummary.exportPdf' | translate }}
     </button>
   </div>
 
   <!-- Date range filter bar -->
   <div class="hud-filter-bar no-print">
     <div class="hud-field">
-      <span class="hud-label">TỪ NGÀY</span>
+      <span class="hud-label">{{ 'attendanceSummary.fromDate' | translate }}</span>
       <app-date-picker [formControl]="startDateControl"></app-date-picker>
     </div>
     <div class="hud-field">
-      <span class="hud-label">ĐẾN NGÀY</span>
+      <span class="hud-label">{{ 'attendanceSummary.toDate' | translate }}</span>
       <app-date-picker [formControl]="endDateControl"></app-date-picker>
     </div>
     <div class="hud-field filter-apply-field">
-      <button class="hud-btn-outline" (click)="applyFilter.emit()">ÁP DỤNG</button>
+      <button class="hud-btn-outline" (click)="applyFilter.emit()">
+        {{ 'common.apply' | translate }}
+      </button>
     </div>
   </div>
 
   <!-- KPI analytics widgets -->
   <div class="attendance-stats-cards">
     <div class="stats-card">
-      <span class="stats-label">SỐ NGÀY LÀM VIỆC THỰC TẾ</span>
-      <span class="stats-value text-glow-green">{{ workingDays() }} ngày</span>
+      <span class="stats-label">{{ 'attendanceSummary.workingDaysLabel' | translate }}</span>
+      <span class="stats-value text-glow-green"
+        >{{ workingDays() }} {{ 'attendanceSummary.workingDaysSuffix' | translate }}</span
+      >
     </div>
     <div class="stats-card">
-      <span class="stats-label">SỐ GIỜ CÔNG TỔNG CỘNG</span>
-      <span class="stats-value text-glow-cyan">{{ workingHours() }} giờ</span>
+      <span class="stats-label">{{ 'attendanceSummary.workingHoursLabel' | translate }}</span>
+      <span class="stats-value text-glow-cyan"
+        >{{ workingHours() }} {{ 'attendanceSummary.workingHoursSuffix' | translate }}</span
+      >
       @if (hasIncompleteAttendance()) {
         <span
           class="stats-note"
-          data-tooltip="Có ngày chấm công vào (CHECK-IN) nhưng chưa có chấm công ra (CHECK-OUT) — số giờ trên chưa tính đủ cho (các) ngày đó."
+          [attr.data-tooltip]="'attendanceSummary.incompleteTooltip' | translate"
         >
-          ⚠️ Chưa tính đủ
+          {{ 'attendanceSummary.incompleteBadge' | translate }}
         </span>
       }
     </div>
@@ -44,7 +50,8 @@
   <!-- Mood breakdown for the same filtered range -->
   <div class="donut-charts-row">
     <app-mood-donut
-      title="🧠 CẢM XÚC TRONG KHOẢNG ĐÃ CHỌN"
+      [title]="'mood.donutTitlePersonal' | translate"
+      [emptyMessage]="'mood.donutEmpty' | translate"
       [segments]="moodSegments()"
       [hasData]="hasMoodData()"
     />
@@ -55,10 +62,10 @@
     <table class="monthly-table">
       <thead>
         <tr>
-          <th>Thời gian</th>
-          <th>Hành động</th>
-          <th>Cảm xúc</th>
-          <th class="action-col-header">Hành động</th>
+          <th>{{ 'attendanceSummary.colTime' | translate }}</th>
+          <th>{{ 'attendanceSummary.colAction' | translate }}</th>
+          <th>{{ 'attendanceSummary.colMood' | translate }}</th>
+          <th class="action-col-header">{{ 'attendanceSummary.colAction' | translate }}</th>
         </tr>
       </thead>
       <tbody>
@@ -71,11 +78,15 @@
                 [class.check-in]="log.action === 'CHECK_IN'"
                 [class.check-out]="log.action === 'CHECK_OUT'"
               >
-                {{ log.action === 'CHECK_IN' ? 'VÀO CA' : 'RA CA' }}
+                {{
+                  log.action === 'CHECK_IN'
+                    ? ('dashboard.statusCheckIn' | translate)
+                    : ('dashboard.statusCheckOut' | translate)
+                }}
               </span>
             </td>
             <td>
-              <span class="mood-badge">{{ translateMood(log.mood) }}</span>
+              <span class="mood-badge">{{ moodLabel(log.mood) }}</span>
             </td>
             <td class="action-col-cell">
               <app-audit-photo-button [imagePath]="log.captured_image_path" />
@@ -84,7 +95,7 @@
                 <button
                   type="button"
                   class="hud-btn-mini danger no-print"
-                  data-tooltip="Xóa lượt chấm công"
+                  [attr.data-tooltip]="'attendanceSummary.deleteTooltip' | translate"
                   (click)="deleteLog.emit(log.id)"
                 >
                   🗑️
@@ -95,7 +106,7 @@
         } @empty {
           <tr>
             <td [attr.colspan]="showDeleteButton() ? 5 : 4" class="no-data">
-              Không có lịch sử chấm công trong khoảng thời gian đã chọn.
+              {{ 'attendanceSummary.empty' | translate }}
             </td>
           </tr>
         }
@@ -107,7 +118,7 @@
   @if (totalCount() > 0) {
     <div class="hud-pagination no-print">
       <div class="pag-size">
-        <label for="attendance-page-size">Hiển thị</label>
+        <label for="attendance-page-size">{{ 'common.show' | translate }}</label>
         <select id="attendance-page-size" class="pag-size-select" [formControl]="pageSizeControl">
           <option [ngValue]="5">5</option>
           <option [ngValue]="10">10</option>
@@ -115,19 +126,21 @@
           <option [ngValue]="50">50</option>
           <option [ngValue]="100">100</option>
         </select>
-        <span>/ trang</span>
+        <span>{{ 'common.perPage' | translate }}</span>
       </div>
       <div class="pag-controls">
         <button class="pag-btn" [disabled]="currentPage() === 1" (click)="prevPage.emit()">
-          ◀ TRƯỚC
+          {{ 'common.prev' | translate }}
         </button>
-        <span class="pag-info">TRANG {{ currentPage() }} / {{ totalPages() }}</span>
+        <span class="pag-info">{{
+          'common.pageInfo' | translate: { current: currentPage(), total: totalPages() }
+        }}</span>
         <button
           class="pag-btn"
           [disabled]="currentPage() === totalPages()"
           (click)="nextPage.emit()"
         >
-          SAU ▶
+          {{ 'common.next' | translate }}
         </button>
       </div>
     </div>

@@ -3,16 +3,18 @@
     <div class="brand">
       <img class="brand-logo-img" src="logo.svg" alt="Employee Face AI Logo" />
       <div class="brand-text">
-        <b>HR Control Panel</b>
-        <span>Mainframe Security Console</span>
+        <b>{{ 'nav.brandTitle' | translate }}</b>
+        <span>{{ 'nav.brandSubtitle' | translate }}</span>
       </div>
     </div>
+
+    <app-language-switcher class="sidebar-lang-switcher"></app-language-switcher>
 
     <nav class="side-nav">
       @if (authService.isAdmin()) {
         <a routerLink="/admin/dashboard" routerLinkActive="active">
           <app-icon class="nav-icon">chart-bar</app-icon>
-          <span>Bảng thống kê</span>
+          <span>{{ 'nav.dashboard' | translate }}</span>
         </a>
         <a
           routerLink="/admin/employees"
@@ -20,18 +22,18 @@
           [routerLinkActiveOptions]="{ exact: false }"
         >
           <app-icon class="nav-icon">users</app-icon>
-          <span>Quản lý Nhân viên</span>
+          <span>{{ 'nav.employees' | translate }}</span>
         </a>
         <a routerLink="/admin/leave-requests" routerLinkActive="active">
           <app-icon class="nav-icon">calendar-check</app-icon>
-          <span>Đơn xin nghỉ</span>
+          <span>{{ 'nav.leaveRequests' | translate }}</span>
           @if (pendingCount() > 0) {
             <span class="pending-badge">{{ pendingCount() }}</span>
           }
         </a>
         <a routerLink="/admin/documents" routerLinkActive="active">
           <app-icon class="nav-icon">document</app-icon>
-          <span>Tài liệu</span>
+          <span>{{ 'nav.documents' | translate }}</span>
         </a>
       }
 
@@ -40,7 +42,7 @@
            under the staff one, without forking this link per role. -->
       <a routerLink="messages" routerLinkActive="active">
         <app-icon class="nav-icon">mail</app-icon>
-        <span>Tin nhắn</span>
+        <span>{{ 'nav.messages' | translate }}</span>
         @if (unreadMessageCount() > 0) {
           <span class="pending-badge">{{ unreadMessageCount() }}</span>
         }
@@ -49,12 +51,12 @@
       @if (authService.isAdmin()) {
         <a routerLink="/admin/message-templates" routerLinkActive="active">
           <app-icon class="nav-icon">archive</app-icon>
-          <span>Mẫu tin nhắn</span>
+          <span>{{ 'nav.templates' | translate }}</span>
         </a>
       }
     </nav>
 
-    <button class="logout" (click)="logout()">⏻ Đăng xuất</button>
+    <button class="logout" (click)="logout()">⏻ {{ 'nav.logout' | translate }}</button>
   </aside>
 
   <main class="content">

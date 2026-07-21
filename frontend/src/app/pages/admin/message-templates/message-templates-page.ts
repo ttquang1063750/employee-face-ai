@@ -7,20 +7,27 @@ import { MessageTemplate } from '../../../core/models/message.model';
 import { translateMessageCategory } from '../../../core/utils/message-category.util';
 import { stripRichContentPreview } from '../../../core/utils/rich-content.util';
 import { IconComponent } from '../../../core/components/icon/icon';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-message-templates-page',
   standalone: true,
-  imports: [RouterLink, IconComponent],
+  imports: [RouterLink, IconComponent, TranslatePipe],
   templateUrl: './message-templates-page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class MessageTemplatesPage implements OnInit {
   private dialogService = inject(DialogService);
   private messageService = inject(MessageService);
+  private translate = inject(TranslateService);
 
-  protected readonly translateMessageCategory = translateMessageCategory;
-  protected readonly stripRichContentPreview = stripRichContentPreview;
+  contentPreview(html: string | null | undefined): string {
+    return stripRichContentPreview(html, this.translate.currentLang() === 'en' ? 'en' : 'vi');
+  }
+
+  categoryLabel(category: Parameters<typeof translateMessageCategory>[0]): string {
+    return translateMessageCategory(category, this.translate.currentLang() === 'en' ? 'en' : 'vi');
+  }
 
   templates = signal<MessageTemplate[]>([]);
   isLoading = signal<boolean>(true);
@@ -40,20 +47,20 @@ export class MessageTemplatesPage implements OnInit {
         if (res.success && res.data) {
           this.templates.set(res.data);
         } else {
-          this.errorMsg.set(res.error || 'Không thể tải danh sách mẫu tin nhắn.');
+          this.errorMsg.set(res.error || this.translate.instant('templates.loadListError'));
         }
       },
       error: () => {
         this.isLoading.set(false);
-        this.errorMsg.set('Lỗi kết nối máy chủ API.');
+        this.errorMsg.set(this.translate.instant('templates.connectionError'));
       },
     });
   }
 
   async deleteTemplate(template: MessageTemplate): Promise<void> {
     const confirmed = await this.dialogService.confirm(
-      'XÓA MẪU TIN NHẮN',
-      `Xóa mẫu "${template.name}"? Thao tác này không thể hoàn tác.`,
+      this.translate.instant('templates.deleteConfirmTitle'),
+      this.translate.instant('templates.deleteConfirmMessage', { name: template.name }),
     );
     if (!confirmed) return;
 
@@ -62,11 +69,17 @@ export class MessageTemplatesPage implements OnInit {
         if (res.success) {
           this.loadTemplates();
         } else {
-          await this.dialogService.alert('LỖI', res.error || 'Không thể xóa mẫu tin nhắn.');
+          await this.dialogService.alert(
+            this.translate.instant('common.error'),
+            res.error || this.translate.instant('templates.deleteError'),
+          );
         }
       },
       error: async (err: HttpErrorResponse) => {
-        await this.dialogService.alert('LỖI', err.error?.error || 'Lỗi kết nối máy chủ.');
+        await this.dialogService.alert(
+          this.translate.instant('common.error'),
+          err.error?.error || this.translate.instant('templates.genericServerError'),
+        );
       },
     });
   }

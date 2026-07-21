@@ -1,12 +1,15 @@
 import {
   Component,
   ChangeDetectionStrategy,
+  computed,
   forwardRef,
+  inject,
   input,
   output,
   signal,
 } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
+import { TranslateService } from '@ngx-translate/core';
 
 // Shared text-input-with-dropdown-suggestions widget, extracted after the
 // same shape (FormControl<string> + show/hide signal + 150ms blur-before-
@@ -33,8 +36,14 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
   ],
 })
 export class HudAutocompleteComponent<T> implements ControlValueAccessor {
+  private translate = inject(TranslateService);
+
   suggestions = input<T[]>([]);
-  placeholder = input<string>('Tìm kiếm...');
+  placeholder = input<string | undefined>(undefined);
+  displayPlaceholder = computed(() => {
+    this.translate.currentLang(); // recompute when the language changes
+    return this.placeholder() ?? this.translate.instant('common.searchEllipsis');
+  });
   inputId = input<string>('');
   icon = input<string>('👤');
   itemLabel = input.required<(item: T) => string>();

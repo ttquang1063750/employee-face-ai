@@ -1,4 +1,5 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, inject, signal } from '@angular/core';
+import { TranslateService } from '@ngx-translate/core';
 import { DialogState } from '../models/dialog-state.model';
 
 export interface DialogOptions {
@@ -13,9 +14,11 @@ export interface DialogOptions {
   providedIn: 'root',
 })
 export class DialogService {
+  private translate = inject(TranslateService);
+
   dialogState = signal<DialogState | null>(null);
 
-  alert(title: string, message: string, confirmText = 'OK'): Promise<void> {
+  alert(title: string, message: string, confirmText = this.translate.instant('common.ok')): Promise<void> {
     return new Promise<void>((resolve) => {
       this.dialogState.set({
         title,
@@ -33,8 +36,8 @@ export class DialogService {
   confirm(
     title: string,
     message: string,
-    confirmText = 'XÁC NHẬN',
-    cancelText = 'HỦY',
+    confirmText = this.translate.instant('common.confirmButton'),
+    cancelText = this.translate.instant('common.cancelButton'),
   ): Promise<boolean> {
     return new Promise<boolean>((resolve) => {
       this.dialogState.set({
@@ -55,8 +58,8 @@ export class DialogService {
     title: string,
     message: string,
     placeholder = '',
-    confirmText = 'XÁC NHẬN',
-    cancelText = 'HỦY',
+    confirmText = this.translate.instant('common.confirmButton'),
+    cancelText = this.translate.instant('common.cancelButton'),
   ): Promise<string | null> {
     return new Promise<string | null>((resolve) => {
       this.dialogState.set({

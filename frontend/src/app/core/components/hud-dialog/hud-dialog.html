@@ -34,14 +34,14 @@
       <div class="dialog-footer">
         @if (state.type === 'confirm' || state.type === 'prompt') {
           <button class="hud-btn-cancel" (click)="onCancel()">
-            {{ state.cancelText || 'HỦY' }}
+            {{ state.cancelText || ('common.cancelButton' | translate) }}
           </button>
           <button class="hud-btn-confirm" (click)="onConfirm()">
-            {{ state.confirmText || 'XÁC NHẬN' }}
+            {{ state.confirmText || ('common.confirmButton' | translate) }}
           </button>
         } @else {
           <button class="hud-btn-confirm alert-mode" (click)="onConfirm()">
-            {{ state.confirmText || 'OK' }}
+            {{ state.confirmText || ('common.ok' | translate) }}
           </button>
         }
       </div>

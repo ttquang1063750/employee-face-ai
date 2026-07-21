@@ -1,6 +1,7 @@
 import { Component, ChangeDetectionStrategy, signal, input, output, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { DialogService } from '../../../../../core/services/dialog.service';
 import { EmployeeService } from '../../../../../core/services/employee.service';
 import { Skill } from '../../../../../core/models/employee.model';
@@ -8,7 +9,7 @@ import { Skill } from '../../../../../core/models/employee.model';
 @Component({
   selector: 'app-skills-panel',
   standalone: true,
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, TranslatePipe],
   templateUrl: './skills-panel.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -16,6 +17,7 @@ export class SkillsPanelComponent {
   private dialogService = inject(DialogService);
   private fb = inject(FormBuilder);
   private employeeService = inject(EmployeeService);
+  private translate = inject(TranslateService);
 
   skills = input.required<Skill[]>();
   employeeId = input.required<number>();
@@ -47,7 +49,10 @@ export class SkillsPanelComponent {
     if (!name) return;
 
     if (this.skillsListToEdit().some((s) => s.skill_name.toLowerCase() === name.toLowerCase())) {
-      await this.dialogService.alert('KỸ NĂNG TỒN TẠI', 'Kỹ năng này đã tồn tại trong danh sách.');
+      await this.dialogService.alert(
+        this.translate.instant('skillsPanel.duplicateTitle'),
+        this.translate.instant('skillsPanel.duplicateMessage'),
+      );
       return;
     }
 
@@ -66,7 +71,10 @@ export class SkillsPanelComponent {
       next: async (res) => {
         this.isSaving.set(false);
         if (res.success) {
-          await this.dialogService.alert('THÀNH CÔNG', 'Cập nhật danh sách kỹ năng thành công.');
+          await this.dialogService.alert(
+            this.translate.instant('skillsPanel.successTitle'),
+            this.translate.instant('skillsPanel.successMessage'),
+          );
           this.closeModal();
           this.changed.emit();
         }
@@ -74,8 +82,8 @@ export class SkillsPanelComponent {
       error: async (err: HttpErrorResponse) => {
         this.isSaving.set(false);
         await this.dialogService.alert(
-          'LỖI CẬP NHẬT',
-          'Lỗi cập nhật kỹ năng: ' + (err.error?.error || err.message),
+          this.translate.instant('skillsPanel.errorTitle'),
+          this.translate.instant('skillsPanel.errorPrefix') + (err.error?.error || err.message),
         );
       },
     });

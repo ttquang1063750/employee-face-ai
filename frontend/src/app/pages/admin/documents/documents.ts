@@ -12,6 +12,7 @@ import { RouterLink } from '@angular/router';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { merge } from 'rxjs';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { DialogService } from '../../../core/services/dialog.service';
 import { openEmployeeDocument } from '../../../core/utils/document-action.util';
 import {
@@ -28,7 +29,14 @@ type VisibilityFilter = 'all' | DocumentVisibility;
 @Component({
   selector: 'app-documents',
   standalone: true,
-  imports: [ReactiveFormsModule, DatePipe, RouterLink, HudSelectComponent, IconComponent],
+  imports: [
+    ReactiveFormsModule,
+    DatePipe,
+    RouterLink,
+    HudSelectComponent,
+    IconComponent,
+    TranslatePipe,
+  ],
   templateUrl: './documents.html',
   styleUrl: './documents.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -36,6 +44,7 @@ type VisibilityFilter = 'all' | DocumentVisibility;
 export class DocumentsComponent implements OnInit {
   private http = inject(HttpClient);
   private dialogService = inject(DialogService);
+  private translate = inject(TranslateService);
   private readonly apiUrl = environment.apiBaseUrl;
 
   documents = signal<EmployeeDocument[]>([]);
@@ -49,11 +58,14 @@ export class DocumentsComponent implements OnInit {
     initialValue: this.searchQuery.value,
   });
   visibilityFilterControl = new FormControl<VisibilityFilter>('all', { nonNullable: true });
-  readonly visibilityFilterOptions: HudSelectOption<VisibilityFilter>[] = [
-    { value: 'all', label: 'Tất cả' },
-    { value: 'chung', label: 'Chung (Toàn bộ nhân viên)' },
-    { value: 'rieng', label: 'Riêng (Theo nhân viên)' },
-  ];
+  visibilityFilterOptions = computed<HudSelectOption<VisibilityFilter>[]>(() => {
+    this.translate.currentLang(); // recompute labels when the language changes
+    return [
+      { value: 'all', label: this.translate.instant('documents.typeAll') },
+      { value: 'chung', label: this.translate.instant('documents.typeBroadcast') },
+      { value: 'rieng', label: this.translate.instant('documents.typePrivate') },
+    ];
+  });
   private visibilityFilter = toSignal(this.visibilityFilterControl.valueChanges, {
     initialValue: this.visibilityFilterControl.value,
   });
@@ -117,12 +129,12 @@ export class DocumentsComponent implements OnInit {
         if (res.success && res.data) {
           this.documents.set(res.data);
         } else {
-          this.errorMsg.set(res.error || 'Không thể tải danh sách tài liệu.');
+          this.errorMsg.set(res.error || this.translate.instant('documents.loadListError'));
         }
       },
       error: () => {
         this.isLoading.set(false);
-        this.errorMsg.set('Lỗi kết nối máy chủ API.');
+        this.errorMsg.set(this.translate.instant('documents.connectionError'));
       },
     });
   }
@@ -141,8 +153,8 @@ export class DocumentsComponent implements OnInit {
 
   async deleteDocument(doc: EmployeeDocument): Promise<void> {
     const confirmed = await this.dialogService.confirm(
-      'XÁC NHẬN XÓA TÀI LIỆU',
-      `Bạn có chắc chắn muốn xóa tài liệu "${doc.title}"? Thao tác này không thể hoàn tác.`,
+      this.translate.instant('documents.deleteConfirmTitle'),
+      this.translate.instant('documents.deleteConfirmMessage', { title: doc.title }),
     );
     if (!confirmed) return;
 
@@ -153,14 +165,20 @@ export class DocumentsComponent implements OnInit {
         }
       },
       error: async (err: HttpErrorResponse) => {
-        await this.dialogService.alert('LỖI', err.error?.error || 'Lỗi kết nối máy chủ.');
+        await this.dialogService.alert(
+          this.translate.instant('common.error'),
+          err.error?.error || this.translate.instant('documents.genericServerError'),
+        );
       },
     });
   }
 
   downloadDocument(doc: EmployeeDocument): void {
     openEmployeeDocument(this.http, this.apiUrl, doc, async () => {
-      await this.dialogService.alert('LỖI', 'Không thể tải xuống tài liệu.');
+      await this.dialogService.alert(
+        this.translate.instant('common.error'),
+        this.translate.instant('documents.downloadError'),
+      );
     });
   }
 }

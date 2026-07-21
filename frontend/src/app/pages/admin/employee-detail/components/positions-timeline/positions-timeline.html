@@ -1,7 +1,13 @@
 <div class="lifecycle-card">
   <div class="section-header-row">
-    <h3 class="section-title">📈 LỊCH SỬ THĂNG TIẾN (POSITIONS)</h3>
-    <button class="hud-btn-mini" (click)="openModal()" data-tooltip="BỔ NHIỆM">⚙️</button>
+    <h3 class="section-title">{{ 'positionsTimeline.title' | translate }}</h3>
+    <button
+      class="hud-btn-mini"
+      (click)="openModal()"
+      [attr.data-tooltip]="'positionsTimeline.addTooltip' | translate"
+    >
+      ⚙️
+    </button>
   </div>
   <div class="timeline">
     @for (pos of positions(); track pos.id) {
@@ -13,17 +19,17 @@
             <button
               class="remove-inline-btn"
               (click)="deletePosition(pos.id)"
-              title="Xóa mốc chức vụ này"
+              [attr.title]="'positionsTimeline.deleteTooltip' | translate"
             >
               ✖
             </button>
           </div>
           <p class="dates">
-            📅 Từ: {{ pos.start_date }}
+            {{ 'positionsTimeline.from' | translate }} {{ pos.start_date }}
             @if (pos.end_date) {
-              - Đến: {{ pos.end_date }}
+              {{ 'positionsTimeline.to' | translate }} {{ pos.end_date }}
             } @else {
-              - Hiện tại
+              {{ 'positionsTimeline.current' | translate }}
             }
           </p>
         </div>
@@ -36,28 +42,27 @@
   <div class="modal-backdrop">
     <div class="modal-card mini">
       <div class="modal-header">
-        <h3>📈 BỔ NHIỆM CHỨC DANH MỚI</h3>
+        <h3>{{ 'positionsTimeline.modalTitle' | translate }}</h3>
         <button class="close-btn" (click)="closeModal()">✖</button>
       </div>
       <div class="modal-body" [formGroup]="newPositionForm">
         <div class="form-fields">
           <div class="form-group">
-            <label for="new-pos-title">CHỨC DANH MỚI</label>
+            <label for="new-pos-title">{{ 'positionsTimeline.newTitleLabel' | translate }}</label>
             <input
               id="new-pos-title"
               type="text"
               formControlName="title"
-              placeholder="Ví dụ: Team Leader, Senior Manager"
+              [placeholder]="'positionsTimeline.newTitlePlaceholder' | translate"
               class="hud-input"
             />
           </div>
           <div class="form-group">
-            <span>NGÀY HIỆU LỰC BỔ NHIỆM</span>
+            <span>{{ 'positionsTimeline.effectiveDateLabel' | translate }}</span>
             <app-date-picker formControlName="startDate"></app-date-picker>
           </div>
           <p class="warning-alert">
-            ℹ️ Ghi chú: Hệ thống sẽ tự động chuyển chức danh hiện tại của nhân sự này sang trạng
-            thái kết thúc vào ngày bổ nhiệm.
+            {{ 'positionsTimeline.note' | translate }}
           </p>
         </div>
       </div>
@@ -70,9 +75,11 @@
           @if (isSaving()) {
             <div class="loader"></div>
           }
-          <span>GHI NHẬN BỔ NHIỆM</span>
+          <span>{{ 'positionsTimeline.submit' | translate }}</span>
         </button>
-        <button class="hud-btn-secondary" (click)="closeModal()">HỦY</button>
+        <button class="hud-btn-secondary" (click)="closeModal()">
+          {{ 'positionsTimeline.cancel' | translate }}
+        </button>
       </div>
     </div>
   </div>

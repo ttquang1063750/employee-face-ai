@@ -1,6 +1,7 @@
 import { Component, ChangeDetectionStrategy, signal, input, output, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { DatePickerComponent } from '../../../../../core/components/date-picker/date-picker';
 import { DialogService } from '../../../../../core/services/dialog.service';
 import { EmployeeService } from '../../../../../core/services/employee.service';
@@ -12,7 +13,7 @@ import { environment } from '../../../../../../environments/environment';
 @Component({
   selector: 'app-income-history',
   standalone: true,
-  imports: [ReactiveFormsModule, DatePickerComponent],
+  imports: [ReactiveFormsModule, DatePickerComponent, TranslatePipe],
   templateUrl: './income-history.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -21,6 +22,7 @@ export class IncomeHistoryComponent {
   private dialogService = inject(DialogService);
   private fb = inject(FormBuilder);
   private employeeService = inject(EmployeeService);
+  private translate = inject(TranslateService);
   private readonly apiUrl = environment.apiBaseUrl;
 
   incomeHistory = input.required<IncomeEntry[]>();
@@ -64,7 +66,10 @@ export class IncomeHistoryComponent {
       next: async (res) => {
         this.isSaving.set(false);
         if (res.success) {
-          await this.dialogService.alert('THÀNH CÔNG', 'Cập nhật điều chỉnh mức lương thành công.');
+          await this.dialogService.alert(
+            this.translate.instant('incomeHistory.successTitle'),
+            this.translate.instant('incomeHistory.successMessage'),
+          );
           this.closeModal();
           this.changed.emit();
         }
@@ -72,8 +77,8 @@ export class IncomeHistoryComponent {
       error: async (err: HttpErrorResponse) => {
         this.isSaving.set(false);
         await this.dialogService.alert(
-          'LỖI ĐIỀU CHỈNH',
-          'Lỗi cập nhật lương: ' + (err.error?.error || err.message),
+          this.translate.instant('incomeHistory.errorTitle'),
+          this.translate.instant('incomeHistory.errorPrefix') + (err.error?.error || err.message),
         );
       },
     });
@@ -81,22 +86,25 @@ export class IncomeHistoryComponent {
 
   async deleteIncome(id: number): Promise<void> {
     const confirmed = await this.dialogService.confirm(
-      'XÁC NHẬN XÓA MỨC LƯƠNG',
-      'Bạn có chắc chắn muốn xóa lịch sử điều chỉnh lương này?',
+      this.translate.instant('incomeHistory.deleteConfirmTitle'),
+      this.translate.instant('incomeHistory.deleteConfirmMessage'),
     );
     if (!confirmed) return;
 
     this.http.delete<ApiResponse>(`${this.apiUrl}/income/${id}`).subscribe({
       next: async (res) => {
         if (res.success) {
-          await this.dialogService.alert('XÓA THÀNH CÔNG', 'Đã xóa lịch sử thu nhập thành công.');
+          await this.dialogService.alert(
+            this.translate.instant('incomeHistory.deleteSuccessTitle'),
+            this.translate.instant('incomeHistory.deleteSuccessMessage'),
+          );
           this.changed.emit();
         }
       },
       error: async (err: HttpErrorResponse) => {
         await this.dialogService.alert(
-          'LỖI XÓA LƯƠNG',
-          'Lỗi khi xóa: ' + (err.error?.error || err.message),
+          this.translate.instant('incomeHistory.deleteErrorTitle'),
+          this.translate.instant('incomeHistory.deleteErrorPrefix') + (err.error?.error || err.message),
         );
       },
     });

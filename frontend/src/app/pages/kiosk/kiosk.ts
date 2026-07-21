@@ -5,14 +5,17 @@ import {
   ElementRef,
   viewChild,
   signal,
+  computed,
   ChangeDetectionStrategy,
   inject,
 } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { ApiResponse } from '../../core/models/api-response.model';
 import { WebcamCaptureService } from '../../core/services/webcam-capture.service';
 import { HudSelectComponent, HudSelectOption } from '../../core/components/hud-select/hud-select';
+import { LanguageSwitcherComponent } from '../../core/components/language-switcher/language-switcher';
 import { environment } from '../../../environments/environment';
 
 export interface AttendanceResult {
@@ -25,7 +28,7 @@ export interface AttendanceResult {
 @Component({
   selector: 'app-kiosk',
   standalone: true,
-  imports: [ReactiveFormsModule, HudSelectComponent],
+  imports: [ReactiveFormsModule, HudSelectComponent, TranslatePipe, LanguageSwitcherComponent],
   templateUrl: './kiosk.html',
   styleUrl: './kiosk.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -34,17 +37,21 @@ export interface AttendanceResult {
 export class KioskComponent implements OnInit, OnDestroy {
   private http = inject(HttpClient);
   private webcam = inject(WebcamCaptureService);
+  private translate = inject(TranslateService);
 
   videoElement = viewChild<ElementRef<HTMLVideoElement>>('videoElement');
   canvasElement = viewChild<ElementRef<HTMLCanvasElement>>('canvasElement');
 
   currentAction = signal<'CHECK_IN' | 'CHECK_OUT'>('CHECK_IN');
   detector = new FormControl('retinaface', { nonNullable: true });
-  readonly detectorOptions: HudSelectOption<string>[] = [
-    { value: 'retinaface', label: 'RetinaFace (Độ chính xác cao nhất)' },
-    { value: 'mtcnn', label: 'MTCNN (Tốc độ xử lý nhanh)' },
-    { value: 'ssd', label: 'SSD (Tối ưu lực lượng tính toán)' },
-  ];
+  readonly detectorOptions = computed<HudSelectOption<string>[]>(() => {
+    this.translate.currentLang(); // recompute labels when the language changes
+    return [
+      { value: 'retinaface', label: this.translate.instant('kiosk.detectorRetinaFace') },
+      { value: 'mtcnn', label: this.translate.instant('kiosk.detectorMtcnn') },
+      { value: 'ssd', label: this.translate.instant('kiosk.detectorSsd') },
+    ];
+  });
 
   isLoading = signal<boolean>(false);
   statusMsg = signal<string | null>(null);
@@ -77,9 +84,7 @@ export class KioskComponent implements OnInit, OnDestroy {
     } catch (err) {
       console.error('Error starting webcam:', err);
       const message = err instanceof Error ? err.message : String(err);
-      this.statusMsg.set(
-        `⚠️ Không thể truy cập Camera: ${message}. Vui lòng cấp quyền truy cập camera.`,
-      );
+      this.statusMsg.set(this.translate.instant('kiosk.cameraAccessError', { message }));
       this.isSuccess.set(false);
     }
   }
@@ -94,7 +99,7 @@ export class KioskComponent implements OnInit, OnDestroy {
 
   submitAttendance(): void {
     if (!this.webcam.isActive) {
-      alert('Camera chưa sẵn sàng!');
+      alert(this.translate.instant('kiosk.cameraNotReady'));
       return;
     }
 
@@ -138,7 +143,7 @@ export class KioskComponent implements OnInit, OnDestroy {
             if (err.error && err.error.error) {
               this.statusMsg.set(err.error.error);
             } else {
-              this.statusMsg.set('Lỗi kết nối máy chủ hoặc lỗi nhận diện.');
+              this.statusMsg.set(this.translate.instant('kiosk.genericError'));
             }
           },
         });

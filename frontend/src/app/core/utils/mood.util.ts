@@ -1,15 +1,34 @@
-const MOOD_LABELS: Record<string, string> = {
-  happy: 'Vui vẻ 😊',
-  sad: 'Buồn bã 😢',
-  angry: 'Tức giận 😠',
-  surprise: 'Ngạc nhiên 😲',
-  fear: 'Lo sợ 😨',
-  disgust: 'Khó chịu 😣',
-  neutral: 'Bình thường 😐',
+const MOOD_LABELS: Record<'vi' | 'en', Record<string, string>> = {
+  vi: {
+    happy: 'Vui vẻ 😊',
+    sad: 'Buồn bã 😢',
+    angry: 'Tức giận 😠',
+    surprise: 'Ngạc nhiên 😲',
+    fear: 'Lo sợ 😨',
+    disgust: 'Khó chịu 😣',
+    neutral: 'Bình thường 😐',
+  },
+  en: {
+    happy: 'Happy 😊',
+    sad: 'Sad 😢',
+    angry: 'Angry 😠',
+    surprise: 'Surprised 😲',
+    fear: 'Fearful 😨',
+    disgust: 'Disgusted 😣',
+    neutral: 'Neutral 😐',
+  },
 };
 
-export function translateMood(mood: string): string {
-  return MOOD_LABELS[mood.toLowerCase()] || mood;
+// `mood` is the raw DeepFace emotion key from the backend (English, e.g.
+// 'happy') for logs fetched via the list endpoints — but the kiosk's own
+// immediate POST /api/attendance response is pre-translated to Vietnamese
+// server-side (see server.py's MOOD_TRANSLATION) and displayed as-is there,
+// so this function is not called on that one value. If the backend's own
+// hardcoded Vietnamese strings are ever localized too, that response should
+// switch to returning the raw key and go through this function like every
+// other mood display in the app.
+export function translateMood(mood: string, lang: 'vi' | 'en' = 'vi'): string {
+  return MOOD_LABELS[lang][mood.toLowerCase()] || mood;
 }
 
 export interface MoodBucketPercentages {

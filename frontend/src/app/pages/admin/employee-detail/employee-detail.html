@@ -7,12 +7,14 @@
     @if (isLoading()) {
       <div class="hud-loading-state">
         <div class="hud-spinner"></div>
-        <p>Đang truy xuất hồ sơ Mainframe...</p>
+        <p>{{ 'employeeDetail.loading' | translate }}</p>
       </div>
     } @else if (errorMsg()) {
       <div class="error-state">
         <p class="err-text">⚠️ {{ errorMsg() }}</p>
-        <button class="retry-btn" (click)="loadEmployeeDetails()">Thử lại</button>
+        <button class="retry-btn" (click)="loadEmployeeDetails()">
+          {{ 'employeeDetail.retry' | translate }}
+        </button>
       </div>
     } @else if (employee(); as emp) {
       <!-- 1. Employee Profile Header -->
@@ -32,17 +34,21 @@
               <span class="id">ID: #{{ emp.id }}</span>
               @let age = calculateAge(emp.date_of_birth);
               @if (age !== null) {
-                <span class="age">{{ age }} tuổi</span>
+                <span class="age">{{ age }} {{ 'employeeDetail.ageSuffix' | translate }}</span>
               }
               <span class="role-tag" [class.admin]="emp.role === 'admin'">
-                {{ emp.role === 'admin' ? 'Hệ thống Admin' : 'Nhân sự Staff' }}
+                {{
+                  emp.role === 'admin'
+                    ? ('employeeDetail.roleAdminTag' | translate)
+                    : ('employeeDetail.roleStaffTag' | translate)
+                }}
               </span>
             </div>
           </div>
         </div>
 
         <button class="hud-btn-primary no-print" (click)="openBaseModal()">
-          ⚙️ SỬA THÔNG TIN BẢN THÂN
+          {{ 'employeeDetail.editSelfInfo' | translate }}
         </button>
       </div>
 

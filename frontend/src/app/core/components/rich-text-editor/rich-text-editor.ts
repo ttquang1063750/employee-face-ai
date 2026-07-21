@@ -4,6 +4,7 @@ import {
   AfterViewInit,
   OnDestroy,
   ChangeDetectionStrategy,
+  computed,
   forwardRef,
   inject,
   input,
@@ -25,6 +26,7 @@ import { HudSelectComponent, HudSelectOption } from '../hud-select/hud-select';
 import { MessageService } from '../../services/message.service';
 import { DialogService } from '../../services/dialog.service';
 import { environment } from '../../../../environments/environment';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
 interface ToolbarState {
   bold: boolean;
@@ -53,20 +55,12 @@ const DEFAULT_COLOR = '#39d353';
 // Font size isn't a mark of its own — it's a `textStyle` attribute (see
 // FontSize from @tiptap/extension-text-style), so "no size set" and "reset
 // to default" are both represented as null, not a real px value.
-const FONT_SIZE_OPTIONS: HudSelectOption<string | null>[] = [
-  { value: null, label: 'Mặc định' },
-  { value: '12px', label: '12' },
-  { value: '14px', label: '14' },
-  { value: '16px', label: '16' },
-  { value: '18px', label: '18' },
-  { value: '24px', label: '24' },
-  { value: '32px', label: '32' },
-];
+const FONT_SIZE_VALUES = ['12px', '14px', '16px', '18px', '24px', '32px'];
 
 @Component({
   selector: 'app-rich-text-editor',
   standalone: true,
-  imports: [ShapeDrawingModal, HudSelectComponent, ReactiveFormsModule],
+  imports: [ShapeDrawingModal, HudSelectComponent, ReactiveFormsModule, TranslatePipe],
   templateUrl: './rich-text-editor.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [
@@ -80,6 +74,7 @@ const FONT_SIZE_OPTIONS: HudSelectOption<string | null>[] = [
 export class RichTextEditor implements ControlValueAccessor, AfterViewInit, OnDestroy {
   private messageService = inject(MessageService);
   private dialogService = inject(DialogService);
+  private translate = inject(TranslateService);
 
   // Applied to the actual contenteditable host, not this component's own
   // element — same "explicit id input" pattern as HudSelectComponent's
@@ -95,7 +90,13 @@ export class RichTextEditor implements ControlValueAccessor, AfterViewInit, OnDe
   private onChange: (value: string) => void = () => undefined;
   private onTouched: () => void = () => undefined;
 
-  readonly fontSizeOptions = FONT_SIZE_OPTIONS;
+  fontSizeOptions = computed<HudSelectOption<string | null>[]>(() => {
+    this.translate.currentLang(); // recompute labels when the language changes
+    return [
+      { value: null, label: this.translate.instant('richEditor.fontSizeDefault') },
+      ...FONT_SIZE_VALUES.map((value) => ({ value, label: value.replace('px', '') })),
+    ];
+  });
   fontSizeControl = new FormControl<string | null>(null);
 
   isDisabled = signal(false);
@@ -280,12 +281,18 @@ export class RichTextEditor implements ControlValueAccessor, AfterViewInit, OnDe
           if (res.success && res.data?.url) {
             this.insertImage(`${environment.serverBaseUrl}${res.data.url}`);
           } else {
-            await this.dialogService.alert('LỖI', res.error || 'Không thể tải ảnh lên.');
+            await this.dialogService.alert(
+            this.translate.instant('common.error'),
+            res.error || this.translate.instant('richEditor.uploadError'),
+          );
           }
         },
         error: async () => {
           this.isUploadingImage.set(false);
-          await this.dialogService.alert('LỖI', 'Lỗi kết nối máy chủ.');
+          await this.dialogService.alert(
+          this.translate.instant('common.error'),
+          this.translate.instant('richEditor.genericServerError'),
+        );
         },
       });
     };

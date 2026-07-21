@@ -1,7 +1,8 @@
-import { Component, ChangeDetectionStrategy, effect, input, output } from '@angular/core';
+import { Component, ChangeDetectionStrategy, effect, inject, input, output } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DatePipe } from '@angular/common';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { DatePickerComponent } from '../../../../../core/components/date-picker/date-picker';
 import { AttendanceLog } from '../../../../../core/models/employee.model';
 import { AuditPhotoButtonComponent } from '../../../../../core/components/audit-photo-button/audit-photo-button';
@@ -18,11 +19,13 @@ import { translateMood } from '../../../../../core/utils/mood.util';
     DatePipe,
     AuditPhotoButtonComponent,
     MoodDonutComponent,
+    TranslatePipe,
   ],
   templateUrl: './attendance-summary.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AttendanceSummaryComponent {
+  private translate = inject(TranslateService);
   paginatedLogs = input.required<AttendanceLog[]>();
   totalCount = input.required<number>();
   workingDays = input.required<number>();
@@ -69,7 +72,9 @@ export class AttendanceSummaryComponent {
       .subscribe((value) => this.pageSizeChange.emit(value));
   }
 
-  protected readonly translateMood = translateMood;
+  moodLabel(mood: string): string {
+    return translateMood(mood, this.translate.currentLang() === 'en' ? 'en' : 'vi');
+  }
 
   // Prints the page as-is; the host page and this component mark whatever
   // shouldn't appear on paper (nav sidebar, back button, side panels,

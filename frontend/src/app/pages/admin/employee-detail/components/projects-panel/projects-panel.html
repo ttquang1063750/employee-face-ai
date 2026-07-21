@@ -1,7 +1,13 @@
 <div class="lifecycle-card">
   <div class="section-header-row">
-    <h3 class="section-title">📂 LỊCH SỬ DỰ ÁN (PROJECTS LOG)</h3>
-    <button class="hud-btn-mini" (click)="openModal()" data-tooltip="QUẢN LÝ DỰ ÁN">⚙️</button>
+    <h3 class="section-title">{{ 'projectsPanel.title' | translate }}</h3>
+    <button
+      class="hud-btn-mini"
+      (click)="openModal()"
+      [attr.data-tooltip]="'projectsPanel.manageTooltip' | translate"
+    >
+      ⚙️
+    </button>
   </div>
   <div class="projects-timeline">
     @for (prj of projects(); track prj.project_name) {
@@ -14,14 +20,14 @@
         <p class="dates">
           📅 {{ prj.start_date }}
           @if (prj.end_date) {
-            đến {{ prj.end_date }}
+            {{ 'projectsPanel.to' | translate }} {{ prj.end_date }}
           } @else {
-            (Đang tham gia)
+            {{ 'projectsPanel.ongoing' | translate }}
           }
         </p>
       </div>
     } @empty {
-      <p class="no-data">Chưa tham gia dự án nào.</p>
+      <p class="no-data">{{ 'projectsPanel.empty' | translate }}</p>
     }
   </div>
 </div>
@@ -30,21 +36,21 @@
   <div class="modal-backdrop">
     <div class="modal-card medium">
       <div class="modal-header">
-        <h3>📂 QUẢN LÝ LỊCH SỬ DỰ ÁN</h3>
+        <h3>{{ 'projectsPanel.modalTitle' | translate }}</h3>
         <button class="close-btn" (click)="closeModal()">✖</button>
       </div>
       <div class="modal-body">
         <div class="projects-editor-wrapper">
           <!-- Projects list preview with delete options -->
           <div class="projects-editor-list">
-            <span class="list-title">DANH SÁCH DỰ ÁN HIỆN TẠI</span>
+            <span class="list-title">{{ 'projectsPanel.currentProjects' | translate }}</span>
             <div class="editor-projects-grid">
               @for (prj of projectsListToEdit(); track prj.project_name; let idx = $index) {
                 <div class="editor-project-card">
                   <div class="card-header-row">
                     <span class="proj-name">{{ prj.project_name }}</span>
                     <button class="remove-badge-btn" (click)="removeProjectFromList(idx)">
-                      ✖ XÓA
+                      {{ 'projectsPanel.remove' | translate }}
                     </button>
                   </div>
                   <div class="card-sub-header">
@@ -52,60 +58,60 @@
                     <span class="proj-dates"
                       >{{ prj.start_date }}
                       @if (prj.end_date) {
-                        đến {{ prj.end_date }}
+                        {{ 'projectsPanel.to' | translate }} {{ prj.end_date }}
                       } @else {
-                        (Đang chạy)
+                        {{ 'projectsPanel.ongoingShort' | translate }}
                       }
                     </span>
                   </div>
                   <p class="proj-desc">{{ prj.description }}</p>
                 </div>
               } @empty {
-                <p class="no-data">Chưa tham gia dự án nào.</p>
+                <p class="no-data">{{ 'projectsPanel.empty' | translate }}</p>
               }
             </div>
           </div>
 
           <!-- Add new project form -->
           <div class="projects-editor-form" [formGroup]="newProjectForm">
-            <span class="form-title">THÊM DỰ ÁN MỚI</span>
+            <span class="form-title">{{ 'projectsPanel.addNewProject' | translate }}</span>
             <div class="form-fields">
               <div class="form-group">
-                <label for="new-proj-name">TÊN DỰ ÁN</label>
+                <label for="new-proj-name">{{ 'projectsPanel.projectName' | translate }}</label>
                 <input
                   id="new-proj-name"
                   type="text"
                   formControlName="name"
-                  placeholder="Ví dụ: ERP Portal, AI Kiosk"
+                  [placeholder]="'projectsPanel.projectNamePlaceholder' | translate"
                   class="hud-input"
                 />
               </div>
               <div class="form-row">
                 <div class="form-group">
-                  <label for="new-proj-role">VAI TRÒ</label>
+                  <label for="new-proj-role">{{ 'projectsPanel.role' | translate }}</label>
                   <input
                     id="new-proj-role"
                     type="text"
                     formControlName="role"
-                    placeholder="Ví dụ: Tech Lead, FE Dev"
+                    [placeholder]="'projectsPanel.rolePlaceholder' | translate"
                     class="hud-input"
                   />
                 </div>
                 <div class="form-group">
-                  <span>NGÀY BẮT ĐẦU</span>
+                  <span>{{ 'projectsPanel.startDate' | translate }}</span>
                   <app-date-picker formControlName="startDate"></app-date-picker>
                 </div>
               </div>
               <div class="form-group">
-                <span>NGÀY KẾT THÚC (Để trống nếu đang diễn ra)</span>
+                <span>{{ 'projectsPanel.endDate' | translate }}</span>
                 <app-date-picker formControlName="endDate"></app-date-picker>
               </div>
               <div class="form-group">
-                <label for="new-proj-desc">MÔ TẢ CHI TIẾT NHIỆM VỤ DỰ ÁN</label>
+                <label for="new-proj-desc">{{ 'projectsPanel.descLabel' | translate }}</label>
                 <textarea
                   id="new-proj-desc"
                   formControlName="desc"
-                  placeholder="Nhiệm vụ cụ thể"
+                  [placeholder]="'projectsPanel.descPlaceholder' | translate"
                   rows="2"
                   class="hud-textarea"
                 ></textarea>
@@ -115,7 +121,7 @@
                 [disabled]="!newProjectForm.controls.name.value.trim()"
                 (click)="addProjectToList()"
               >
-                THÊM DỰ ÁN VÀO DANH SÁCH
+                {{ 'projectsPanel.addToList' | translate }}
               </button>
             </div>
           </div>
@@ -126,9 +132,11 @@
           @if (isSaving()) {
             <div class="loader"></div>
           }
-          <span>LƯU LỊCH SỬ DỰ ÁN</span>
+          <span>{{ 'projectsPanel.save' | translate }}</span>
         </button>
-        <button class="hud-btn-secondary" (click)="closeModal()">HỦY</button>
+        <button class="hud-btn-secondary" (click)="closeModal()">
+          {{ 'projectsPanel.cancel' | translate }}
+        </button>
       </div>
     </div>
   </div>

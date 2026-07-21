@@ -1,11 +1,19 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideTranslateService } from '@ngx-translate/core';
 import { HudSelectComponent } from './hud-select';
+import { StaticTranslateLoader } from '../../i18n/translate-loader';
 
 describe('HudSelectComponent', () => {
   let component: HudSelectComponent<string>;
   let fixture: ComponentFixture<HudSelectComponent<string>>;
 
   beforeEach(() => {
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({
+      providers: [
+        provideTranslateService({ loader: StaticTranslateLoader, lang: 'vi', fallbackLang: 'vi' }),
+      ],
+    });
     fixture = TestBed.createComponent<HudSelectComponent<string>>(HudSelectComponent);
     component = fixture.componentInstance;
     fixture.componentRef.setInput('options', [

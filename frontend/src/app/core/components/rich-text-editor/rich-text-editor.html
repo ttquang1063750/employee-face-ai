@@ -3,7 +3,7 @@
     <button
       type="button"
       class="hud-btn-mini"
-      data-tooltip="Tiêu đề 1"
+      [attr.data-tooltip]="'richEditor.heading1' | translate"
       [class.active]="toolbarState().headingLevel === 1"
       (click)="setHeading(1)"
     >
@@ -12,7 +12,7 @@
     <button
       type="button"
       class="hud-btn-mini"
-      data-tooltip="Tiêu đề 2"
+      [attr.data-tooltip]="'richEditor.heading2' | translate"
       [class.active]="toolbarState().headingLevel === 2"
       (click)="setHeading(2)"
     >
@@ -21,7 +21,7 @@
     <button
       type="button"
       class="hud-btn-mini"
-      data-tooltip="Tiêu đề 3"
+      [attr.data-tooltip]="'richEditor.heading3' | translate"
       [class.active]="toolbarState().headingLevel === 3"
       (click)="setHeading(3)"
     >
@@ -30,9 +30,9 @@
 
     <div class="rich-editor-font-size">
       <app-hud-select
-        [options]="fontSizeOptions"
+        [options]="fontSizeOptions()"
         [formControl]="fontSizeControl"
-        placeholder="Cỡ chữ"
+        [placeholder]="'richEditor.fontSizePlaceholder' | translate"
       ></app-hud-select>
     </div>
 
@@ -41,7 +41,7 @@
     <button
       type="button"
       class="hud-btn-mini"
-      data-tooltip="Đậm"
+      [attr.data-tooltip]="'richEditor.bold' | translate"
       [class.active]="toolbarState().bold"
       (click)="toggleBold()"
     >
@@ -50,7 +50,7 @@
     <button
       type="button"
       class="hud-btn-mini"
-      data-tooltip="Nghiêng"
+      [attr.data-tooltip]="'richEditor.italic' | translate"
       [class.active]="toolbarState().italic"
       (click)="toggleItalic()"
     >
@@ -59,7 +59,7 @@
     <button
       type="button"
       class="hud-btn-mini"
-      data-tooltip="Gạch chân"
+      [attr.data-tooltip]="'richEditor.underline' | translate"
       [class.active]="toolbarState().underline"
       (click)="toggleUnderline()"
     >
@@ -68,7 +68,7 @@
     <button
       type="button"
       class="hud-btn-mini"
-      data-tooltip="Mã inline"
+      [attr.data-tooltip]="'richEditor.inlineCode' | translate"
       [class.active]="toolbarState().code"
       (click)="toggleCode()"
     >
@@ -77,7 +77,7 @@
     <button
       type="button"
       class="hud-btn-mini"
-      data-tooltip="Khối mã"
+      [attr.data-tooltip]="'richEditor.codeBlock' | translate"
       [class.active]="toolbarState().codeBlock"
       (click)="toggleCodeBlock()"
     >
@@ -86,7 +86,7 @@
     <button
       type="button"
       class="hud-btn-mini rich-editor-color-picker"
-      data-tooltip="Màu chữ"
+      [attr.data-tooltip]="'richEditor.textColor' | translate"
       (click)="triggerColorPicker()"
     >
       🖌️
@@ -105,7 +105,7 @@
     <button
       type="button"
       class="hud-btn-mini"
-      data-tooltip="Danh sách"
+      [attr.data-tooltip]="'richEditor.bulletList' | translate"
       [class.active]="toolbarState().bulletList"
       (click)="toggleBulletList()"
     >
@@ -114,17 +114,27 @@
     <button
       type="button"
       class="hud-btn-mini"
-      data-tooltip="Danh sách số"
+      [attr.data-tooltip]="'richEditor.orderedList' | translate"
       [class.active]="toolbarState().orderedList"
       (click)="toggleOrderedList()"
     >
       1.
     </button>
 
-    <button type="button" class="hud-btn-mini" data-tooltip="Thụt vào" (click)="indentListItem()">
+    <button
+      type="button"
+      class="hud-btn-mini"
+      [attr.data-tooltip]="'richEditor.indent' | translate"
+      (click)="indentListItem()"
+    >
       →|
     </button>
-    <button type="button" class="hud-btn-mini" data-tooltip="Thụt ra" (click)="outdentListItem()">
+    <button
+      type="button"
+      class="hud-btn-mini"
+      [attr.data-tooltip]="'richEditor.outdent' | translate"
+      (click)="outdentListItem()"
+    >
       |←
     </button>
 
@@ -133,13 +143,18 @@
     <button
       type="button"
       class="hud-btn-mini"
-      data-tooltip="Tải ảnh lên"
+      [attr.data-tooltip]="'richEditor.uploadImage' | translate"
       [disabled]="isUploadingImage()"
       (click)="triggerImageUpload()"
     >
       📎
     </button>
-    <button type="button" class="hud-btn-mini" data-tooltip="Vẽ hình" (click)="openDrawingModal()">
+    <button
+      type="button"
+      class="hud-btn-mini"
+      [attr.data-tooltip]="'richEditor.drawShape' | translate"
+      (click)="openDrawingModal()"
+    >
       ✏️
     </button>
     <input

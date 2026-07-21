@@ -3,7 +3,7 @@
     @if (isLoading()) {
       <div class="loading-state">
         <div class="radial-spinner"></div>
-        <p>Đang truy xuất hồ sơ Mainframe...</p>
+        <p>{{ 'staffProfile.loading' | translate }}</p>
       </div>
     } @else if (errorMsg()) {
       <div class="error-state">
@@ -27,18 +27,28 @@
               <span class="id">ID: #{{ employee()?.id }}</span>
               @let age = calculateAge(employee()?.date_of_birth);
               @if (age !== null) {
-                <span class="age">{{ age }} tuổi</span>
+                <span class="age">{{ age }} {{ 'staffProfile.ageSuffix' | translate }}</span>
               }
               <span class="role-tag" [class.admin]="employee()?.role === 'admin'">
-                {{ employee()?.role === 'admin' ? 'Hệ thống Admin' : 'Nhân sự Staff' }}
+                {{
+                  employee()?.role === 'admin'
+                    ? ('staffProfile.roleAdminTag' | translate)
+                    : ('staffProfile.roleStaffTag' | translate)
+                }}
               </span>
             </div>
           </div>
         </div>
         <div class="profile-actions no-print">
-          <button class="hud-btn-outline" (click)="openAvatarModal()">📷 Đổi ảnh đại diện</button>
-          <button class="hud-btn-outline" (click)="openPasswordModal()">🔒 Đổi mật khẩu</button>
-          <button class="hud-btn-success" (click)="openLeaveModal()">📝 Xin nghỉ phép</button>
+          <button class="hud-btn-outline" (click)="openAvatarModal()">
+            {{ 'staffProfile.changeAvatar' | translate }}
+          </button>
+          <button class="hud-btn-outline" (click)="openPasswordModal()">
+            {{ 'staffProfile.changePassword' | translate }}
+          </button>
+          <button class="hud-btn-success" (click)="openLeaveModal()">
+            {{ 'staffProfile.requestLeave' | translate }}
+          </button>
         </div>
       </div>
 
@@ -47,7 +57,7 @@
            printed report stays focused on the profile + attendance data) -->
       <div class="lifecycle-card no-print">
         <div class="section-header-row">
-          <h3 class="section-title">🌴 ĐƠN XIN NGHỈ ĐÃ GỬI</h3>
+          <h3 class="section-title">{{ 'staffProfile.leaveRequestsSentTitle' | translate }}</h3>
         </div>
         <div class="timeline-container">
           <div class="timeline">
@@ -64,13 +74,14 @@
                   <p class="dates">{{ req.reason }}</p>
                   @if (req.status === 'rejected' && req.rejection_reason) {
                     <p class="rejection-reason">
-                      <strong>Lý do từ chối:</strong> {{ req.rejection_reason }}
+                      <strong>{{ 'staffProfile.rejectionReasonPrefix' | translate }}</strong>
+                      {{ req.rejection_reason }}
                     </p>
                   }
                 </div>
               </div>
             } @empty {
-              <p class="no-data">Chưa gửi đơn xin nghỉ nào.</p>
+              <p class="no-data">{{ 'staffProfile.leaveEmpty' | translate }}</p>
             }
           </div>
         </div>
@@ -80,7 +91,7 @@
            private ("riêng"); excluded from print, same reasoning as above -->
       <div class="lifecycle-card no-print">
         <div class="section-header-row">
-          <h3 class="section-title">📄 TÀI LIỆU CỦA TÔI</h3>
+          <h3 class="section-title">{{ 'staffProfile.myDocumentsTitle' | translate }}</h3>
         </div>
         <div class="comp-list">
           @for (doc of documents(); track doc.id) {
@@ -95,20 +106,26 @@
                 <button
                   class="remove-inline-btn"
                   (click)="downloadDocument(doc)"
-                  [title]="doc.source_type === 'link' ? 'Mở liên kết' : 'Tải xuống tài liệu này'"
+                  [title]="
+                    doc.source_type === 'link'
+                      ? ('staffProfile.openLinkTooltip' | translate)
+                      : ('staffProfile.downloadTooltip' | translate)
+                  "
                 >
                   {{ doc.source_type === 'link' ? '🔗' : '⬇️' }}
                 </button>
               </div>
               <div class="comp-details">
                 <span class="reason">{{
-                  doc.visibility === 'chung' ? 'Toàn bộ nhân viên' : 'Riêng cho bạn'
+                  doc.visibility === 'chung'
+                    ? ('staffProfile.broadcastDoc' | translate)
+                    : ('staffProfile.privateDoc' | translate)
                 }}</span>
                 <span class="date">📅 {{ doc.uploaded_at | date: 'dd/MM/yyyy' }}</span>
               </div>
             </div>
           } @empty {
-            <p class="no-data">Chưa có tài liệu nào được gửi cho bạn.</p>
+            <p class="no-data">{{ 'staffProfile.documentsEmpty' | translate }}</p>
           }
         </div>
       </div>
@@ -144,7 +161,7 @@
           <!-- Career positions history -->
           <div class="lifecycle-card">
             <div class="section-header-row">
-              <h3 class="section-title">📈 LỊCH SỬ THĂNG TIẾN (POSITIONS)</h3>
+              <h3 class="section-title">{{ 'positionsTimeline.title' | translate }}</h3>
             </div>
             <div class="timeline">
               @for (pos of employee()?.positions; track pos.id) {
@@ -155,11 +172,11 @@
                       <h4 class="title text-glow-cyan">{{ pos.title }}</h4>
                     </div>
                     <p class="dates">
-                      📅 Từ: {{ pos.start_date }}
+                      {{ 'positionsTimeline.from' | translate }} {{ pos.start_date }}
                       @if (pos.end_date) {
-                        - Đến: {{ pos.end_date }}
+                        {{ 'positionsTimeline.to' | translate }} {{ pos.end_date }}
                       } @else {
-                        - Hiện tại
+                        {{ 'positionsTimeline.current' | translate }}
                       }
                     </p>
                   </div>
@@ -171,7 +188,7 @@
           <!-- Compensation raises history -->
           <div class="lifecycle-card">
             <div class="section-header-row">
-              <h3 class="section-title">💵 LỊCH SỬ THU NHẬP (COMPENSATION)</h3>
+              <h3 class="section-title">{{ 'incomeHistory.title' | translate }}</h3>
             </div>
             <div class="comp-list">
               @for (inc of employee()?.income_history; track inc.id) {
@@ -191,7 +208,7 @@
           <!-- Skills Registry with descriptions -->
           <div class="lifecycle-card">
             <div class="section-header-row">
-              <h3 class="section-title">🧠 HỒ SƠ KỸ NĂNG (SKILLS SET)</h3>
+              <h3 class="section-title">{{ 'skillsPanel.title' | translate }}</h3>
             </div>
             <div class="skills-grid">
               @for (sk of employee()?.skills; track sk.skill_name) {
@@ -200,7 +217,7 @@
                   <p class="skill-desc">{{ sk.description }}</p>
                 </div>
               } @empty {
-                <p class="no-data">Chưa cấu hình kỹ năng cho nhân sự này.</p>
+                <p class="no-data">{{ 'skillsPanel.empty' | translate }}</p>
               }
             </div>
           </div>
@@ -208,7 +225,7 @@
           <!-- Projects Assignment History with description -->
           <div class="lifecycle-card">
             <div class="section-header-row">
-              <h3 class="section-title">📂 LỊCH SỬ DỰ ÁN (PROJECTS LOG)</h3>
+              <h3 class="section-title">{{ 'projectsPanel.title' | translate }}</h3>
             </div>
             <div class="projects-timeline">
               @for (prj of employee()?.projects; track prj.project_name) {
@@ -221,14 +238,14 @@
                   <p class="dates">
                     📅 {{ prj.start_date }}
                     @if (prj.end_date) {
-                      đến {{ prj.end_date }}
+                      {{ 'projectsPanel.to' | translate }} {{ prj.end_date }}
                     } @else {
-                      (Đang tham gia)
+                      {{ 'projectsPanel.ongoing' | translate }}
                     }
                   </p>
                 </div>
               } @empty {
-                <p class="no-data">Chưa tham gia dự án nào.</p>
+                <p class="no-data">{{ 'projectsPanel.empty' | translate }}</p>
               }
             </div>
           </div>
@@ -242,13 +259,15 @@
     <div class="modal-backdrop">
       <div class="modal-card mini">
         <div class="modal-header">
-          <h3>🔒 Đổi mật khẩu</h3>
+          <h3>{{ 'staffProfile.changePasswordModalTitle' | translate }}</h3>
           <button class="close-btn" (click)="closePasswordModal()">✕</button>
         </div>
         <div class="modal-body" [formGroup]="passwordForm">
           <div class="form-fields">
             <div class="form-group">
-              <label for="staff-current-password">MẬT KHẨU HIỆN TẠI</label>
+              <label for="staff-current-password">{{
+                'staffProfile.currentPasswordLabel' | translate
+              }}</label>
               <div class="input-with-actions">
                 <input
                   id="staff-current-password"
@@ -260,7 +279,7 @@
                 <button
                   type="button"
                   class="hud-btn-mini"
-                  data-tooltip="Hiện/ẩn mật khẩu"
+                  [attr.data-tooltip]="'employees.togglePasswordTooltip' | translate"
                   (click)="showCurrentPassword.set(!showCurrentPassword())"
                 >
                   {{ showCurrentPassword() ? '🙈' : '👁' }}
@@ -268,7 +287,7 @@
               </div>
             </div>
             <div class="form-group">
-              <label for="staff-new-password">MẬT KHẨU MỚI</label>
+              <label for="staff-new-password">{{ 'staffProfile.newPasswordLabel' | translate }}</label>
               <div class="input-with-actions">
                 <input
                   id="staff-new-password"
@@ -280,7 +299,7 @@
                 <button
                   type="button"
                   class="hud-btn-mini"
-                  data-tooltip="Hiện/ẩn mật khẩu"
+                  [attr.data-tooltip]="'employees.togglePasswordTooltip' | translate"
                   (click)="showNewStaffPassword.set(!showNewStaffPassword())"
                 >
                   {{ showNewStaffPassword() ? '🙈' : '👁' }}
@@ -290,11 +309,13 @@
                 passwordForm.controls.newPassword.value &&
                 passwordForm.controls.newPassword.hasError('passwordComplexity')
               ) {
-                <p class="field-hint error">✖ {{ passwordHint }}</p>
+                <p class="field-hint error">✖ {{ 'common.passwordHint' | translate }}</p>
               }
             </div>
             <div class="form-group">
-              <label for="staff-confirm-password">XÁC NHẬN MẬT KHẨU MỚI</label>
+              <label for="staff-confirm-password">{{
+                'staffProfile.confirmPasswordLabel' | translate
+              }}</label>
               <input
                 id="staff-confirm-password"
                 type="password"
@@ -306,7 +327,7 @@
                 passwordForm.controls.confirm.value &&
                 passwordForm.controls.newPassword.value !== passwordForm.controls.confirm.value
               ) {
-                <p class="field-hint error">✖ Mật khẩu xác nhận không khớp.</p>
+                <p class="field-hint error">{{ 'staffProfile.passwordMismatch' | translate }}</p>
               }
             </div>
           </div>
@@ -316,9 +337,11 @@
             @if (isSavingPassword()) {
               <div class="loader"></div>
             }
-            <span>LƯU MẬT KHẨU</span>
+            <span>{{ 'staffProfile.savePassword' | translate }}</span>
           </button>
-          <button class="hud-btn-secondary" (click)="closePasswordModal()">HỦY</button>
+          <button class="hud-btn-secondary" (click)="closePasswordModal()">
+            {{ 'staffProfile.cancel' | translate }}
+          </button>
         </div>
       </div>
     </div>
@@ -329,7 +352,7 @@
     <div class="modal-backdrop">
       <div class="modal-card mini">
         <div class="modal-header">
-          <h3>📷 Đổi ảnh đại diện</h3>
+          <h3>{{ 'staffProfile.changeAvatarModalTitle' | translate }}</h3>
           <button class="close-btn" (click)="closeAvatarModal()">✕</button>
         </div>
         <div class="modal-body">
@@ -338,13 +361,13 @@
               @if (photoCapture.showWebcam()) {
                 <video #videoElement autoplay playsinline class="modal-video"></video>
                 <button class="camera-cap-btn" (click)="photoCapture.capturePhoto()">
-                  📸 CHỤP ẢNH
+                  {{ 'staffProfile.capturePhoto' | translate }}
                 </button>
               } @else {
                 @if (photoCapture.imgBase64()) {
                   <img
                     [src]="photoCapture.imgBase64()"
-                    alt="Ảnh đại diện đã chụp"
+                    [attr.alt]="'staffProfile.capturedAlt' | translate"
                     class="captured-preview-img"
                   />
                 } @else {
@@ -357,7 +380,7 @@
                 }
                 <div class="photo-controls">
                   <button class="hud-btn-outline" (click)="photoCapture.startWebcam()">
-                    📸 CAMERA CHỤP TRỰC TIẾP
+                    {{ 'staffProfile.liveCameraCapture' | translate }}
                   </button>
                   <input
                     #fileInputElement
@@ -367,7 +390,7 @@
                     accept="image/*"
                   />
                   <button class="hud-btn-outline" (click)="photoCapture.triggerFileInput()">
-                    📁 TẢI LÊN FILE ẢNH
+                    {{ 'staffProfile.uploadPhotoFile' | translate }}
                   </button>
                 </div>
               }
@@ -384,9 +407,11 @@
             @if (isSavingAvatar()) {
               <div class="loader"></div>
             }
-            <span>LƯU ẢNH MỚI</span>
+            <span>{{ 'staffProfile.saveNewPhoto' | translate }}</span>
           </button>
-          <button class="hud-btn-secondary" (click)="closeAvatarModal()">HỦY</button>
+          <button class="hud-btn-secondary" (click)="closeAvatarModal()">
+            {{ 'staffProfile.cancel' | translate }}
+          </button>
         </div>
       </div>
     </div>
@@ -397,28 +422,28 @@
     <div class="modal-backdrop">
       <div class="modal-card mini">
         <div class="modal-header">
-          <h3>📝 Xin nghỉ phép</h3>
+          <h3>{{ 'staffProfile.requestLeaveModalTitle' | translate }}</h3>
           <button class="close-btn" (click)="closeLeaveModal()">✕</button>
         </div>
         <div class="modal-body" [formGroup]="leaveForm">
           <div class="form-fields">
             <div class="form-row">
               <div class="form-group">
-                <span>TỪ NGÀY</span>
+                <span>{{ 'staffProfile.fromDate' | translate }}</span>
                 <app-date-picker formControlName="startDate"></app-date-picker>
               </div>
               <div class="form-group">
-                <span>ĐẾN NGÀY</span>
+                <span>{{ 'staffProfile.toDate' | translate }}</span>
                 <app-date-picker formControlName="endDate"></app-date-picker>
               </div>
             </div>
             <div class="form-group">
-              <label for="staff-leave-reason">LÝ DO XIN NGHỈ</label>
+              <label for="staff-leave-reason">{{ 'staffProfile.reasonLabel' | translate }}</label>
               <input
                 id="staff-leave-reason"
                 type="text"
                 formControlName="reason"
-                placeholder="VD: Việc gia đình, khám sức khoẻ..."
+                [placeholder]="'staffProfile.reasonPlaceholder' | translate"
                 class="hud-input"
               />
             </div>
@@ -433,9 +458,11 @@
             @if (isSavingLeave()) {
               <div class="loader"></div>
             }
-            <span>GỬI ĐƠN</span>
+            <span>{{ 'staffProfile.submitLeave' | translate }}</span>
           </button>
-          <button class="hud-btn-secondary" (click)="closeLeaveModal()">HỦY</button>
+          <button class="hud-btn-secondary" (click)="closeLeaveModal()">
+            {{ 'staffProfile.cancel' | translate }}
+          </button>
         </div>
       </div>
     </div>

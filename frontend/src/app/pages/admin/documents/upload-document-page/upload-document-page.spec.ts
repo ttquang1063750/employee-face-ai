@@ -2,7 +2,9 @@ import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ActivatedRoute } from '@angular/router';
+import { provideTranslateService } from '@ngx-translate/core';
 import { UploadDocumentPage } from './upload-document-page';
+import { StaticTranslateLoader } from '../../../../core/i18n/translate-loader';
 
 describe('UploadDocumentPage', () => {
   let component: UploadDocumentPage;
@@ -14,6 +16,7 @@ describe('UploadDocumentPage', () => {
       providers: [
         provideHttpClient(),
         provideHttpClientTesting(),
+        provideTranslateService({ loader: StaticTranslateLoader, lang: 'vi', fallbackLang: 'vi' }),
         { provide: ActivatedRoute, useValue: {} },
       ],
     });

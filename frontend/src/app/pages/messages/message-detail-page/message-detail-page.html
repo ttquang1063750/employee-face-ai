@@ -4,32 +4,35 @@
       <h2 class="title">
         <app-icon class="title-icon">mail</app-icon>
 
-        CHI TIẾT TIN NHẮN
+        {{ 'messageDetail.pageTitle' | translate }}
       </h2>
       <button class="hud-btn-outline" (click)="back()">
         <app-icon class="title-icon">arrow-left</app-icon>
 
-        QUAY LẠI
+        {{ 'messageDetail.back' | translate }}
       </button>
     </div>
 
     @if (isLoading()) {
       <div class="hud-loading-state">
         <div class="hud-spinner"></div>
-        <p>Đang tải tin nhắn...</p>
+        <p>{{ 'messageDetail.loading' | translate }}</p>
       </div>
     } @else if (errorMsg()) {
       <div class="error-state">
         <p class="err-text">⚠️ {{ errorMsg() }}</p>
-        <button class="retry-btn" (click)="loadMessage()">Thử lại</button>
+        <button class="retry-btn" (click)="loadMessage()">{{ 'messageDetail.reload' | translate }}</button>
       </div>
     } @else if (message(); as msg) {
       <div class="logs-card">
         <div class="message-meta-row">
-          <span><strong>Từ:</strong> {{ msg.sender_name }}</span>
-          <span><strong>Đến:</strong> {{ msg.recipient_name }}</span>
-          <span><strong>Loại:</strong> {{ translateMessageCategory(msg.category) }}</span>
-          <span><strong>Thời gian:</strong> {{ msg.created_at | date: 'HH:mm dd/MM/yyyy' }}</span>
+          <span><strong>{{ 'messageDetail.from' | translate }}</strong> {{ msg.sender_name }}</span>
+          <span><strong>{{ 'messageDetail.to' | translate }}</strong> {{ msg.recipient_name }}</span>
+          <span><strong>{{ 'messageDetail.type' | translate }}</strong> {{ categoryLabel(msg.category) }}</span>
+          <span
+            ><strong>{{ 'messageDetail.time' | translate }}</strong>
+            {{ msg.created_at | date: 'HH:mm dd/MM/yyyy' }}</span
+          >
         </div>
         <h3 class="message-subject">{{ msg.subject }}</h3>
         <div class="message-content rich-content" [innerHTML]="msg.content"></div>

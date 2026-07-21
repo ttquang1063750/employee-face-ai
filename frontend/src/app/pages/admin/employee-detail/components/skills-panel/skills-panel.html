@@ -1,7 +1,13 @@
 <div class="lifecycle-card">
   <div class="section-header-row">
-    <h3 class="section-title">🧠 HỒ SƠ KỸ NĂNG (SKILLS SET)</h3>
-    <button class="hud-btn-mini" (click)="openModal()" data-tooltip="CẬP NHẬT KỸ NĂNG">⚙️</button>
+    <h3 class="section-title">{{ 'skillsPanel.title' | translate }}</h3>
+    <button
+      class="hud-btn-mini"
+      (click)="openModal()"
+      [attr.data-tooltip]="'skillsPanel.updateTooltip' | translate"
+    >
+      ⚙️
+    </button>
   </div>
   <div class="skills-grid">
     @for (sk of skills(); track sk.skill_name) {
@@ -10,7 +16,7 @@
         <p class="skill-desc">{{ sk.description }}</p>
       </div>
     } @empty {
-      <p class="no-data">Chưa cấu hình kỹ năng cho nhân sự này.</p>
+      <p class="no-data">{{ 'skillsPanel.empty' | translate }}</p>
     }
   </div>
 </div>
@@ -19,14 +25,14 @@
   <div class="modal-backdrop">
     <div class="modal-card medium">
       <div class="modal-header">
-        <h3>🧠 CẬP NHẬT HỒ SƠ KỸ NĂNG</h3>
+        <h3>{{ 'skillsPanel.modalTitle' | translate }}</h3>
         <button class="close-btn" (click)="closeModal()">✖</button>
       </div>
       <div class="modal-body">
         <div class="skills-editor-wrapper">
           <!-- Skills list preview with delete options -->
           <div class="skills-editor-list">
-            <span class="list-title">KỸ NĂNG HIỆN TẠI</span>
+            <span class="list-title">{{ 'skillsPanel.currentSkills' | translate }}</span>
             <div class="editor-badges-grid">
               @for (sk of skillsListToEdit(); track sk.skill_name; let idx = $index) {
                 <div class="editor-badge-item">
@@ -37,31 +43,31 @@
                   <p class="badge-desc">{{ sk.description }}</p>
                 </div>
               } @empty {
-                <p class="no-data">Chưa có kỹ năng nào trong danh sách.</p>
+                <p class="no-data">{{ 'skillsPanel.listEmpty' | translate }}</p>
               }
             </div>
           </div>
 
           <!-- Add new skill form -->
           <div class="skills-editor-form" [formGroup]="newSkillForm">
-            <span class="form-title">THÊM KỸ NĂNG MỚI</span>
+            <span class="form-title">{{ 'skillsPanel.addNewSkill' | translate }}</span>
             <div class="form-fields">
               <div class="form-group">
-                <label for="new-skill-name">TÊN KỸ NĂNG</label>
+                <label for="new-skill-name">{{ 'skillsPanel.skillName' | translate }}</label>
                 <input
                   id="new-skill-name"
                   type="text"
                   formControlName="name"
-                  placeholder="Ví dụ: Angular, Python, AWS"
+                  [placeholder]="'skillsPanel.skillNamePlaceholder' | translate"
                   class="hud-input"
                 />
               </div>
               <div class="form-group">
-                <label for="new-skill-desc">MÔ TẢ KỸ NĂNG / MỨC ĐỘ THÀNH THẠO</label>
+                <label for="new-skill-desc">{{ 'skillsPanel.skillDescLabel' | translate }}</label>
                 <textarea
                   id="new-skill-desc"
                   formControlName="desc"
-                  placeholder="Mô tả chi tiết"
+                  [placeholder]="'skillsPanel.skillDescPlaceholder' | translate"
                   rows="2"
                   class="hud-textarea"
                 ></textarea>
@@ -71,7 +77,7 @@
                 [disabled]="!newSkillForm.controls.name.value.trim()"
                 (click)="addSkillToList()"
               >
-                THÊM VÀO DANH SÁCH
+                {{ 'skillsPanel.addToList' | translate }}
               </button>
             </div>
           </div>
@@ -82,9 +88,11 @@
           @if (isSaving()) {
             <div class="loader"></div>
           }
-          <span>LƯU HỒ SƠ KỸ NĂNG</span>
+          <span>{{ 'skillsPanel.save' | translate }}</span>
         </button>
-        <button class="hud-btn-secondary" (click)="closeModal()">HỦY</button>
+        <button class="hud-btn-secondary" (click)="closeModal()">
+          {{ 'skillsPanel.cancel' | translate }}
+        </button>
       </div>
     </div>
   </div>

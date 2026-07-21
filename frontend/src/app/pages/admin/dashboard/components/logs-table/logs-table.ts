@@ -1,7 +1,8 @@
-import { Component, ChangeDetectionStrategy, effect, input, output } from '@angular/core';
+import { Component, ChangeDetectionStrategy, effect, inject, input, output } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { translateMood } from '../../../../../core/utils/mood.util';
 import { AttendanceLogEntry } from '../../../../../core/models/attendance-log.model';
 import { AuditPhotoButtonComponent } from '../../../../../core/components/audit-photo-button/audit-photo-button';
@@ -10,12 +11,14 @@ import { IconComponent } from '../../../../../core/components/icon/icon';
 @Component({
   selector: 'app-logs-table',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink, AuditPhotoButtonComponent, IconComponent],
+  imports: [ReactiveFormsModule, RouterLink, AuditPhotoButtonComponent, IconComponent, TranslatePipe],
   templateUrl: './logs-table.html',
   styleUrl: './logs-table.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LogsTableComponent {
+  private translate = inject(TranslateService);
+
   logs = input.required<AttendanceLogEntry[]>();
   totalCount = input.required<number>();
   currentPage = input.required<number>();
@@ -29,8 +32,11 @@ export class LogsTableComponent {
   exportCsv = output<void>();
   deleteLog = output<number>();
 
-  readonly translateMood = translateMood;
   readonly skeletonRows = [1, 2, 3, 4, 5];
+
+  moodLabel(mood: string): string {
+    return translateMood(mood, this.translate.currentLang() === 'en' ? 'en' : 'vi');
+  }
 
   // Bridges the pageSize input()/output() pair to a real FormControl for
   // this component's own <select> — see attendance-summary.ts for the same

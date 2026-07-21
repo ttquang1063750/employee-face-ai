@@ -4,24 +4,24 @@
       <h2 class="title">
         <app-icon class="title-icon">mail</app-icon>
 
-        TIN NHẮN NỘI BỘ
+        {{ 'messages.pageTitle' | translate }}
       </h2>
       <a class="hud-btn-primary" [routerLink]="['new']">
         <app-icon class="title-icon">pencil</app-icon>
 
-        Soạn tin nhắn mới
+        {{ 'messages.composeNew' | translate }}
       </a>
     </div>
 
     @if (isLoading()) {
       <div class="hud-loading-state">
         <div class="hud-spinner"></div>
-        <p>Đang tải danh sách tin nhắn...</p>
+        <p>{{ 'messages.loading' | translate }}</p>
       </div>
     } @else if (errorMsg()) {
       <div class="error-state">
         <p class="err-text">⚠️ {{ errorMsg() }}</p>
-        <button class="retry-btn" (click)="loadMessages()">Thử lại</button>
+        <button class="retry-btn" (click)="loadMessages()">{{ 'messages.reload' | translate }}</button>
       </div>
     } @else {
       <div class="logs-card">
@@ -32,7 +32,7 @@
             [class.active]="activeTab() === 'received'"
             (click)="selectTab('received')"
           >
-            ĐÃ NHẬN ({{ receivedMessages().length }})
+            {{ 'messages.receivedTab' | translate: { count: receivedMessages().length } }}
           </button>
           <button
             type="button"
@@ -40,7 +40,7 @@
             [class.active]="activeTab() === 'sent'"
             (click)="selectTab('sent')"
           >
-            ĐÃ GỬI ({{ sentMessages().length }})
+            {{ 'messages.sentTab' | translate: { count: sentMessages().length } }}
           </button>
         </div>
 
@@ -49,18 +49,18 @@
             <table class="logs-table">
               <thead>
                 <tr>
-                  <th>NGƯỜI GỬI</th>
-                  <th>LOẠI</th>
-                  <th>TIÊU ĐỀ</th>
-                  <th>THỜI GIAN</th>
-                  <th>HÀNH ĐỘNG</th>
+                  <th>{{ 'messages.colSender' | translate }}</th>
+                  <th>{{ 'messages.colType' | translate }}</th>
+                  <th>{{ 'messages.colSubject' | translate }}</th>
+                  <th>{{ 'messages.colTime' | translate }}</th>
+                  <th>{{ 'messages.colAction' | translate }}</th>
                 </tr>
               </thead>
               <tbody>
                 @for (msg of receivedMessages(); track msg.id) {
                   <tr class="clickable-row" [routerLink]="[msg.id]">
                     <td class="log-name">{{ msg.sender_name }}</td>
-                    <td>{{ translateMessageCategory(msg.category) }}</td>
+                    <td>{{ categoryLabel(msg.category) }}</td>
                     <td>
                       @if (!msg.is_read) {
                         <span class="unread-dot"></span>
@@ -70,13 +70,13 @@
                     <td class="log-time">{{ msg.created_at | date: 'HH:mm dd/MM/yyyy' }}</td>
                     <td>
                       <button class="action-btn delete-btn" (click)="deleteMessage(msg, $event)">
-                        Xóa
+                        {{ 'messages.delete' | translate }}
                       </button>
                     </td>
                   </tr>
                 } @empty {
                   <tr>
-                    <td colspan="5" class="no-data">Chưa nhận được tin nhắn nào.</td>
+                    <td colspan="5" class="no-data">{{ 'messages.emptyReceived' | translate }}</td>
                   </tr>
                 }
               </tbody>
@@ -87,29 +87,29 @@
             <table class="logs-table">
               <thead>
                 <tr>
-                  <th>NGƯỜI NHẬN</th>
-                  <th>LOẠI</th>
-                  <th>TIÊU ĐỀ</th>
-                  <th>THỜI GIAN</th>
-                  <th>HÀNH ĐỘNG</th>
+                  <th>{{ 'messages.colRecipient' | translate }}</th>
+                  <th>{{ 'messages.colType' | translate }}</th>
+                  <th>{{ 'messages.colSubject' | translate }}</th>
+                  <th>{{ 'messages.colTime' | translate }}</th>
+                  <th>{{ 'messages.colAction' | translate }}</th>
                 </tr>
               </thead>
               <tbody>
                 @for (msg of sentMessages(); track msg.id) {
                   <tr class="clickable-row" [routerLink]="[msg.id]">
                     <td class="log-name">{{ msg.recipient_name }}</td>
-                    <td>{{ translateMessageCategory(msg.category) }}</td>
+                    <td>{{ categoryLabel(msg.category) }}</td>
                     <td>{{ msg.subject }}</td>
                     <td class="log-time">{{ msg.created_at | date: 'HH:mm dd/MM/yyyy' }}</td>
                     <td>
                       <button class="action-btn delete-btn" (click)="deleteMessage(msg, $event)">
-                        Xóa
+                        {{ 'messages.delete' | translate }}
                       </button>
                     </td>
                   </tr>
                 } @empty {
                   <tr>
-                    <td colspan="5" class="no-data">Chưa gửi tin nhắn nào.</td>
+                    <td colspan="5" class="no-data">{{ 'messages.emptySent' | translate }}</td>
                   </tr>
                 }
               </tbody>

@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { MessageService } from '../../../core/services/message.service';
 import { RealtimeService } from '../../../core/services/realtime.service';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { DialogService } from '../../../core/services/dialog.service';
 import { ReceivedMessage, SentMessage } from '../../../core/models/message.model';
 import { translateMessageCategory } from '../../../core/utils/message-category.util';
@@ -14,7 +15,7 @@ type MessagesTab = 'received' | 'sent';
 @Component({
   selector: 'app-messages-page',
   standalone: true,
-  imports: [RouterLink, DatePipe, IconComponent],
+  imports: [RouterLink, DatePipe, IconComponent, TranslatePipe],
   templateUrl: './messages-page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -22,6 +23,7 @@ export class MessagesPage implements OnInit {
   private messageService = inject(MessageService);
   private realtimeService = inject(RealtimeService);
   private dialogService = inject(DialogService);
+  private translate = inject(TranslateService);
 
   activeTab = signal<MessagesTab>('received');
 
@@ -34,7 +36,9 @@ export class MessagesPage implements OnInit {
   isLoading = signal<boolean>(true);
   errorMsg = signal<string | null>(null);
 
-  protected readonly translateMessageCategory = translateMessageCategory;
+  categoryLabel(category: Parameters<typeof translateMessageCategory>[0]): string {
+    return translateMessageCategory(category, this.translate.currentLang() === 'en' ? 'en' : 'vi');
+  }
 
   ngOnInit(): void {
     this.loadMessages();
@@ -62,12 +66,12 @@ export class MessagesPage implements OnInit {
         if (res.success && res.data) {
           this.sentMessages.set(res.data);
         } else {
-          this.errorMsg.set(res.error || 'Không thể tải danh sách tin nhắn.');
+          this.errorMsg.set(res.error || this.translate.instant('messages.loadListError'));
         }
       },
       error: () => {
         this.isLoading.set(false);
-        this.errorMsg.set('Lỗi kết nối máy chủ API.');
+        this.errorMsg.set(this.translate.instant('messages.connectionError'));
       },
     });
   }
@@ -78,8 +82,8 @@ export class MessagesPage implements OnInit {
     event.stopPropagation();
 
     const confirmed = await this.dialogService.confirm(
-      'XÓA TIN NHẮN',
-      `Xóa tin nhắn "${msg.subject}"? Tin nhắn sẽ bị ẩn khỏi danh sách của bạn.`,
+      this.translate.instant('messages.deleteConfirmTitle'),
+      this.translate.instant('messages.deleteConfirmMessage', { subject: msg.subject }),
     );
     if (!confirmed) return;
 
@@ -91,11 +95,17 @@ export class MessagesPage implements OnInit {
           );
           this.sentMessages.update((list) => list.filter((m) => m.id !== msg.id));
         } else {
-          await this.dialogService.alert('LỖI', res.error || 'Không thể xóa tin nhắn.');
+          await this.dialogService.alert(
+            this.translate.instant('common.error'),
+            res.error || this.translate.instant('messages.deleteError'),
+          );
         }
       },
       error: async (err: HttpErrorResponse) => {
-        await this.dialogService.alert('LỖI', err.error?.error || 'Lỗi kết nối máy chủ.');
+        await this.dialogService.alert(
+          this.translate.instant('common.error'),
+          err.error?.error || this.translate.instant('messages.genericServerError'),
+        );
       },
     });
   }

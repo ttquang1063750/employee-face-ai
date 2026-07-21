@@ -3,13 +3,15 @@
     <div class="page-title-row">
       <h2 class="title">
         <app-icon class="title-icon">calendar-check</app-icon>
-        QUẢN LÝ ĐƠN XIN NGHỈ
+        {{ 'leaveRequests.pageTitle' | translate }}
       </h2>
     </div>
 
     <div class="hud-filter-bar">
       <div class="hud-field">
-        <label class="hud-label" for="leave-status-filter">LỌC TRẠNG THÁI</label>
+        <label class="hud-label" for="leave-status-filter">{{
+          'leaveRequests.statusFilterLabel' | translate
+        }}</label>
         <app-hud-select
           [selectId]="'leave-status-filter'"
           [options]="statusOptions()"
@@ -17,29 +19,35 @@
         ></app-hud-select>
       </div>
       <div class="hud-field">
-        <span class="hud-label">TỪ NGÀY</span>
+        <span class="hud-label">{{ 'leaveRequests.fromDate' | translate }}</span>
         <app-date-picker [formControl]="filterStartDateInput"></app-date-picker>
       </div>
       <div class="hud-field">
-        <span class="hud-label">ĐẾN NGÀY</span>
+        <span class="hud-label">{{ 'leaveRequests.toDate' | translate }}</span>
         <app-date-picker [formControl]="filterEndDateInput"></app-date-picker>
       </div>
       <div class="hud-field filter-apply-field">
-        <span class="hud-label hud-label-spacer">LỌC</span>
+        <span class="hud-label hud-label-spacer">{{ 'leaveRequests.filterLabel' | translate }}</span>
         <div class="filter-actions-row">
-          <button class="hud-btn-outline" (click)="applyDateFilter()">ÁP DỤNG</button>
+          <button class="hud-btn-outline" (click)="applyDateFilter()">
+            {{ 'leaveRequests.apply' | translate }}
+          </button>
           @if (filterStartDate() || filterEndDate()) {
-            <button class="hud-btn-outline muted" (click)="clearDateFilter()">XÓA</button>
+            <button class="hud-btn-outline muted" (click)="clearDateFilter()">
+              {{ 'leaveRequests.clear' | translate }}
+            </button>
           }
         </div>
       </div>
       <div class="hud-field grow-2">
-        <label class="hud-label" for="leave-search-input">TÌM THEO TÊN / VỊ TRÍ</label>
+        <label class="hud-label" for="leave-search-input">{{
+          'leaveRequests.searchLabel' | translate
+        }}</label>
         <input
           id="leave-search-input"
           type="text"
           [formControl]="searchQuery"
-          placeholder="Tìm theo tên hoặc vị trí nhân viên..."
+          [placeholder]="'leaveRequests.searchPlaceholder' | translate"
           class="hud-input"
         />
       </div>
@@ -48,19 +56,21 @@
     @if (isLoading()) {
       <div class="hud-loading-state">
         <div class="hud-spinner"></div>
-        <p>Đang tải danh sách đơn xin nghỉ...</p>
+        <p>{{ 'leaveRequests.loading' | translate }}</p>
       </div>
     } @else if (errorMsg()) {
       <div class="error-state">
         <p class="err-text">⚠️ {{ errorMsg() }}</p>
-        <button class="retry-btn" (click)="loadRequests()">Thử lại</button>
+        <button class="retry-btn" (click)="loadRequests()">
+          {{ 'leaveRequests.reload' | translate }}
+        </button>
       </div>
     } @else {
       <div class="logs-card">
         <div class="logs-header">
           <h3 class="logs-title">
             <app-icon class="logs-title-icon">list</app-icon>
-            DANH SÁCH ĐƠN XIN NGHỈ
+            {{ 'leaveRequests.listTitle' | translate }}
           </h3>
         </div>
 
@@ -68,13 +78,13 @@
           <table class="logs-table">
             <thead>
               <tr>
-                <th>NHÂN VIÊN</th>
-                <th>VỊ TRÍ</th>
-                <th>TỪ NGÀY</th>
-                <th>ĐẾN NGÀY</th>
-                <th>LÝ DO</th>
-                <th>TRẠNG THÁI</th>
-                <th>HÀNH ĐỘNG</th>
+                <th>{{ 'leaveRequests.colEmployee' | translate }}</th>
+                <th>{{ 'leaveRequests.colPosition' | translate }}</th>
+                <th>{{ 'leaveRequests.colFrom' | translate }}</th>
+                <th>{{ 'leaveRequests.colTo' | translate }}</th>
+                <th>{{ 'leaveRequests.colReason' | translate }}</th>
+                <th>{{ 'leaveRequests.colStatus' | translate }}</th>
+                <th>{{ 'leaveRequests.colAction' | translate }}</th>
               </tr>
             </thead>
             <tbody>
@@ -87,7 +97,11 @@
                   <td>
                     <div>{{ req.reason }}</div>
                     @if (req.status === 'rejected' && req.rejection_reason) {
-                      <div class="rejection-reason">Lý do từ chối: {{ req.rejection_reason }}</div>
+                      <div class="rejection-reason">
+                        {{ 'leaveRequests.rejectionReasonPrefix' | translate }}{{
+                          req.rejection_reason
+                        }}
+                      </div>
                     }
                   </td>
                   <td>
@@ -99,10 +113,10 @@
                     @if (req.status === 'pending') {
                       <div class="review-actions">
                         <button class="action-btn approve-btn" (click)="approve(req)">
-                          ✔ Duyệt
+                          {{ 'leaveRequests.approve' | translate }}
                         </button>
                         <button class="action-btn delete-btn" (click)="reject(req)">
-                          ✖ Từ chối
+                          {{ 'leaveRequests.reject' | translate }}
                         </button>
                       </div>
                     } @else {
@@ -112,7 +126,7 @@
                 </tr>
               } @empty {
                 <tr>
-                  <td colspan="7" class="no-data">Không có đơn xin nghỉ nào phù hợp.</td>
+                  <td colspan="7" class="no-data">{{ 'leaveRequests.empty' | translate }}</td>
                 </tr>
               }
             </tbody>
@@ -122,7 +136,7 @@
         @if (filteredRequests().length > 0) {
           <div class="hud-pagination">
             <div class="pag-size">
-              <label for="leave-page-size">Hiển thị</label>
+              <label for="leave-page-size">{{ 'common.show' | translate }}</label>
               <select id="leave-page-size" class="pag-size-select" [formControl]="pageSizeControl">
                 <option [ngValue]="5">5</option>
                 <option [ngValue]="10">10</option>
@@ -130,19 +144,21 @@
                 <option [ngValue]="50">50</option>
                 <option [ngValue]="100">100</option>
               </select>
-              <span>/ trang</span>
+              <span>{{ 'common.perPage' | translate }}</span>
             </div>
             <div class="pag-controls">
               <button class="pag-btn" [disabled]="currentPage() === 1" (click)="prevPage()">
-                ◀ TRƯỚC
+                {{ 'common.prev' | translate }}
               </button>
-              <span class="pag-info">TRANG {{ currentPage() }} / {{ totalPages() }}</span>
+              <span class="pag-info">{{
+                'common.pageInfo' | translate: { current: currentPage(), total: totalPages() }
+              }}</span>
               <button
                 class="pag-btn"
                 [disabled]="currentPage() === totalPages()"
                 (click)="nextPage()"
               >
-                SAU ▶
+                {{ 'common.next' | translate }}
               </button>
             </div>
           </div>

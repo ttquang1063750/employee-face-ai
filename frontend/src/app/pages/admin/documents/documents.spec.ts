@@ -2,7 +2,9 @@ import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideRouter } from '@angular/router';
+import { provideTranslateService } from '@ngx-translate/core';
 import { DocumentsComponent } from './documents';
+import { StaticTranslateLoader } from '../../../core/i18n/translate-loader';
 import { EmployeeDocument } from '../../../core/models/document.model';
 
 function makeDoc(overrides: Partial<EmployeeDocument>): EmployeeDocument {
@@ -27,7 +29,12 @@ describe('DocumentsComponent', () => {
   beforeEach(() => {
     TestBed.resetTestingModule();
     TestBed.configureTestingModule({
-      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])],
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        provideRouter([]),
+        provideTranslateService({ loader: StaticTranslateLoader, lang: 'vi', fallbackLang: 'vi' }),
+      ],
     });
     const fixture = TestBed.createComponent(DocumentsComponent);
     component = fixture.componentInstance;

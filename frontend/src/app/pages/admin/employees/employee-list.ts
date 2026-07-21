@@ -13,13 +13,13 @@ import { RouterLink } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { map } from 'rxjs';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { DialogService } from '../../../core/services/dialog.service';
 import {
   UsernameCheckService,
   usernameStatusSignal,
 } from '../../../core/services/username-check.service';
 import {
-  PASSWORD_HINT,
   generateRandomPassword,
   passwordComplexityValidator,
 } from '../../../core/services/credentials.util';
@@ -45,6 +45,7 @@ import { IconComponent } from '../../../core/components/icon/icon';
     HudSelectComponent,
     DatePickerComponent,
     IconComponent,
+    TranslatePipe,
   ],
   templateUrl: './employee-list.html',
   styleUrl: './employee-list.scss',
@@ -53,6 +54,7 @@ import { IconComponent } from '../../../core/components/icon/icon';
 })
 export class EmployeeListComponent implements OnInit {
   private dialogService = inject(DialogService);
+  private translate = inject(TranslateService);
   private usernameCheckService = inject(UsernameCheckService);
   private fb = inject(FormBuilder);
   private employeeService = inject(EmployeeService);
@@ -108,11 +110,13 @@ export class EmployeeListComponent implements OnInit {
   );
   usernameStatus = usernameStatusSignal(this.newEmployeeForm.controls.username);
   showNewPassword = signal<boolean>(false);
-  readonly passwordHint = PASSWORD_HINT;
-  readonly roleOptions: HudSelectOption<EmployeeRole>[] = [
-    { value: 'staff', label: 'Nhân viên (Staff)' },
-    { value: 'admin', label: 'Quản lý (Admin)' },
-  ];
+  roleOptions = computed<HudSelectOption<EmployeeRole>[]>(() => {
+    this.translate.currentLang(); // recompute labels when the language changes
+    return [
+      { value: 'staff', label: this.translate.instant('employees.roleStaff') },
+      { value: 'admin', label: this.translate.instant('employees.roleAdmin') },
+    ];
+  });
 
   // Pagination for employee list
   currentPage = signal<number>(1);
@@ -181,7 +185,7 @@ export class EmployeeListComponent implements OnInit {
       },
       error: () => {
         this.isLoading.set(false);
-        this.errorMsg.set('Không thể kết nối đến máy chủ để lấy danh sách nhân sự.');
+        this.errorMsg.set(this.translate.instant('employees.loadError'));
       },
     });
   }
@@ -235,22 +239,25 @@ export class EmployeeListComponent implements OnInit {
 
     if (!name || !this.photoCapture.imgBase64()) {
       await this.dialogService.alert(
-        'THIẾU THÔNG TIN',
-        'Vui lòng điền tên và chụp/tải lên ảnh chân dung mẫu.',
+        this.translate.instant('employees.missingInfoTitle'),
+        this.translate.instant('employees.missingInfoMessage'),
       );
       return;
     }
 
     if (!username.trim() || this.usernameStatus() !== 'available') {
       await this.dialogService.alert(
-        'USERNAME KHÔNG HỢP LỆ',
-        'Vui lòng nhập một username hợp lệ và chưa được sử dụng.',
+        this.translate.instant('employees.invalidUsernameTitle'),
+        this.translate.instant('employees.invalidUsernameMessage'),
       );
       return;
     }
 
     if (this.newEmployeeForm.controls.password.hasError('passwordComplexity')) {
-      await this.dialogService.alert('MẬT KHẨU KHÔNG HỢP LỆ', this.passwordHint);
+      await this.dialogService.alert(
+        this.translate.instant('employees.invalidPasswordTitle'),
+        this.translate.instant('common.passwordHint'),
+      );
       return;
     }
 
@@ -303,8 +310,8 @@ export class EmployeeListComponent implements OnInit {
         this.isSubmitting.set(false);
         if (res.success) {
           await this.dialogService.alert(
-            'ĐĂNG KÝ THÀNH CÔNG',
-            'Đăng ký tài khoản nhân sự mới thành công.',
+            this.translate.instant('employees.registerSuccessTitle'),
+            this.translate.instant('employees.registerSuccessMessage'),
           );
           this.closeAddModal();
           this.loadEmployees();
@@ -313,8 +320,8 @@ export class EmployeeListComponent implements OnInit {
       error: async (err: HttpErrorResponse) => {
         this.isSubmitting.set(false);
         await this.dialogService.alert(
-          'LỖI ĐĂNG KÝ',
-          'Lỗi đăng ký: ' + (err.error?.error || err.message),
+          this.translate.instant('employees.registerErrorTitle'),
+          this.translate.instant('employees.registerErrorPrefix') + (err.error?.error || err.message),
         );
       },
     });
@@ -322,21 +329,24 @@ export class EmployeeListComponent implements OnInit {
 
   async deleteEmployee(id: number, name: string): Promise<void> {
     const confirmed = await this.dialogService.confirm(
-      'XÁC NHẬN XÓA NHÂN SỰ',
-      `Bạn có chắc chắn muốn xóa hồ sơ nhân sự của "${name}" (Mã: #${id})? Hành động này sẽ xóa vĩnh viễn dữ liệu chấm công liên quan.`,
+      this.translate.instant('employees.deleteConfirmTitle'),
+      this.translate.instant('employees.deleteConfirmMessage', { name, id }),
     );
     if (confirmed) {
       this.employeeService.delete(id).subscribe({
         next: async (res) => {
           if (res.success) {
-            await this.dialogService.alert('XÓA THÀNH CÔNG', 'Đã xóa hồ sơ nhân sự thành công.');
+            await this.dialogService.alert(
+              this.translate.instant('employees.deleteSuccessTitle'),
+              this.translate.instant('employees.deleteSuccessMessage'),
+            );
             this.loadEmployees();
           }
         },
         error: async (err: HttpErrorResponse) => {
           await this.dialogService.alert(
-            'LỖI XÓA HỒ SƠ',
-            'Lỗi xóa nhân viên: ' + (err.error?.error || err.message),
+            this.translate.instant('employees.deleteErrorTitle'),
+            this.translate.instant('employees.deleteErrorPrefix') + (err.error?.error || err.message),
           );
         },
       });

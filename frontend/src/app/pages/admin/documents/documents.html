@@ -3,27 +3,29 @@
     <div class="page-title-row">
       <h2 class="title">
         <app-icon class="title-icon">document</app-icon>
-        QUẢN LÝ TÀI LIỆU NHÂN SỰ
+        {{ 'documents.pageTitle' | translate }}
       </h2>
-      <a class="hud-btn-success" [routerLink]="['new']">TẢI LÊN TÀI LIỆU MỚI</a>
+      <a class="hud-btn-success" [routerLink]="['new']">{{ 'documents.uploadNew' | translate }}</a>
     </div>
 
     <div class="hud-filter-bar">
       <div class="hud-field">
-        <label class="hud-label" for="doc-visibility-filter">LOẠI TÀI LIỆU</label>
+        <label class="hud-label" for="doc-visibility-filter">{{
+          'documents.typeLabel' | translate
+        }}</label>
         <app-hud-select
           [selectId]="'doc-visibility-filter'"
-          [options]="visibilityFilterOptions"
+          [options]="visibilityFilterOptions()"
           [formControl]="visibilityFilterControl"
         ></app-hud-select>
       </div>
       <div class="hud-field grow-3">
-        <label class="hud-label" for="doc-search-input">TÌM KIẾM</label>
+        <label class="hud-label" for="doc-search-input">{{ 'documents.searchLabel' | translate }}</label>
         <input
           id="doc-search-input"
           type="text"
           [formControl]="searchQuery"
-          placeholder="Tìm theo tiêu đề hoặc tên nhân viên..."
+          [placeholder]="'documents.searchPlaceholder' | translate"
           class="hud-search-input"
         />
       </div>
@@ -32,19 +34,19 @@
     @if (isLoading()) {
       <div class="hud-loading-state">
         <div class="hud-spinner"></div>
-        <p>Đang tải danh sách tài liệu...</p>
+        <p>{{ 'documents.loading' | translate }}</p>
       </div>
     } @else if (errorMsg()) {
       <div class="error-state">
-        <p class="err-text">⚠️ Lỗi: {{ errorMsg() }}</p>
-        <button class="retry-btn" (click)="loadDocuments()">Tải lại</button>
+        <p class="err-text">⚠️ {{ 'common.error' | translate }}: {{ errorMsg() }}</p>
+        <button class="retry-btn" (click)="loadDocuments()">{{ 'documents.reload' | translate }}</button>
       </div>
     } @else {
       <div class="logs-card">
         <div class="logs-header">
           <h3 class="logs-title">
             <app-icon class="logs-title-icon">list</app-icon>
-            DANH SÁCH TÀI LIỆU
+            {{ 'documents.listTitle' | translate }}
           </h3>
         </div>
 
@@ -52,11 +54,11 @@
           <table class="logs-table">
             <thead>
               <tr>
-                <th>TIÊU ĐỀ</th>
-                <th>NHÂN VIÊN</th>
-                <th>LOẠI</th>
-                <th>NGÀY TẢI LÊN</th>
-                <th class="action-col-header">HÀNH ĐỘNG</th>
+                <th>{{ 'documents.colTitle' | translate }}</th>
+                <th>{{ 'documents.colEmployee' | translate }}</th>
+                <th>{{ 'documents.colType' | translate }}</th>
+                <th>{{ 'documents.colUploadDate' | translate }}</th>
+                <th class="action-col-header">{{ 'documents.colAction' | translate }}</th>
               </tr>
             </thead>
             <tbody>
@@ -72,7 +74,7 @@
                     {{
                       doc.employee_name
                         ? doc.employee_name + ' · #' + doc.employee_id
-                        : 'Toàn bộ nhân viên'
+                        : ('documents.allEmployees' | translate)
                     }}
                   </td>
                   <td>
@@ -80,7 +82,11 @@
                       class="doc-visibility-badge"
                       [class.broadcast]="doc.visibility === 'chung'"
                     >
-                      {{ doc.visibility === 'chung' ? 'Chung' : 'Riêng' }}
+                      {{
+                        doc.visibility === 'chung'
+                          ? ('documents.visibilityBroadcast' | translate)
+                          : ('documents.visibilityPrivate' | translate)
+                      }}
                     </span>
                   </td>
                   <td class="log-time">{{ doc.uploaded_at | date: 'dd/MM/yyyy HH:mm' }}</td>
@@ -88,7 +94,11 @@
                     <button
                       type="button"
                       class="hud-btn-mini"
-                      [attr.data-tooltip]="doc.source_type === 'link' ? 'Mở liên kết' : 'Tải xuống'"
+                      [attr.data-tooltip]="
+                        doc.source_type === 'link'
+                          ? ('documents.openLinkTooltip' | translate)
+                          : ('documents.downloadTooltip' | translate)
+                      "
                       (click)="downloadDocument(doc)"
                     >
                       {{ doc.source_type === 'link' ? '🔗' : '⬇️' }}
@@ -96,7 +106,7 @@
                     <button
                       type="button"
                       class="hud-btn-mini danger"
-                      data-tooltip="Xóa tài liệu"
+                      [attr.data-tooltip]="'documents.deleteTooltip' | translate"
                       (click)="deleteDocument(doc)"
                     >
                       🗑️
@@ -105,7 +115,7 @@
                 </tr>
               } @empty {
                 <tr>
-                  <td colspan="5" class="no-data">Không tìm thấy tài liệu nào phù hợp.</td>
+                  <td colspan="5" class="no-data">{{ 'documents.empty' | translate }}</td>
                 </tr>
               }
             </tbody>
@@ -115,7 +125,7 @@
         @if (documents().length > 0) {
           <div class="hud-pagination">
             <div class="pag-size">
-              <label for="doc-page-size">Hiển thị</label>
+              <label for="doc-page-size">{{ 'common.show' | translate }}</label>
               <select id="doc-page-size" class="pag-size-select" [formControl]="pageSizeControl">
                 <option [ngValue]="5">5</option>
                 <option [ngValue]="10">10</option>
@@ -123,19 +133,21 @@
                 <option [ngValue]="50">50</option>
                 <option [ngValue]="100">100</option>
               </select>
-              <span>/ trang</span>
+              <span>{{ 'common.perPage' | translate }}</span>
             </div>
             <div class="pag-controls">
               <button class="pag-btn" [disabled]="currentPage() === 1" (click)="prevPage()">
-                ◀ TRƯỚC
+                {{ 'common.prev' | translate }}
               </button>
-              <span class="pag-info">TRANG {{ currentPage() }} / {{ totalPages() }}</span>
+              <span class="pag-info">{{
+                'common.pageInfo' | translate: { current: currentPage(), total: totalPages() }
+              }}</span>
               <button
                 class="pag-btn"
                 [disabled]="currentPage() === totalPages()"
                 (click)="nextPage()"
               >
-                SAU ▶
+                {{ 'common.next' | translate }}
               </button>
             </div>
           </div>

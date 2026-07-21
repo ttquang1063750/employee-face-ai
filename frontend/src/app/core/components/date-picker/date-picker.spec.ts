@@ -1,10 +1,18 @@
 import { TestBed } from '@angular/core/testing';
+import { provideTranslateService } from '@ngx-translate/core';
 import { DatePickerComponent } from './date-picker';
+import { StaticTranslateLoader } from '../../i18n/translate-loader';
 
 describe('DatePickerComponent', () => {
   let component: DatePickerComponent;
 
   beforeEach(() => {
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({
+      providers: [
+        provideTranslateService({ loader: StaticTranslateLoader, lang: 'vi', fallbackLang: 'vi' }),
+      ],
+    });
     const fixture = TestBed.createComponent(DatePickerComponent);
     component = fixture.componentInstance;
   });

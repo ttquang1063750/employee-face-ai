@@ -9,19 +9,23 @@ import {
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
-import { HudSelectComponent } from '../../../../core/components/hud-select/hud-select';
+import {
+  HudSelectComponent,
+  HudSelectOption,
+} from '../../../../core/components/hud-select/hud-select';
 import { RichTextEditor } from '../../../../core/components/rich-text-editor/rich-text-editor';
 import { DialogService } from '../../../../core/services/dialog.service';
 import { MessageService } from '../../../../core/services/message.service';
 import { MessageCategory } from '../../../../core/models/message.model';
-import { MESSAGE_CATEGORY_OPTIONS } from '../../../../core/utils/message-category.util';
+import { messageCategoryOptions } from '../../../../core/utils/message-category.util';
 import { richContentRequiredValidator } from '../../../../core/utils/rich-content.util';
 import { IconComponent } from '../../../../core/components/icon/icon';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-template-form-page',
   standalone: true,
-  imports: [ReactiveFormsModule, HudSelectComponent, RichTextEditor, IconComponent],
+  imports: [ReactiveFormsModule, HudSelectComponent, RichTextEditor, IconComponent, TranslatePipe],
   templateUrl: './template-form-page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -31,8 +35,11 @@ export class TemplateFormPage implements OnInit {
   private messageService = inject(MessageService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
+  private translate = inject(TranslateService);
 
-  readonly categoryOptions = MESSAGE_CATEGORY_OPTIONS;
+  categoryOptions = computed<HudSelectOption<MessageCategory>[]>(() =>
+    messageCategoryOptions(this.translate.currentLang() === 'en' ? 'en' : 'vi'),
+  );
 
   // null on 'message-templates/new', the id being edited on 'message-templates/:id'.
   private templateId = signal<number | null>(null);
@@ -63,7 +70,10 @@ export class TemplateFormPage implements OnInit {
         this.isLoading.set(false);
         const template = res.data?.find((t) => t.id === id);
         if (!res.success || !template) {
-          await this.dialogService.alert('LỖI', 'Không tìm thấy mẫu tin nhắn.');
+          await this.dialogService.alert(
+            this.translate.instant('common.error'),
+            this.translate.instant('templateForm.notFoundMessage'),
+          );
           this.router.navigate(['../'], { relativeTo: this.route });
           return;
         }
@@ -75,7 +85,10 @@ export class TemplateFormPage implements OnInit {
       },
       error: async () => {
         this.isLoading.set(false);
-        await this.dialogService.alert('LỖI', 'Lỗi kết nối máy chủ API.');
+        await this.dialogService.alert(
+          this.translate.instant('common.error'),
+          this.translate.instant('templateForm.connectionError'),
+        );
         this.router.navigate(['../'], { relativeTo: this.route });
       },
     });
@@ -97,12 +110,18 @@ export class TemplateFormPage implements OnInit {
         if (res.success) {
           this.router.navigate(['../'], { relativeTo: this.route });
         } else {
-          await this.dialogService.alert('LỖI', res.error || 'Không thể lưu mẫu tin nhắn.');
+          await this.dialogService.alert(
+            this.translate.instant('common.error'),
+            res.error || this.translate.instant('templateForm.saveError'),
+          );
         }
       },
       error: async (err: HttpErrorResponse) => {
         this.isSaving.set(false);
-        await this.dialogService.alert('LỖI', err.error?.error || 'Lỗi kết nối máy chủ.');
+        await this.dialogService.alert(
+          this.translate.instant('common.error'),
+          err.error?.error || this.translate.instant('templateForm.genericServerError'),
+        );
       },
     });
   }

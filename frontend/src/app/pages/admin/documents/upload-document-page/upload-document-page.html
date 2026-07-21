@@ -3,73 +3,71 @@
     <div class="page-title-row">
       <h2 class="title">
         <app-icon class="title-icon">upload</app-icon>
-        TẢI LÊN TÀI LIỆU MỚI
+        {{ 'uploadDocument.pageTitle' | translate }}
       </h2>
     </div>
 
     <div class="logs-card" [formGroup]="uploadForm">
       <div class="form-fields">
         <div class="form-group">
-          <label for="doc-title">TIÊU ĐỀ TÀI LIỆU</label>
+          <label for="doc-title">{{ 'uploadDocument.docTitleLabel' | translate }}</label>
           <input
             id="doc-title"
             type="text"
             formControlName="title"
-            placeholder="VD: Bảng lương Tháng 7/2026"
+            [placeholder]="'uploadDocument.docTitlePlaceholder' | translate"
             class="hud-input"
           />
         </div>
 
         <div class="form-group">
-          <label for="doc-visibility">LOẠI TÀI LIỆU</label>
+          <label for="doc-visibility">{{ 'uploadDocument.typeLabel' | translate }}</label>
           <app-hud-select
             [selectId]="'doc-visibility'"
-            [options]="uploadVisibilityOptions"
+            [options]="uploadVisibilityOptions()"
             formControlName="visibility"
           ></app-hud-select>
         </div>
 
         @if (uploadForm.controls.visibility.value === 'rieng') {
           <div class="form-group">
-            <label for="doc-employee">NHÂN VIÊN NHẬN TÀI LIỆU</label>
+            <label for="doc-employee">{{ 'uploadDocument.recipientLabel' | translate }}</label>
             <app-hud-autocomplete
               [inputId]="'doc-employee'"
               [formControl]="employeeQueryControl"
               [suggestions]="employeeSuggestions()"
               [itemLabel]="employeeSuggestionLabel"
               [itemMeta]="employeeSuggestionMeta"
-              placeholder="Tìm kiếm tên nhân viên..."
+              [placeholder]="'uploadDocument.recipientSearchPlaceholder' | translate"
               (optionSelected)="onEmployeeSelected($event)"
             ></app-hud-autocomplete>
           </div>
         }
 
         <div class="form-group">
-          <label for="doc-source-type">NGUỒN TÀI LIỆU</label>
+          <label for="doc-source-type">{{ 'uploadDocument.sourceLabel' | translate }}</label>
           <app-hud-select
             [selectId]="'doc-source-type'"
-            [options]="sourceTypeOptions"
+            [options]="sourceTypeOptions()"
             formControlName="sourceType"
           ></app-hud-select>
         </div>
 
         @if (uploadForm.controls.sourceType.value === 'link') {
           <div class="form-group">
-            <label for="doc-external-url">LIÊN KẾT NGOÀI</label>
+            <label for="doc-external-url">{{ 'uploadDocument.externalUrlLabel' | translate }}</label>
             <input
               id="doc-external-url"
               type="text"
               formControlName="externalUrl"
-              placeholder="https://..."
+              [placeholder]="'uploadDocument.externalUrlPlaceholder' | translate"
               class="hud-input"
             />
-            <span class="field-hint"
-              >Chỉ chấp nhận liên kết bắt đầu bằng http:// hoặc https://.</span
-            >
+            <span class="field-hint">{{ 'uploadDocument.externalUrlHint' | translate }}</span>
           </div>
         } @else {
           <div class="form-group">
-            <span class="hud-label">FILE TÀI LIỆU (PDF, Word, Excel, ảnh, video — tối đa 5GB)</span>
+            <span class="hud-label">{{ 'uploadDocument.fileFieldLabel' | translate }}</span>
             <input
               #fileInputElement
               type="file"
@@ -79,7 +77,7 @@
             />
             <div class="filter-actions-row">
               <button type="button" class="hud-btn-outline" (click)="triggerFileInput()">
-                📁 CHỌN FILE
+                {{ 'uploadDocument.chooseFile' | translate }}
               </button>
               @if (selectedFileName()) {
                 <span class="selected-file-name">{{ selectedFileName() }}</span>
@@ -93,7 +91,9 @@
             <svg class="upload-progress-track" viewBox="0 0 100 6" preserveAspectRatio="none">
               <rect class="upload-progress-fill" [attr.width]="uploadProgress()" height="6" />
             </svg>
-            <span class="field-hint">Đang tải lên... {{ uploadProgress() }}%</span>
+            <span class="field-hint">{{
+              'uploadDocument.uploadingProgress' | translate: { percent: uploadProgress() }
+            }}</span>
           </div>
         }
       </div>
@@ -108,10 +108,12 @@
           @if (isUploading()) {
             <div class="loader"></div>
           } @else {
-            <span>TẢI LÊN</span>
+            <span>{{ 'uploadDocument.submit' | translate }}</span>
           }
         </button>
-        <button type="button" class="hud-btn-secondary" (click)="cancel()">HỦY</button>
+        <button type="button" class="hud-btn-secondary" (click)="cancel()">
+          {{ 'uploadDocument.cancel' | translate }}
+        </button>
       </div>
     </div>
   </div>

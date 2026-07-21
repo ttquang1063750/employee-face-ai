@@ -6,11 +6,12 @@ import { MessageService } from '../../../core/services/message.service';
 import { MessageDetail } from '../../../core/models/message.model';
 import { translateMessageCategory } from '../../../core/utils/message-category.util';
 import { IconComponent } from '../../../core/components/icon/icon';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-message-detail-page',
   standalone: true,
-  imports: [DatePipe, IconComponent],
+  imports: [DatePipe, IconComponent, TranslatePipe],
   templateUrl: './message-detail-page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -19,12 +20,15 @@ export class MessageDetailPage implements OnInit {
   private router = inject(Router);
   private authService = inject(AuthService);
   private messageService = inject(MessageService);
+  private translate = inject(TranslateService);
 
   message = signal<MessageDetail | null>(null);
   isLoading = signal<boolean>(true);
   errorMsg = signal<string | null>(null);
 
-  protected readonly translateMessageCategory = translateMessageCategory;
+  categoryLabel(category: Parameters<typeof translateMessageCategory>[0]): string {
+    return translateMessageCategory(category, this.translate.currentLang() === 'en' ? 'en' : 'vi');
+  }
 
   private messageId: number | null = null;
 
@@ -48,12 +52,12 @@ export class MessageDetailPage implements OnInit {
           this.message.set(res.data);
           this.markReadIfNeeded(res.data);
         } else {
-          this.errorMsg.set(res.error || 'Không thể tải tin nhắn.');
+          this.errorMsg.set(res.error || this.translate.instant('messageDetail.loadError'));
         }
       },
       error: () => {
         this.isLoading.set(false);
-        this.errorMsg.set('Lỗi kết nối máy chủ API.');
+        this.errorMsg.set(this.translate.instant('messageDetail.connectionError'));
       },
     });
   }

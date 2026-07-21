@@ -3,20 +3,20 @@
     <div class="page-title-row">
       <h2 class="title">
         <app-icon class="title-icon">archive</app-icon>
-        MẪU TIN NHẮN
+        {{ 'templates.pageTitle' | translate }}
       </h2>
-      <a class="hud-btn-primary" [routerLink]="['new']">THÊM MẪU MỚI</a>
+      <a class="hud-btn-primary" [routerLink]="['new']">{{ 'templates.addNew' | translate }}</a>
     </div>
 
     @if (isLoading()) {
       <div class="hud-loading-state">
         <div class="hud-spinner"></div>
-        <p>Đang tải danh sách mẫu tin nhắn...</p>
+        <p>{{ 'templates.loading' | translate }}</p>
       </div>
     } @else if (errorMsg()) {
       <div class="error-state">
         <p class="err-text">⚠️ {{ errorMsg() }}</p>
-        <button class="retry-btn" (click)="loadTemplates()">Thử lại</button>
+        <button class="retry-btn" (click)="loadTemplates()">{{ 'templates.reload' | translate }}</button>
       </div>
     } @else {
       <div class="logs-card">
@@ -24,28 +24,32 @@
           <table class="logs-table">
             <thead>
               <tr>
-                <th>LOẠI</th>
-                <th>TÊN MẪU</th>
-                <th>NỘI DUNG</th>
-                <th>HÀNH ĐỘNG</th>
+                <th>{{ 'templates.colType' | translate }}</th>
+                <th>{{ 'templates.colName' | translate }}</th>
+                <th>{{ 'templates.colContent' | translate }}</th>
+                <th>{{ 'templates.colAction' | translate }}</th>
               </tr>
             </thead>
             <tbody>
               @for (t of templates(); track t.id) {
                 <tr>
-                  <td>{{ translateMessageCategory(t.category) }}</td>
+                  <td>{{ categoryLabel(t.category) }}</td>
                   <td class="log-name">{{ t.name }}</td>
-                  <td class="template-preview">{{ stripRichContentPreview(t.content) }}</td>
+                  <td class="template-preview">{{ contentPreview(t.content) }}</td>
                   <td>
                     <div class="review-actions">
-                      <a class="action-btn approve-btn" [routerLink]="[t.id]">Sửa</a>
-                      <button class="action-btn delete-btn" (click)="deleteTemplate(t)">Xóa</button>
+                      <a class="action-btn approve-btn" [routerLink]="[t.id]">{{
+                        'templates.edit' | translate
+                      }}</a>
+                      <button class="action-btn delete-btn" (click)="deleteTemplate(t)">
+                        {{ 'templates.delete' | translate }}
+                      </button>
                     </div>
                   </td>
                 </tr>
               } @empty {
                 <tr>
-                  <td colspan="4" class="no-data">Chưa có mẫu tin nhắn nào.</td>
+                  <td colspan="4" class="no-data">{{ 'templates.empty' | translate }}</td>
                 </tr>
               }
             </tbody>

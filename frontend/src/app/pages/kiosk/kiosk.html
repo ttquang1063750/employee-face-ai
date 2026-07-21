@@ -3,10 +3,11 @@
     <div class="header-logo">
       <img class="kiosk-logo-img" src="logo.svg" alt="Employee Face AI Logo" />
       <div class="logo-text">
-        <h1>EMPLOYEE FACE AI</h1>
-        <p>Cổng Biometric Chấm Công & Tâm Lý Nhân Sự</p>
+        <h1>{{ 'kiosk.title' | translate }}</h1>
+        <p>{{ 'kiosk.subtitle' | translate }}</p>
       </div>
     </div>
+    <app-language-switcher></app-language-switcher>
   </header>
 
   <div class="kiosk-content">
@@ -31,8 +32,12 @@
                  freeze the captured frame over the video (plus a brief flash)
                  so it's obvious the photo is taken and holding still isn't needed. -->
             @if (capturedFrame()) {
-              <img [src]="capturedFrame()" alt="Ảnh vừa chụp" class="captured-freeze-frame" />
-              <div class="freeze-frame-label">📸 ĐÃ CHỤP ẢNH — KHÔNG CẦN GIỮ YÊN NỮA</div>
+              <img
+                [src]="capturedFrame()"
+                [attr.alt]="'kiosk.capturedFrameAlt' | translate"
+                class="captured-freeze-frame"
+              />
+              <div class="freeze-frame-label">{{ 'kiosk.capturedLabel' | translate }}</div>
             }
 
             @if (showFlash()) {
@@ -45,7 +50,7 @@
       <!-- Action Panel -->
       <div class="action-card">
         <div class="card-inner">
-          <h2 class="panel-title">HỆ THỐNG GHI NHẬN</h2>
+          <h2 class="panel-title">{{ 'kiosk.panelTitle' | translate }}</h2>
 
           <div class="action-selector">
             <button
@@ -54,8 +59,8 @@
               [class.active]="currentAction() === 'CHECK_IN'"
               (click)="selectAction('CHECK_IN')"
             >
-              <span class="btn-title">CHECK IN</span>
-              <span class="btn-desc">Bắt đầu ca làm việc</span>
+              <span class="btn-title">{{ 'kiosk.checkIn' | translate }}</span>
+              <span class="btn-desc">{{ 'kiosk.checkInDesc' | translate }}</span>
             </button>
 
             <button
@@ -64,16 +69,16 @@
               [class.active]="currentAction() === 'CHECK_OUT'"
               (click)="selectAction('CHECK_OUT')"
             >
-              <span class="btn-title">CHECK OUT</span>
-              <span class="btn-desc">Kết thúc ca làm việc</span>
+              <span class="btn-title">{{ 'kiosk.checkOut' | translate }}</span>
+              <span class="btn-desc">{{ 'kiosk.checkOutDesc' | translate }}</span>
             </button>
           </div>
 
           <div class="form-group">
-            <label for="backend-detector">MODULE PHÁT HIỆN KHUÔN MẶT</label>
+            <label for="backend-detector">{{ 'kiosk.detectorLabel' | translate }}</label>
             <app-hud-select
               [selectId]="'backend-detector'"
-              [options]="detectorOptions"
+              [options]="detectorOptions()"
               [formControl]="detector"
             ></app-hud-select>
           </div>
@@ -87,9 +92,9 @@
             >
               @if (isLoading()) {
                 <div class="radial-spinner"></div>
-                <span>ĐANG QUÉT SINH TRẮC HỌC...</span>
+                <span>{{ 'kiosk.scanning' | translate }}</span>
               } @else {
-                <span>BẤT ĐẦU QUÉT KHUÔN MẶT</span>
+                <span>{{ 'kiosk.scanButton' | translate }}</span>
               }
             </button>
           </div>
@@ -98,22 +103,22 @@
           @if (resultData()) {
             <div class="status-card success">
               <div class="card-glow"></div>
-              <h3 class="status-title">🎉 GHI NHẬN THÀNH CÔNG</h3>
+              <h3 class="status-title">{{ 'kiosk.successTitle' | translate }}</h3>
               <div class="status-details">
                 <div class="detail-row">
-                  <span class="lbl">Nhân viên:</span>
+                  <span class="lbl">{{ 'kiosk.employeeLabel' | translate }}</span>
                   <span class="val name">{{ resultData()?.employee_name }}</span>
                 </div>
                 <div class="detail-row">
-                  <span class="lbl">Hành động:</span>
+                  <span class="lbl">{{ 'kiosk.actionLabel' | translate }}</span>
                   <span class="val">{{ resultData()?.action }}</span>
                 </div>
                 <div class="detail-row">
-                  <span class="lbl">Thời gian:</span>
+                  <span class="lbl">{{ 'kiosk.timeLabel' | translate }}</span>
                   <span class="val">{{ resultData()?.time }}</span>
                 </div>
                 <div class="detail-row highlight">
-                  <span class="lbl">Đánh giá tâm lý (Mood):</span>
+                  <span class="lbl">{{ 'kiosk.moodLabel' | translate }}</span>
                   <span class="val mood">{{ resultData()?.mood }}</span>
                 </div>
               </div>
@@ -123,7 +128,7 @@
           @if (statusMsg()) {
             <div class="status-card error">
               <div class="card-glow"></div>
-              <h3 class="status-title">⚠️ LỖI GHI NHẬN</h3>
+              <h3 class="status-title">{{ 'kiosk.errorTitle' | translate }}</h3>
               <p class="error-desc">{{ statusMsg() }}</p>
             </div>
           }

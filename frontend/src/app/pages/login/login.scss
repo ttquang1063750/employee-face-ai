@@ -12,6 +12,13 @@
   padding: var(--space-4);
 }
 
+.login-lang-switcher {
+  position: absolute;
+  top: var(--space-5);
+  right: var(--space-5);
+  z-index: 1;
+}
+
 .glow-bg {
   position: absolute;
   width: 400px;

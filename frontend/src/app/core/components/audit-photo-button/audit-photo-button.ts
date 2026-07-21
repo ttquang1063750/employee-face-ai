@@ -7,6 +7,7 @@ import {
   inject,
 } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { TranslatePipe } from '@ngx-translate/core';
 import { environment } from '../../../../environments/environment';
 
 /**
@@ -19,7 +20,7 @@ import { environment } from '../../../../environments/environment';
 @Component({
   selector: 'app-audit-photo-button',
   standalone: true,
-  imports: [],
+  imports: [TranslatePipe],
   templateUrl: './audit-photo-button.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
