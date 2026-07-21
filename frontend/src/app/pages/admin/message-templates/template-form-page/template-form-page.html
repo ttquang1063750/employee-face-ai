@@ -32,13 +32,10 @@
           </div>
           <div class="form-group">
             <label for="template-content">NỘI DUNG MẪU</label>
-            <textarea
-              id="template-content"
+            <app-rich-text-editor
+              [editorId]="'template-content'"
               formControlName="content"
-              rows="10"
-              class="hud-textarea"
-              placeholder="Nội dung sẽ điền sẵn vào ô nội dung khi người dùng chọn mẫu này"
-            ></textarea>
+            ></app-rich-text-editor>
           </div>
         </div>
 

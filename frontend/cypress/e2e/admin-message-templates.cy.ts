@@ -12,13 +12,16 @@ describe('Admin message templates', () => {
     cy.url().should('match', /\/admin\/message-templates\/new$/);
 
     cy.get('#template-name').type('Mẫu test E2E');
-    cy.get('#template-content').type('Nội dung mẫu test E2E.');
+    // The content field is a Tiptap rich text editor — #template-content is
+    // on its wrapper (for the <label for>), the actual contenteditable
+    // surface is the .ProseMirror element inside it.
+    cy.get('#template-content .ProseMirror').type('Nội dung mẫu test E2E.');
 
     cy.intercept('POST', '**/api/message-templates', (req) => {
       expect(req.body).to.deep.equal({
         category: 'daily_report',
         name: 'Mẫu test E2E',
-        content: 'Nội dung mẫu test E2E.',
+        content: '<p>Nội dung mẫu test E2E.</p>',
       });
       req.reply({ statusCode: 200, body: { success: true } });
     }).as('createTemplate');
@@ -31,7 +34,7 @@ describe('Admin message templates', () => {
             id: 1,
             category: 'daily_report',
             name: 'Mẫu test E2E',
-            content: 'Nội dung mẫu test E2E.',
+            content: '<p>Nội dung mẫu test E2E.</p>',
             created_at: '2026-07-21T08:00:00',
           },
         ],
@@ -53,7 +56,7 @@ describe('Admin message templates', () => {
 
     cy.selectHudOption('#compose-template', 'Mẫu test E2E');
     cy.get('#compose-subject').should('have.value', 'Mẫu test E2E');
-    cy.get('#compose-content').should('have.value', 'Nội dung mẫu test E2E.');
+    cy.get('#compose-content .ProseMirror').should('have.text', 'Nội dung mẫu test E2E.');
   });
 
   it('edits and deletes an existing template', () => {
@@ -83,6 +86,9 @@ describe('Admin message templates', () => {
     cy.get('#template-name').clear().type('Mẫu báo cáo ngày chuẩn (đã sửa)');
 
     cy.intercept('PUT', '**/api/message-templates/1', (req) => {
+      // The content FormControl's value only ever changes via the rich text
+      // editor's own onChange (real user edits) — since this test never
+      // touches the content field, it's resubmitted exactly as loaded.
       expect(req.body).to.deep.equal({
         category: 'daily_report',
         name: 'Mẫu báo cáo ngày chuẩn (đã sửa)',

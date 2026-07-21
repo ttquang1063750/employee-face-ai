@@ -4,6 +4,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { HudSelectComponent, HudSelectOption } from '../../../core/components/hud-select/hud-select';
+import { RichTextEditor } from '../../../core/components/rich-text-editor/rich-text-editor';
 import { DialogService } from '../../../core/services/dialog.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { EmployeeService } from '../../../core/services/employee.service';
@@ -11,11 +12,12 @@ import { MessageService } from '../../../core/services/message.service';
 import { EmployeeDirectoryEntry } from '../../../core/models/employee.model';
 import { MessageCategory, MessageTemplate } from '../../../core/models/message.model';
 import { MESSAGE_CATEGORY_OPTIONS } from '../../../core/utils/message-category.util';
+import { isRichContentEmpty } from '../../../core/utils/rich-content.util';
 
 @Component({
   selector: 'app-compose-message-page',
   standalone: true,
-  imports: [ReactiveFormsModule, HudSelectComponent],
+  imports: [ReactiveFormsModule, HudSelectComponent, RichTextEditor],
   templateUrl: './compose-message-page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -67,7 +69,7 @@ export class ComposeMessagePage implements OnInit {
 
   canSubmit = computed(() => {
     const { subject = '', content = '' } = this.formValue();
-    return !!this.selectedRecipient() && !!subject.trim() && !!content.trim();
+    return !!this.selectedRecipient() && !!subject.trim() && !isRichContentEmpty(content);
   });
 
   constructor() {

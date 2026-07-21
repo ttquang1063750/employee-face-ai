@@ -13,14 +13,17 @@ describe('Internal messages', () => {
     cy.get('#compose-recipient').type('Quang');
     cy.contains('.hud-autocomplete-item', 'Tăng Thanh Quang').click();
     cy.get('#compose-subject').type('Báo cáo công việc ngày 20/07/2026');
-    cy.get('#compose-content').type('Đã hoàn thành các task được giao trong ngày.');
+    // The content field is a Tiptap rich text editor — #compose-content is
+    // on its wrapper (for the <label for>), the actual contenteditable
+    // surface is the .ProseMirror element inside it.
+    cy.get('#compose-content .ProseMirror').type('Đã hoàn thành các task được giao trong ngày.');
 
     cy.intercept('POST', '**/api/messages', (req) => {
       expect(req.body).to.deep.equal({
         recipient_id: 11,
         category: 'daily_report',
         subject: 'Báo cáo công việc ngày 20/07/2026',
-        content: 'Đã hoàn thành các task được giao trong ngày.',
+        content: '<p>Đã hoàn thành các task được giao trong ngày.</p>',
       });
       req.reply({ statusCode: 200, body: { success: true } });
     }).as('sendMessage');

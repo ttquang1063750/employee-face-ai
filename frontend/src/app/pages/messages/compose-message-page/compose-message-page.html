@@ -76,13 +76,7 @@
 
         <div class="form-group">
           <label for="compose-content">NỘI DUNG</label>
-          <textarea
-            id="compose-content"
-            formControlName="content"
-            rows="10"
-            class="hud-textarea"
-            placeholder="Nội dung báo cáo..."
-          ></textarea>
+          <app-rich-text-editor [editorId]="'compose-content'" formControlName="content"></app-rich-text-editor>
         </div>
       </div>
 

@@ -24,7 +24,7 @@
           <span><strong>Thời gian:</strong> {{ msg.created_at | date: 'HH:mm dd/MM/yyyy' }}</span>
         </div>
         <h3 class="message-subject">{{ msg.subject }}</h3>
-        <p class="message-content">{{ msg.content }}</p>
+        <div class="message-content rich-content" [innerHTML]="msg.content"></div>
       </div>
     }
   </div>

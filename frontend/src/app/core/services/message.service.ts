@@ -48,6 +48,15 @@ export class MessageService {
     return this.http.delete<ApiResponse>(`${this.apiUrl}/messages/${id}`);
   }
 
+  // Uploads a shape drawing (PNG data URL) for insertion into the rich text
+  // editor — not tied to a specific message/template id, since the image may
+  // be inserted before the message is ever saved.
+  uploadImage(imgBase64: string): Observable<ApiResponse<{ url: string }>> {
+    return this.http.post<ApiResponse<{ url: string }>>(`${this.apiUrl}/messages/images`, {
+      img: imgBase64,
+    });
+  }
+
   getTemplates(): Observable<ApiResponse<MessageTemplate[]>> {
     return this.http.get<ApiResponse<MessageTemplate[]>>(`${this.apiUrl}/message-templates`);
   }

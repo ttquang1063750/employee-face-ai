@@ -629,6 +629,10 @@
   &.medium {
     max-width: 880px;
   }
+
+  &.full {
+    max-width: 1180px;
+  }
 }
 
 @keyframes modalScale {

@@ -12,6 +12,7 @@ import re
 import tempfile
 import threading
 import time
+import uuid
 from datetime import datetime
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlparse
@@ -156,6 +157,12 @@ MAX_DOCUMENT_BYTES = 15 * 1024 * 1024  # 15 MB
 
 DOCUMENTS_DIR = os.path.join(UPLOADS_ROOT, "documents")
 os.makedirs(DOCUMENTS_DIR, exist_ok=True)
+
+# Shape drawings inserted into message/template rich content — filenames are
+# random (not the sequential message/template id) since these are served
+# back over a public, unauthenticated static route just like avatar photos.
+MESSAGE_IMAGES_DIR = os.path.join(UPLOADS_ROOT, "messages")
+os.makedirs(MESSAGE_IMAGES_DIR, exist_ok=True)
 DOCUMENT_CONTENT_TYPES = {
     ".pdf": "application/pdf",
     ".doc": "application/msword",
@@ -180,6 +187,19 @@ def base64_within_size_limit(base64_str, max_bytes):
 
 def image_within_size_limit(base64_str):
     return base64_within_size_limit(base64_str, MAX_IMAGE_BYTES)
+
+
+# Message/template content is now rich HTML from the frontend's Tiptap editor
+# — its "empty" state is still non-blank markup (an empty <p></p>), so a
+# plain falsy/strip() check on the raw string (as used for every other
+# plain-text field) never catches it. Mirrors isRichContentEmpty in
+# frontend/src/app/core/utils/rich-content.util.ts.
+def is_rich_content_empty(html):
+    if not html:
+        return True
+    if re.search(r"<img\b", html, re.IGNORECASE):
+        return False
+    return re.sub(r"<[^>]*>", "", html).strip() == ""
 
 
 def save_base64_file(base64_str, output_path, max_bytes):
@@ -258,6 +278,8 @@ class EmployeeFaceAIRequestHandler(BaseHTTPRequestHandler):
             self.serve_database_image()
         elif self.path.startswith("/uploads/logs/"):
             self.serve_audit_image()
+        elif self.path.startswith("/uploads/messages/"):
+            self.serve_message_image()
         # Serve the single page index.html for static hosting fallback
         elif self.path == "/" or self.path == "/index.html":
             self.serve_static_index()
@@ -283,6 +305,8 @@ class EmployeeFaceAIRequestHandler(BaseHTTPRequestHandler):
             self.handle_create_document()
         elif self.path == "/api/messages":
             self.handle_create_message()
+        elif self.path == "/api/messages/images":
+            self.handle_upload_message_image()
         elif self.path == "/api/message-templates":
             self.handle_create_message_template()
         elif self.path == "/api/attendance":
@@ -371,6 +395,9 @@ class EmployeeFaceAIRequestHandler(BaseHTTPRequestHandler):
 
     def serve_database_image(self):
         self._serve_local_file(DATABASE_DIR, self.path[len("/uploads/database/") :])
+
+    def serve_message_image(self):
+        self._serve_local_file(MESSAGE_IMAGES_DIR, self.path[len("/uploads/messages/") :])
 
     def serve_audit_image(self):
         # Audit photos are forensic evidence of a specific person's face at a
@@ -1467,7 +1494,7 @@ class EmployeeFaceAIRequestHandler(BaseHTTPRequestHandler):
             subject = (data.get("subject") or "").strip()
             content = (data.get("content") or "").strip()
 
-            if not recipient_id or not subject or not content:
+            if not recipient_id or not subject or is_rich_content_empty(content):
                 self.send_json_response(
                     400, {"success": False, "error": "Vui lòng chọn người nhận, tiêu đề và nội dung."}
                 )
@@ -1483,6 +1510,39 @@ class EmployeeFaceAIRequestHandler(BaseHTTPRequestHandler):
             self.send_json_response(
                 200, {"success": True, "message": "Gửi tin nhắn thành công.", "id": message_id}
             )
+        except Exception as e:
+            self.send_json_response(500, {"success": False, "error": str(e)})
+
+    def handle_upload_message_image(self):
+        # Any authenticated employee — used by the shape-drawing tool inside
+        # the message/template rich text editor. Not tied to a specific
+        # message/template id (the image may be inserted before the message
+        # is ever saved), so it's just a standalone file upload.
+        user = self.get_authenticated_user()
+        if not user:
+            self.send_json_response(401, {"success": False, "error": "Unauthorized access"})
+            return
+        try:
+            content_length = int(self.headers["Content-Length"])
+            post_data = self.rfile.read(content_length)
+            data = json.loads(post_data.decode("utf-8"))
+
+            img_base64 = data.get("img")
+            if not img_base64:
+                self.send_json_response(400, {"success": False, "error": "Thiếu dữ liệu hình ảnh."})
+                return
+            if not image_within_size_limit(img_base64):
+                self.send_json_response(
+                    400, {"success": False, "error": "Hình vẽ vượt quá dung lượng cho phép (tối đa 8MB)."}
+                )
+                return
+
+            filename = f"{uuid.uuid4().hex}.png"
+            output_path = os.path.join(MESSAGE_IMAGES_DIR, filename)
+            if save_base64_image(img_base64, output_path):
+                self.send_json_response(200, {"success": True, "data": {"url": f"/uploads/messages/{filename}"}})
+            else:
+                self.send_json_response(500, {"success": False, "error": "Không thể lưu hình vẽ."})
         except Exception as e:
             self.send_json_response(500, {"success": False, "error": str(e)})
 
@@ -1608,7 +1668,7 @@ class EmployeeFaceAIRequestHandler(BaseHTTPRequestHandler):
             if category not in db.MESSAGE_CATEGORIES:
                 self.send_json_response(400, {"success": False, "error": "Loại tin nhắn không hợp lệ."})
                 return
-            if not name or not content:
+            if not name or is_rich_content_empty(content):
                 self.send_json_response(400, {"success": False, "error": "Vui lòng nhập tên và nội dung mẫu."})
                 return
 
@@ -1637,7 +1697,7 @@ class EmployeeFaceAIRequestHandler(BaseHTTPRequestHandler):
             if category not in db.MESSAGE_CATEGORIES:
                 self.send_json_response(400, {"success": False, "error": "Loại tin nhắn không hợp lệ."})
                 return
-            if not name or not content:
+            if not name or is_rich_content_empty(content):
                 self.send_json_response(400, {"success": False, "error": "Vui lòng nhập tên và nội dung mẫu."})
                 return
 

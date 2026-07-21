@@ -5,6 +5,7 @@ import { DialogService } from '../../../core/services/dialog.service';
 import { MessageService } from '../../../core/services/message.service';
 import { MessageTemplate } from '../../../core/models/message.model';
 import { translateMessageCategory } from '../../../core/utils/message-category.util';
+import { stripRichContentPreview } from '../../../core/utils/rich-content.util';
 
 @Component({
   selector: 'app-message-templates-page',
@@ -18,6 +19,7 @@ export class MessageTemplatesPage implements OnInit {
   private messageService = inject(MessageService);
 
   protected readonly translateMessageCategory = translateMessageCategory;
+  protected readonly stripRichContentPreview = stripRichContentPreview;
 
   templates = signal<MessageTemplate[]>([]);
   isLoading = signal<boolean>(true);

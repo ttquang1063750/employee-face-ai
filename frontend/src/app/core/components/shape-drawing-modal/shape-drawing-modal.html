@@ -1,0 +1,138 @@
+<div class="modal-backdrop">
+  <div class="modal-card full">
+    <div class="modal-header">
+      <h3>✏️ VẼ HÌNH</h3>
+      <button class="close-btn" (click)="cancel()">✖</button>
+    </div>
+    <div class="modal-body">
+      <div class="shape-toolbar">
+        <button
+          type="button"
+          class="hud-btn-mini"
+          data-tooltip="Chọn / Di chuyển"
+          [class.active]="activeTool() === 'select'"
+          (click)="selectTool('select')"
+        >
+          ↖
+        </button>
+        <button
+          type="button"
+          class="hud-btn-mini"
+          data-tooltip="Hình chữ nhật"
+          [class.active]="activeTool() === 'rectangle'"
+          (click)="selectTool('rectangle')"
+        >
+          ▭
+        </button>
+        <button
+          type="button"
+          class="hud-btn-mini"
+          data-tooltip="Hình tròn"
+          [class.active]="activeTool() === 'ellipse'"
+          (click)="selectTool('ellipse')"
+        >
+          ◯
+        </button>
+        <button
+          type="button"
+          class="hud-btn-mini"
+          data-tooltip="Đường thẳng"
+          [class.active]="activeTool() === 'line'"
+          (click)="selectTool('line')"
+        >
+          ╱
+        </button>
+        <button
+          type="button"
+          class="hud-btn-mini"
+          data-tooltip="Mũi tên"
+          [class.active]="activeTool() === 'arrow'"
+          (click)="selectTool('arrow')"
+        >
+          ➚
+        </button>
+        <button
+          type="button"
+          class="hud-btn-mini"
+          data-tooltip="Chèn chữ"
+          (click)="selectTool('text')"
+        >
+          T
+        </button>
+        <button
+          type="button"
+          class="hud-btn-mini"
+          data-tooltip="Cắt hình (crop)"
+          [class.active]="activeTool() === 'crop'"
+          (click)="selectTool('crop')"
+        >
+          ⛶
+        </button>
+
+        <span class="shape-toolbar-divider"></span>
+
+        @for (color of colors; track color) {
+          <button
+            type="button"
+            class="shape-color-swatch"
+            [class.active]="strokeColor() === color"
+            [style.background]="color"
+            [attr.data-tooltip]="color"
+            [attr.aria-label]="'Chọn màu ' + color"
+            (click)="setColor(color)"
+          ></button>
+        }
+        <button
+          type="button"
+          class="hud-btn-mini shape-color-picker"
+          data-tooltip="Chọn màu tuỳ ý"
+          (click)="triggerColorPicker()"
+        >
+          🖌️
+          <span class="shape-color-picker-indicator" [style.background]="strokeColor()"></span>
+        </button>
+        <input
+          #colorPickerInput
+          type="color"
+          [value]="strokeColor()"
+          (input)="onColorPicked($event)"
+          class="visually-hidden-input"
+        />
+
+        <span class="shape-toolbar-divider"></span>
+
+        <button type="button" class="hud-btn-mini danger" data-tooltip="Xóa vùng chọn" (click)="deleteSelected()">
+          🗑
+        </button>
+        @if (hasCrop()) {
+          <button type="button" class="hud-btn-mini" data-tooltip="Áp dụng crop" (click)="applyCrop()">
+            ⛶✔
+          </button>
+          <button type="button" class="hud-btn-mini danger" data-tooltip="Bỏ vùng cắt" (click)="clearCrop()">
+            ⛶✖
+          </button>
+        }
+        <button type="button" class="hud-btn-mini danger" data-tooltip="Xóa toàn bộ" (click)="clearCanvas()">
+          ⟲
+        </button>
+      </div>
+
+      <div #canvasWrapper class="shape-canvas-wrapper">
+        <canvas #canvasHost class="shape-canvas"></canvas>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button
+        class="hud-btn-success"
+        [disabled]="isUploading()"
+        (click)="insertIntoContent()"
+      >
+        @if (isUploading()) {
+          <div class="loader"></div>
+        }
+        <span>CHÈN VÀO NỘI DUNG</span>
+      </button>
+      <button class="hud-btn-secondary" (click)="cancel()">HỦY</button>
+    </div>
+  </div>
+</div>

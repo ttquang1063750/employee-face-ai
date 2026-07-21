@@ -1,0 +1,87 @@
+<div class="rich-editor" [class.disabled]="isDisabled()">
+  <div class="rich-editor-toolbar">
+    <button
+      type="button"
+      class="hud-btn-mini"
+      data-tooltip="Đậm"
+      [class.active]="toolbarState().bold"
+      (click)="toggleBold()"
+    >
+      <strong>B</strong>
+    </button>
+    <button
+      type="button"
+      class="hud-btn-mini"
+      data-tooltip="Nghiêng"
+      [class.active]="toolbarState().italic"
+      (click)="toggleItalic()"
+    >
+      <em>I</em>
+    </button>
+    <button
+      type="button"
+      class="hud-btn-mini"
+      data-tooltip="Gạch chân"
+      [class.active]="toolbarState().underline"
+      (click)="toggleUnderline()"
+    >
+      <span class="underline-label">U</span>
+    </button>
+
+    <span class="rich-editor-toolbar-divider"></span>
+
+    <button
+      type="button"
+      class="hud-btn-mini"
+      data-tooltip="Danh sách"
+      [class.active]="toolbarState().bulletList"
+      (click)="toggleBulletList()"
+    >
+      ☰
+    </button>
+    <button
+      type="button"
+      class="hud-btn-mini"
+      data-tooltip="Danh sách số"
+      [class.active]="toolbarState().orderedList"
+      (click)="toggleOrderedList()"
+    >
+      1.
+    </button>
+
+    <button type="button" class="hud-btn-mini" data-tooltip="Thụt vào" (click)="indentListItem()">
+      →|
+    </button>
+    <button type="button" class="hud-btn-mini" data-tooltip="Thụt ra" (click)="outdentListItem()">
+      |←
+    </button>
+
+    <span class="rich-editor-toolbar-divider"></span>
+
+    <button
+      type="button"
+      class="hud-btn-mini"
+      data-tooltip="Tải ảnh lên"
+      [disabled]="isUploadingImage()"
+      (click)="triggerImageUpload()"
+    >
+      📎
+    </button>
+    <button type="button" class="hud-btn-mini" data-tooltip="Vẽ hình" (click)="openDrawingModal()">
+      ✏️
+    </button>
+    <input
+      #imageFileInput
+      type="file"
+      accept="image/*"
+      class="visually-hidden-input"
+      (change)="onImageFileSelected($event)"
+    />
+  </div>
+
+  <div #editorHost [attr.id]="editorId()" class="rich-editor-content"></div>
+</div>
+
+@if (showDrawingModal()) {
+  <app-shape-drawing-modal (insert)="insertImage($event)" (cancelled)="closeDrawingModal()"></app-shape-drawing-modal>
+}

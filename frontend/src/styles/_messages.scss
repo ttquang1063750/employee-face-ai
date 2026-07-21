@@ -202,8 +202,6 @@
 }
 
 .message-content {
-  white-space: pre-wrap;
-  line-height: 1.6;
   color: var(--color-text-primary);
 }
 
@@ -258,4 +256,160 @@
       box-shadow: 0 0 10px rgba(var(--color-red-rgb), 0.3);
     }
   }
+}
+
+// ─── RichTextEditor ──────────────────────────────────────────────
+.rich-editor {
+  border: 1px solid rgba(var(--color-border-rgb), 0.7);
+  border-radius: var(--radius-sm);
+  background: rgba(var(--color-bg-input-rgb), 0.9);
+  overflow: hidden;
+  transition: all 0.2s;
+
+  &:focus-within {
+    border-color: var(--color-cyan);
+    box-shadow: 0 0 8px rgba(var(--color-cyan-rgb), 0.25);
+  }
+
+  &.disabled {
+    opacity: 0.6;
+    pointer-events: none;
+  }
+}
+
+.rich-editor-toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid rgba(var(--color-border-rgb), 0.4);
+}
+
+.rich-editor-toolbar-divider,
+.shape-toolbar-divider {
+  width: 1px;
+  height: 1.4rem;
+  background: rgba(var(--color-border-rgb), 0.4);
+}
+
+.underline-label {
+  text-decoration: underline;
+}
+
+// Toolbar buttons reflecting the format active at the cursor.
+.rich-editor-toolbar .hud-btn-mini.active,
+.shape-toolbar .hud-btn-mini.active {
+  background: rgba(var(--color-cyan-rgb), 0.15);
+  border-color: var(--color-cyan);
+  box-shadow: 0 0 8px rgba(var(--color-cyan-rgb), 0.25);
+}
+
+.rich-editor-content {
+  padding: var(--space-3) var(--space-4);
+  min-height: 220px;
+  outline: none;
+  font-family: 'Inter', sans-serif;
+  font-size: var(--text-base);
+  color: var(--color-heading);
+}
+
+// Shared typography for both the live editor surface and the read-only
+// rendered message/template content — same rules, two contexts.
+.rich-editor-content,
+.rich-content {
+  line-height: 1.6;
+  // Preserves line breaks in messages/templates written before the rich
+  // text editor existed — their content is plain text with literal
+  // newlines, not HTML <p> tags. Harmless for new rich content: Tiptap's
+  // getHTML() output has no stray whitespace text nodes between tags for
+  // this to affect.
+  white-space: pre-wrap;
+
+  p {
+    margin: 0 0 0.6em;
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  ul,
+  ol {
+    margin: 0 0 0.6em;
+    padding-left: 1.4em;
+  }
+
+  li {
+    margin-bottom: 0.2em;
+  }
+
+  strong {
+    color: var(--color-heading);
+  }
+
+  img {
+    max-width: 100%;
+    border-radius: var(--radius-sm);
+    margin: var(--space-2) 0;
+  }
+}
+
+// ─── ShapeDrawingModal ───────────────────────────────────────────
+.shape-toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-4);
+}
+
+.shape-color-swatch {
+  width: 1.6rem;
+  height: 1.6rem;
+  padding: 0;
+  border-radius: 50%;
+  border: 2px solid rgba(var(--color-border-rgb), 0.5);
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &.active {
+    border-color: var(--color-heading);
+    box-shadow: 0 0 0 3px rgba(var(--color-cyan-rgb), 0.4);
+  }
+}
+
+// Brush icon + a small color bar underneath reflecting the picked value —
+// the actual <input type="color"> stays functional but visually hidden
+// (same .visually-hidden-input pattern as every other file input in the
+// app), since native color-input chrome doesn't fit the icon-button style.
+.shape-color-picker {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.shape-color-picker-indicator {
+  position: absolute;
+  left: 0.4rem;
+  right: 0.4rem;
+  bottom: 0.3rem;
+  height: 3px;
+  border-radius: 2px;
+}
+
+.shape-canvas-wrapper {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  border: 1px solid rgba(var(--color-border-rgb), 0.5);
+  border-radius: var(--radius-sm);
+  cursor: crosshair;
+  overflow: hidden;
+  background: rgba(var(--color-bg-input-rgb), 0.9);
+}
+
+.shape-canvas {
+  display: block;
+  max-width: 100%;
 }

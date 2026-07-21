@@ -32,7 +32,7 @@
                 <tr>
                   <td>{{ translateMessageCategory(t.category) }}</td>
                   <td class="log-name">{{ t.name }}</td>
-                  <td class="template-preview">{{ t.content }}</td>
+                  <td class="template-preview">{{ stripRichContentPreview(t.content) }}</td>
                   <td>
                     <div class="review-actions">
                       <a class="action-btn approve-btn" [routerLink]="[t.id]">Sửa</a>

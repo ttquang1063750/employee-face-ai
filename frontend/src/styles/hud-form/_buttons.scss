@@ -65,6 +65,15 @@
     border-color: var(--color-cyan);
     box-shadow: 0 0 8px rgba(var(--color-cyan-rgb), 0.25);
   }
+
+  &[disabled] {
+    opacity: 0.5;
+    cursor: not-allowed;
+    &:hover {
+      background: transparent;
+      box-shadow: none;
+    }
+  }
 }
 
 // Danger variant of .hud-btn-mini for destructive row actions (delete).

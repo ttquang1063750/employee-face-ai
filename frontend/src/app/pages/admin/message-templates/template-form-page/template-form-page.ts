@@ -3,15 +3,17 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { HudSelectComponent } from '../../../../core/components/hud-select/hud-select';
+import { RichTextEditor } from '../../../../core/components/rich-text-editor/rich-text-editor';
 import { DialogService } from '../../../../core/services/dialog.service';
 import { MessageService } from '../../../../core/services/message.service';
 import { MessageCategory } from '../../../../core/models/message.model';
 import { MESSAGE_CATEGORY_OPTIONS } from '../../../../core/utils/message-category.util';
+import { richContentRequiredValidator } from '../../../../core/utils/rich-content.util';
 
 @Component({
   selector: 'app-template-form-page',
   standalone: true,
-  imports: [ReactiveFormsModule, HudSelectComponent],
+  imports: [ReactiveFormsModule, HudSelectComponent, RichTextEditor],
   templateUrl: './template-form-page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -37,7 +39,7 @@ export class TemplateFormPage implements OnInit {
   form = this.fb.nonNullable.group({
     category: this.fb.nonNullable.control<MessageCategory>('daily_report'),
     name: ['', Validators.required],
-    content: ['', Validators.required],
+    content: ['', richContentRequiredValidator],
   });
 
   ngOnInit(): void {
