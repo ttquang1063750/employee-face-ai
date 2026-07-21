@@ -635,6 +635,8 @@ export const EN = {
     applyCrop: 'Apply crop',
     discardCrop: 'Discard crop',
     clearAll: 'Clear all',
+    undo: 'Undo (Ctrl+Z)',
+    redo: 'Redo (Ctrl+Shift+Z)',
     insertIntoContent: 'INSERT INTO CONTENT',
     cancel: 'CANCEL',
     noShapeTitle: 'NOTICE',

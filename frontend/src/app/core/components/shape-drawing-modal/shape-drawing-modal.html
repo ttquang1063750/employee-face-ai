@@ -9,6 +9,27 @@
         <button
           type="button"
           class="hud-btn-mini"
+          [attr.data-tooltip]="'shapeDrawing.undo' | translate"
+          [disabled]="!canUndo()"
+          (click)="undo()"
+        >
+          ↺
+        </button>
+        <button
+          type="button"
+          class="hud-btn-mini"
+          [attr.data-tooltip]="'shapeDrawing.redo' | translate"
+          [disabled]="!canRedo()"
+          (click)="redo()"
+        >
+          ↻
+        </button>
+
+        <span class="shape-toolbar-divider"></span>
+
+        <button
+          type="button"
+          class="hud-btn-mini"
           [attr.data-tooltip]="'shapeDrawing.selectMove' | translate"
           [class.active]="activeTool() === 'select'"
           (click)="selectTool('select')"
@@ -79,7 +100,7 @@
             [style.background]="color"
             [attr.data-tooltip]="color"
             [attr.aria-label]="('shapeDrawing.chooseColorPrefix' | translate) + ' ' + color"
-            (click)="setColor(color)"
+            (click)="chooseSwatch(color)"
           ></button>
         }
         <button
@@ -96,6 +117,7 @@
           type="color"
           [value]="strokeColor()"
           (input)="onColorPicked($event)"
+          (change)="onColorCommitted()"
           class="visually-hidden-input"
         />
 

@@ -4,6 +4,7 @@ import {
   AfterViewInit,
   OnDestroy,
   ChangeDetectionStrategy,
+  HostListener,
   inject,
   signal,
   output,
@@ -17,9 +18,16 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
 type ShapeTool = 'select' | 'rectangle' | 'ellipse' | 'line' | 'arrow' | 'text' | 'crop';
 
+interface HistorySnapshot {
+  json: Record<string, unknown>;
+  width: number;
+  height: number;
+}
+
 const MIN_CANVAS_WIDTH = 480;
 const MAX_CANVAS_WIDTH = 1100;
 const CANVAS_HEIGHT = 480;
+const MAX_HISTORY = 50;
 
 @Component({
   selector: 'app-shape-drawing-modal',
@@ -50,6 +58,20 @@ export class ShapeDrawingModal implements AfterViewInit, OnDestroy {
   // checks and stripped out of the exported image.
   private cropRect: Rect | null = null;
 
+  // Snapshot-based undo/redo (whole-canvas JSON, not per-mutation diffing) —
+  // robust against the very different kinds of state changes here (adding a
+  // shape, deleting one, dragging/resizing via Fabric's own controls,
+  // clearing everything, and applyCrop() which resizes the canvas itself and
+  // shifts every object). The crop-selection rect is deliberately excluded
+  // from every snapshot (same detach-serialize-reattach dance as
+  // insertIntoContent()'s export) — it's a transient tool draft, not
+  // canvas content, so drawing/clearing it never touches history.
+  private historyStack: HistorySnapshot[] = [];
+  private historyIndex = -1;
+  private isRestoringHistory = false;
+  canUndo = signal(false);
+  canRedo = signal(false);
+
   readonly colors = ['#39d353', '#f43f5e', '#38bdf8', '#fb923c', '#1e2724', '#ffffff'];
 
   activeTool = signal<ShapeTool>('select');
@@ -73,10 +95,35 @@ export class ShapeDrawingModal implements AfterViewInit, OnDestroy {
     this.canvas.on('mouse:down', (opt) => this.onMouseDown(opt.e));
     this.canvas.on('mouse:move', (opt) => this.onMouseMove(opt.e));
     this.canvas.on('mouse:up', () => this.onMouseUp());
+    // Dragging/resizing an object via Fabric's own selection handles doesn't
+    // go through any of our onMouseDown/Move/Up drawing logic above, so it
+    // needs its own history hook — fires once per gesture, on release.
+    this.canvas.on('object:modified', () => this.captureHistory());
+
+    this.captureHistory(); // seed history with the empty canvas so undo can return to it
   }
 
   ngOnDestroy(): void {
     this.canvas?.dispose();
+  }
+
+  @HostListener('window:keydown', ['$event'])
+  onKeydown(event: KeyboardEvent): void {
+    const isUndoRedoKey = (event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'z';
+    if (!isUndoRedoKey) return;
+
+    // Let Fabric's own text editing handle Ctrl/Cmd+Z while a Textbox is
+    // being edited (it manages its own contenteditable-like undo via the
+    // browser) rather than jumping to a whole-canvas snapshot mid-edit.
+    const active = this.canvas?.getActiveObject();
+    if (active instanceof Textbox && active.isEditing) return;
+
+    event.preventDefault();
+    if (event.shiftKey) {
+      this.redo();
+    } else {
+      this.undo();
+    }
   }
 
   selectTool(tool: ShapeTool): void {
@@ -96,9 +143,15 @@ export class ShapeDrawingModal implements AfterViewInit, OnDestroy {
       this.canvas.setActiveObject(text);
       this.canvas.requestRenderAll();
       tool = 'select';
+      this.captureHistory();
     }
 
     this.activeTool.set(tool);
+    this.applySelectableForTool(tool);
+  }
+
+  private applySelectableForTool(tool: ShapeTool): void {
+    if (!this.canvas) return;
     this.canvas.selection = tool === 'select';
     this.canvas.forEachObject((obj) => (obj.selectable = tool === 'select'));
   }
@@ -115,8 +168,23 @@ export class ShapeDrawingModal implements AfterViewInit, OnDestroy {
     this.canvas.requestRenderAll();
   }
 
+  // Swatch buttons are one discrete click each — commit history immediately.
+  chooseSwatch(color: string): void {
+    this.setColor(color);
+    this.captureHistory();
+  }
+
+  // The native color picker's `input` event fires continuously while the
+  // user drags inside it, so pushing history on every tick here would flood
+  // the stack with dozens of near-identical entries — only live-preview the
+  // color, and commit a single history entry once the picker closes/commits
+  // (its `change` event, see onColorCommitted).
   onColorPicked(event: Event): void {
     this.setColor((event.target as HTMLInputElement).value);
+  }
+
+  onColorCommitted(): void {
+    this.captureHistory();
   }
 
   triggerColorPicker(): void {
@@ -227,9 +295,13 @@ export class ShapeDrawingModal implements AfterViewInit, OnDestroy {
       this.selectTool('select');
       this.canvas?.setActiveObject(this.cropRect);
       this.canvas?.requestRenderAll();
-    }
-    if (this.activeTool() === 'arrow' && this.drawingShape instanceof Line) {
+      // No captureHistory() here — the crop rect is a transient draft
+      // excluded from every snapshot (see the field comment above); only
+      // applyCrop() actually changes canvas content.
+    } else if (this.activeTool() === 'arrow' && this.drawingShape instanceof Line) {
       this.finalizeArrow(this.drawingShape);
+    } else if (this.drawingShape) {
+      this.captureHistory();
     }
     this.drawingShape = null;
     this.startPoint = null;
@@ -259,19 +331,24 @@ export class ShapeDrawingModal implements AfterViewInit, OnDestroy {
     );
     this.canvas.add(group);
     this.canvas.requestRenderAll();
+    this.captureHistory();
   }
 
   deleteSelected(): void {
     if (!this.canvas) return;
+    let deletedContent = false;
     for (const obj of this.canvas.getActiveObjects()) {
       if (obj === this.cropRect) {
         this.cropRect = null;
         this.hasCrop.set(false);
+      } else {
+        deletedContent = true;
       }
       this.canvas.remove(obj);
     }
     this.canvas.discardActiveObject();
     this.canvas.requestRenderAll();
+    if (deletedContent) this.captureHistory();
   }
 
   clearCrop(): void {
@@ -310,6 +387,7 @@ export class ShapeDrawingModal implements AfterViewInit, OnDestroy {
     this.canvas.setDimensions({ width: this.canvasWidth, height: this.canvasHeight });
     this.canvas.requestRenderAll();
     this.selectTool('select');
+    this.captureHistory();
   }
 
   clearCanvas(): void {
@@ -318,6 +396,73 @@ export class ShapeDrawingModal implements AfterViewInit, OnDestroy {
     this.cropRect = null;
     this.hasCrop.set(false);
     this.canvas.requestRenderAll();
+    this.captureHistory();
+  }
+
+  // ===================== Undo / Redo =====================
+
+  private captureHistory(): void {
+    if (!this.canvas || this.isRestoringHistory) return;
+
+    // Exclude the crop-selection draft from the snapshot (see the
+    // historyStack field comment) — same detach/serialize/reattach dance
+    // insertIntoContent() already uses for the exported PNG.
+    const crop = this.cropRect;
+    if (crop) this.canvas.remove(crop);
+    const snapshot: HistorySnapshot = {
+      json: this.canvas.toJSON(),
+      width: this.canvasWidth,
+      height: this.canvasHeight,
+    };
+    if (crop) this.canvas.add(crop);
+
+    this.historyStack.splice(this.historyIndex + 1); // drop any redo branch
+    this.historyStack.push(snapshot);
+    if (this.historyStack.length > MAX_HISTORY) {
+      this.historyStack.shift();
+    }
+    this.historyIndex = this.historyStack.length - 1;
+    this.refreshHistoryFlags();
+  }
+
+  private refreshHistoryFlags(): void {
+    this.canUndo.set(this.historyIndex > 0);
+    this.canRedo.set(this.historyIndex < this.historyStack.length - 1);
+  }
+
+  undo(): void {
+    if (this.historyIndex <= 0) return;
+    this.historyIndex--;
+    this.restoreHistory(this.historyStack[this.historyIndex]);
+  }
+
+  redo(): void {
+    if (this.historyIndex >= this.historyStack.length - 1) return;
+    this.historyIndex++;
+    this.restoreHistory(this.historyStack[this.historyIndex]);
+  }
+
+  private restoreHistory(snapshot: HistorySnapshot): void {
+    if (!this.canvas) return;
+    this.isRestoringHistory = true;
+
+    // Undo/redo never restores a mid-draw crop draft (see field comment) —
+    // always clear it so `hasCrop`/the Apply/Discard-crop buttons don't
+    // point at a rect that no longer exists post-restore.
+    this.cropRect = null;
+    this.hasCrop.set(false);
+
+    this.canvasWidth = snapshot.width;
+    this.canvasHeight = snapshot.height;
+    this.canvas.setDimensions({ width: snapshot.width, height: snapshot.height });
+
+    this.canvas.loadFromJSON(snapshot.json).then(() => {
+      if (!this.canvas) return;
+      this.applySelectableForTool(this.activeTool());
+      this.canvas.requestRenderAll();
+      this.isRestoringHistory = false;
+      this.refreshHistoryFlags();
+    });
   }
 
   cancel(): void {

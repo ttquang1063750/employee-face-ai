@@ -636,6 +636,8 @@ export const VI = {
     applyCrop: 'Áp dụng crop',
     discardCrop: 'Bỏ vùng cắt',
     clearAll: 'Xóa toàn bộ',
+    undo: 'Hoàn tác (Ctrl+Z)',
+    redo: 'Làm lại (Ctrl+Shift+Z)',
     insertIntoContent: 'CHÈN VÀO NỘI DUNG',
     cancel: 'HỦY',
     noShapeTitle: 'THÔNG BÁO',
