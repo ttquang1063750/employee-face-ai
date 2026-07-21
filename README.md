@@ -8,6 +8,7 @@
 ![AI engine](https://img.shields.io/badge/AI%20engine-DeepFace%20(CPU)-6f42c1)
 ![privacy](https://img.shields.io/badge/privacy-100%25%20offline-brightgreen)
 ![platform](https://img.shields.io/badge/platform-macOS%20(Apple%20Silicon)-lightgrey?logo=apple&logoColor=white)
+[![donate](https://img.shields.io/badge/donate-support%20this%20project-ff69b4)](https://js-tools.org/donate)
 
 ---
 
@@ -248,3 +249,8 @@ sudo ./deploy/install.sh yourdomain.com you@yourdomain.com  # + HTTPS via Let's 
 ```
 
 See [AGENTS.md](AGENTS.md) for the full architecture reference, database schema, and development conventions.
+
+## ❤️ Support this project
+
+If this project is useful to you, consider supporting its development:
+**[https://js-tools.org/donate](https://js-tools.org/donate)**
