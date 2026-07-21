@@ -5,11 +5,12 @@ import { AuthService } from '../../../core/services/auth.service';
 import { MessageService } from '../../../core/services/message.service';
 import { MessageDetail } from '../../../core/models/message.model';
 import { translateMessageCategory } from '../../../core/utils/message-category.util';
+import { IconComponent } from '../../../core/components/icon/icon';
 
 @Component({
   selector: 'app-message-detail-page',
   standalone: true,
-  imports: [DatePipe],
+  imports: [DatePipe, IconComponent],
   templateUrl: './message-detail-page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

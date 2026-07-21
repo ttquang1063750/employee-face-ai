@@ -7,13 +7,14 @@ import { RealtimeService } from '../../../core/services/realtime.service';
 import { DialogService } from '../../../core/services/dialog.service';
 import { ReceivedMessage, SentMessage } from '../../../core/models/message.model';
 import { translateMessageCategory } from '../../../core/utils/message-category.util';
+import { IconComponent } from '../../../core/components/icon/icon';
 
 type MessagesTab = 'received' | 'sent';
 
 @Component({
   selector: 'app-messages-page',
   standalone: true,
-  imports: [RouterLink, DatePipe],
+  imports: [RouterLink, DatePipe, IconComponent],
   templateUrl: './messages-page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

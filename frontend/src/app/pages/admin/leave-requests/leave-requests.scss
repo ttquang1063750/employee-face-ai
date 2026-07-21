@@ -47,9 +47,18 @@
 }
 
 .logs-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
   font-size: 0.85rem;
   letter-spacing: 1.5px;
   color: var(--color-text-secondary);
+}
+
+.logs-title-icon {
+  width: 16px;
+  height: 16px;
+  flex: none;
 }
 
 .logs-table-wrapper {

@@ -19,7 +19,10 @@ export function richContentRequiredValidator(control: AbstractControl): Validati
 // mis-sized inline images, so strip markup down to its text content instead.
 export function stripRichContentPreview(html: string | null | undefined): string {
   if (!html) return '';
-  const text = html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+  const text = html
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
   if (text) return text;
   return /<img\b/i.test(html) ? '[Hình ảnh]' : '';
 }

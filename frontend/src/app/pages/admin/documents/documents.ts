@@ -21,13 +21,14 @@ import {
 import { ApiResponse } from '../../../core/models/api-response.model';
 import { DocumentVisibility, EmployeeDocument } from '../../../core/models/document.model';
 import { environment } from '../../../../environments/environment';
+import { IconComponent } from '../../../core/components/icon/icon';
 
 type VisibilityFilter = 'all' | DocumentVisibility;
 
 @Component({
   selector: 'app-documents',
   standalone: true,
-  imports: [ReactiveFormsModule, DatePipe, RouterLink, HudSelectComponent],
+  imports: [ReactiveFormsModule, DatePipe, RouterLink, HudSelectComponent, IconComponent],
   templateUrl: './documents.html',
   styleUrl: './documents.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

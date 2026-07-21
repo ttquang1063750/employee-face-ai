@@ -31,12 +31,22 @@
   align-items: center;
 
   .title {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
     font-size: 1.15rem;
     font-weight: 700;
     letter-spacing: 2px;
     color: var(--color-heading);
     text-shadow: 0 0 10px rgba(var(--color-cyan-rgb), 0.2);
   }
+}
+
+.title-icon {
+  width: 22px;
+  height: 22px;
+  flex: none;
+  color: var(--color-cyan);
 }
 
 .logs-card {
@@ -56,9 +66,18 @@
 }
 
 .logs-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
   font-size: 0.85rem;
   letter-spacing: 1.5px;
   color: var(--color-text-secondary);
+}
+
+.logs-title-icon {
+  width: 16px;
+  height: 16px;
+  flex: none;
 }
 
 .logs-table-wrapper {

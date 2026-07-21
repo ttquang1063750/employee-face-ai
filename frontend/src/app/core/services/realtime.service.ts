@@ -25,9 +25,7 @@ export class RealtimeService implements OnDestroy {
   // employee (Admin and Staff are peers for messaging), unlike
   // refreshLeaveRequests above which is Admin-only.
   receivedMessages = signal<ReceivedMessage[]>([]);
-  unreadMessageCount = computed(
-    () => this.receivedMessages().filter((m) => !m.is_read).length,
-  );
+  unreadMessageCount = computed(() => this.receivedMessages().filter((m) => !m.is_read).length);
 
   private pollIntervalId: ReturnType<typeof setInterval> | null = null;
 

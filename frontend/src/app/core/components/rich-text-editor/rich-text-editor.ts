@@ -10,7 +10,12 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
-import { ControlValueAccessor, NG_VALUE_ACCESSOR, FormControl, ReactiveFormsModule } from '@angular/forms';
+import {
+  ControlValueAccessor,
+  NG_VALUE_ACCESSOR,
+  FormControl,
+  ReactiveFormsModule,
+} from '@angular/forms';
 import { Editor } from '@tiptap/core';
 import StarterKit from '@tiptap/starter-kit';
 import Image from '@tiptap/extension-image';
@@ -132,7 +137,10 @@ export class RichTextEditor implements ControlValueAccessor, AfterViewInit, OnDe
     // refreshToolbarState() already set from the cursor position — guard so
     // that re-application doesn't get pushed onto the undo stack pointlessly.
     this.fontSizeControl.valueChanges.subscribe((size) => {
-      if (!this.editor || this.editor.getAttributes('textStyle')['fontSize'] === (size ?? undefined)) {
+      if (
+        !this.editor ||
+        this.editor.getAttributes('textStyle')['fontSize'] === (size ?? undefined)
+      ) {
         return;
       }
       if (size) {

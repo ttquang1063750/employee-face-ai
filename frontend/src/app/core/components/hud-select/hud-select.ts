@@ -75,10 +75,8 @@ export class HudSelectComponent<T = string>
     return this.options().find((opt) => opt.value === current)?.label ?? null;
   });
 
-  // eslint-disable-next-line @typescript-eslint/no-empty-function -- overwritten by registerOnChange/registerOnTouched
-  private onChange: (value: T) => void = () => {};
-  // eslint-disable-next-line @typescript-eslint/no-empty-function -- overwritten by registerOnChange/registerOnTouched
-  private onTouched: () => void = () => {};
+  private onChange: (value: T) => void = () => null;
+  private onTouched: () => void = () => null;
 
   writeValue(value: T): void {
     this.value.set(value ?? null);

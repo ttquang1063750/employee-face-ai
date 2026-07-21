@@ -101,18 +101,38 @@
 
         <span class="shape-toolbar-divider"></span>
 
-        <button type="button" class="hud-btn-mini danger" data-tooltip="Xóa vùng chọn" (click)="deleteSelected()">
+        <button
+          type="button"
+          class="hud-btn-mini danger"
+          data-tooltip="Xóa vùng chọn"
+          (click)="deleteSelected()"
+        >
           🗑
         </button>
         @if (hasCrop()) {
-          <button type="button" class="hud-btn-mini" data-tooltip="Áp dụng crop" (click)="applyCrop()">
+          <button
+            type="button"
+            class="hud-btn-mini"
+            data-tooltip="Áp dụng crop"
+            (click)="applyCrop()"
+          >
             ⛶✔
           </button>
-          <button type="button" class="hud-btn-mini danger" data-tooltip="Bỏ vùng cắt" (click)="clearCrop()">
+          <button
+            type="button"
+            class="hud-btn-mini danger"
+            data-tooltip="Bỏ vùng cắt"
+            (click)="clearCrop()"
+          >
             ⛶✖
           </button>
         }
-        <button type="button" class="hud-btn-mini danger" data-tooltip="Xóa toàn bộ" (click)="clearCanvas()">
+        <button
+          type="button"
+          class="hud-btn-mini danger"
+          data-tooltip="Xóa toàn bộ"
+          (click)="clearCanvas()"
+        >
           ⟲
         </button>
       </div>
@@ -122,11 +142,7 @@
       </div>
     </div>
     <div class="modal-footer">
-      <button
-        class="hud-btn-success"
-        [disabled]="isUploading()"
-        (click)="insertIntoContent()"
-      >
+      <button class="hud-btn-success" [disabled]="isUploading()" (click)="insertIntoContent()">
         @if (isUploading()) {
           <div class="loader"></div>
         }

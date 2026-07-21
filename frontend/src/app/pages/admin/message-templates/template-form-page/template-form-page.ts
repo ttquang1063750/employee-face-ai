@@ -1,4 +1,11 @@
-import { Component, OnInit, signal, computed, ChangeDetectionStrategy, inject } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  signal,
+  computed,
+  ChangeDetectionStrategy,
+  inject,
+} from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
@@ -9,11 +16,12 @@ import { MessageService } from '../../../../core/services/message.service';
 import { MessageCategory } from '../../../../core/models/message.model';
 import { MESSAGE_CATEGORY_OPTIONS } from '../../../../core/utils/message-category.util';
 import { richContentRequiredValidator } from '../../../../core/utils/rich-content.util';
+import { IconComponent } from '../../../../core/components/icon/icon';
 
 @Component({
   selector: 'app-template-form-page',
   standalone: true,
-  imports: [ReactiveFormsModule, HudSelectComponent, RichTextEditor],
+  imports: [ReactiveFormsModule, HudSelectComponent, RichTextEditor, IconComponent],
   templateUrl: './template-form-page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

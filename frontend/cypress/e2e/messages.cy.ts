@@ -4,9 +4,10 @@ describe('Internal messages', () => {
     cy.intercept('GET', '**/api/employees/directory', { fixture: 'employees-directory.json' }).as(
       'getDirectory',
     );
-    cy.intercept('GET', '**/api/message-templates', { statusCode: 200, body: { success: true, data: [] } }).as(
-      'getTemplates',
-    );
+    cy.intercept('GET', '**/api/message-templates', {
+      statusCode: 200,
+      body: { success: true, data: [] },
+    }).as('getTemplates');
     cy.loginAsAdmin('/admin/messages/new');
     cy.wait(['@getDirectory', '@getTemplates']);
 

@@ -146,7 +146,9 @@ describe('Admin documents', () => {
     it('submits a "link" source document with an external_url, not a file', () => {
       cy.intercept('POST', '**/api/documents', (req) => {
         expect(req.body).to.include('name="source_type"').and.include('link');
-        expect(req.body).to.include('name="external_url"').and.include('https://example.com/video.mp4');
+        expect(req.body)
+          .to.include('name="external_url"')
+          .and.include('https://example.com/video.mp4');
         expect(req.body).not.to.include('name="file"');
         req.reply({ statusCode: 200, body: { success: true, id: 5 } });
       }).as('uploadLink');

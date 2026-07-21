@@ -27,6 +27,7 @@ import {
 import { DocumentSourceType, DocumentVisibility } from '../../../../core/models/document.model';
 import { environment } from '../../../../../environments/environment';
 import { EmployeeService } from '../../../../core/services/employee.service';
+import { IconComponent } from '../../../../core/components/icon/icon';
 
 const ALLOWED_EXTENSIONS = [
   '.pdf',
@@ -50,7 +51,7 @@ const EXTERNAL_URL_PATTERN = /^https?:\/\//i;
 @Component({
   selector: 'app-upload-document-page',
   standalone: true,
-  imports: [ReactiveFormsModule, HudSelectComponent, HudAutocompleteComponent],
+  imports: [ReactiveFormsModule, HudSelectComponent, HudAutocompleteComponent, IconComponent],
   templateUrl: './upload-document-page.html',
   styleUrl: './upload-document-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -131,7 +132,10 @@ export class UploadDocumentPage implements OnInit {
       .subscribe((sourceType) => {
         const externalUrlControl = this.uploadForm.controls.externalUrl;
         if (sourceType === 'link') {
-          externalUrlControl.setValidators([Validators.required, Validators.pattern(EXTERNAL_URL_PATTERN)]);
+          externalUrlControl.setValidators([
+            Validators.required,
+            Validators.pattern(EXTERNAL_URL_PATTERN),
+          ]);
           this.selectedFileName.set(null);
           this.selectedFile.set(null);
         } else {
@@ -194,7 +198,8 @@ export class UploadDocumentPage implements OnInit {
 
   submitUpload(): void {
     if (!this.canSubmit()) return;
-    const { title, visibility, employeeId, sourceType, externalUrl } = this.uploadForm.getRawValue();
+    const { title, visibility, employeeId, sourceType, externalUrl } =
+      this.uploadForm.getRawValue();
 
     const formData = new FormData();
     formData.append('title', title);

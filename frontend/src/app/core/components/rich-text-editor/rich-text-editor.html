@@ -155,5 +155,8 @@
 </div>
 
 @if (showDrawingModal()) {
-  <app-shape-drawing-modal (insert)="insertImage($event)" (cancelled)="closeDrawingModal()"></app-shape-drawing-modal>
+  <app-shape-drawing-modal
+    (insert)="insertImage($event)"
+    (cancelled)="closeDrawingModal()"
+  ></app-shape-drawing-modal>
 }

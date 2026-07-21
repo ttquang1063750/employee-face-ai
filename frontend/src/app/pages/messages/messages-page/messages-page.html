@@ -1,8 +1,16 @@
 <div class="dashboard-layout">
   <div class="dashboard-content">
     <div class="page-title-row">
-      <h2 class="title">✉️ TIN NHẮN NỘI BỘ</h2>
-      <a class="hud-btn-primary" [routerLink]="['new']">✍️ Soạn tin nhắn mới</a>
+      <h2 class="title">
+        <app-icon class="title-icon">mail</app-icon>
+
+        TIN NHẮN NỘI BỘ
+      </h2>
+      <a class="hud-btn-primary" [routerLink]="['new']">
+        <app-icon class="title-icon">pencil</app-icon>
+
+        Soạn tin nhắn mới
+      </a>
     </div>
 
     @if (isLoading()) {

@@ -19,13 +19,14 @@ import { RealtimeService } from '../../../core/services/realtime.service';
 import { ApiResponse } from '../../../core/models/api-response.model';
 import { LeaveRequest } from '../../../core/models/leave-request.model';
 import { environment } from '../../../../environments/environment';
+import { IconComponent } from '../../../core/components/icon/icon';
 
 type StatusFilter = 'all' | 'pending' | 'approved' | 'rejected';
 
 @Component({
   selector: 'app-leave-requests',
   standalone: true,
-  imports: [ReactiveFormsModule, DatePickerComponent, HudSelectComponent],
+  imports: [ReactiveFormsModule, DatePickerComponent, HudSelectComponent, IconComponent],
   templateUrl: './leave-requests.html',
   styleUrl: './leave-requests.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -1,8 +1,16 @@
 <div class="dashboard-layout">
   <div class="dashboard-content">
     <div class="page-title-row">
-      <h2 class="title">✉️ CHI TIẾT TIN NHẮN</h2>
-      <button class="hud-btn-outline" (click)="back()">⬅️ QUAY LẠI</button>
+      <h2 class="title">
+        <app-icon class="title-icon">mail</app-icon>
+
+        CHI TIẾT TIN NHẮN
+      </h2>
+      <button class="hud-btn-outline" (click)="back()">
+        <app-icon class="title-icon">arrow-left</app-icon>
+
+        QUAY LẠI
+      </button>
     </div>
 
     @if (isLoading()) {

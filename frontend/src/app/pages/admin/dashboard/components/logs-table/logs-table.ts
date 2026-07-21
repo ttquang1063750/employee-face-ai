@@ -5,11 +5,12 @@ import { RouterLink } from '@angular/router';
 import { translateMood } from '../../../../../core/utils/mood.util';
 import { AttendanceLogEntry } from '../../../../../core/models/attendance-log.model';
 import { AuditPhotoButtonComponent } from '../../../../../core/components/audit-photo-button/audit-photo-button';
+import { IconComponent } from '../../../../../core/components/icon/icon';
 
 @Component({
   selector: 'app-logs-table',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink, AuditPhotoButtonComponent],
+  imports: [ReactiveFormsModule, RouterLink, AuditPhotoButtonComponent, IconComponent],
   templateUrl: './logs-table.html',
   styleUrl: './logs-table.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

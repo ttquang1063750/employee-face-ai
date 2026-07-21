@@ -1,9 +1,19 @@
-import { Component, OnInit, signal, computed, ChangeDetectionStrategy, inject } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  signal,
+  computed,
+  ChangeDetectionStrategy,
+  inject,
+} from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
-import { HudSelectComponent, HudSelectOption } from '../../../core/components/hud-select/hud-select';
+import {
+  HudSelectComponent,
+  HudSelectOption,
+} from '../../../core/components/hud-select/hud-select';
 import { HudAutocompleteComponent } from '../../../core/components/hud-autocomplete/hud-autocomplete';
 import { RichTextEditor } from '../../../core/components/rich-text-editor/rich-text-editor';
 import { DialogService } from '../../../core/services/dialog.service';
@@ -18,11 +28,18 @@ import {
 import { MessageCategory, MessageTemplate } from '../../../core/models/message.model';
 import { MESSAGE_CATEGORY_OPTIONS } from '../../../core/utils/message-category.util';
 import { isRichContentEmpty } from '../../../core/utils/rich-content.util';
+import { IconComponent } from '../../../core/components/icon/icon';
 
 @Component({
   selector: 'app-compose-message-page',
   standalone: true,
-  imports: [ReactiveFormsModule, HudSelectComponent, HudAutocompleteComponent, RichTextEditor],
+  imports: [
+    ReactiveFormsModule,
+    HudSelectComponent,
+    HudAutocompleteComponent,
+    RichTextEditor,
+    IconComponent,
+  ],
   templateUrl: './compose-message-page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -87,13 +104,15 @@ export class ComposeMessagePage implements OnInit {
     // Selecting a template prefills subject/content — done as a side effect
     // of the control's own valueChanges (not a template (change) handler),
     // since app-hud-select only exposes its selection via a bound FormControl.
-    this.form.controls.templateId.valueChanges.pipe(takeUntilDestroyed()).subscribe((templateId) => {
-      if (templateId === null) return;
-      const template = this.templates().find((t) => t.id === templateId);
-      if (template) {
-        this.form.patchValue({ subject: template.name, content: template.content });
-      }
-    });
+    this.form.controls.templateId.valueChanges
+      .pipe(takeUntilDestroyed())
+      .subscribe((templateId) => {
+        if (templateId === null) return;
+        const template = this.templates().find((t) => t.id === templateId);
+        if (template) {
+          this.form.patchValue({ subject: template.name, content: template.content });
+        }
+      });
   }
 
   ngOnInit(): void {
@@ -130,7 +149,12 @@ export class ComposeMessagePage implements OnInit {
     const { category, subject, content } = this.form.getRawValue();
 
     this.messageService
-      .send({ recipient_id: recipient.id, category, subject: subject.trim(), content: content.trim() })
+      .send({
+        recipient_id: recipient.id,
+        category,
+        subject: subject.trim(),
+        content: content.trim(),
+      })
       .subscribe({
         next: async (res) => {
           this.isSubmitting.set(false);

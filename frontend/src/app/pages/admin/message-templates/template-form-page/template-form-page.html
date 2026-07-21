@@ -1,7 +1,11 @@
 <div class="dashboard-layout">
   <div class="dashboard-content">
     <div class="page-title-row">
-      <h2 class="title">{{ isEditMode() ? '✏️ SỬA MẪU TIN NHẮN' : 'THÊM MẪU TIN NHẮN MỚI' }}</h2>
+      <h2 class="title">
+        <app-icon class="title-icon">pencil</app-icon>
+
+        {{ isEditMode() ? 'SỬA MẪU TIN NHẮN' : 'THÊM MẪU TIN NHẮN MỚI' }}
+      </h2>
     </div>
 
     @if (isLoading()) {

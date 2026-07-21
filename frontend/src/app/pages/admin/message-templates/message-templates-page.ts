@@ -6,11 +6,12 @@ import { MessageService } from '../../../core/services/message.service';
 import { MessageTemplate } from '../../../core/models/message.model';
 import { translateMessageCategory } from '../../../core/utils/message-category.util';
 import { stripRichContentPreview } from '../../../core/utils/rich-content.util';
+import { IconComponent } from '../../../core/components/icon/icon';
 
 @Component({
   selector: 'app-message-templates-page',
   standalone: true,
-  imports: [RouterLink],
+  imports: [RouterLink, IconComponent],
   templateUrl: './message-templates-page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

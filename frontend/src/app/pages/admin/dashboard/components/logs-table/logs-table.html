@@ -1,8 +1,12 @@
 <div class="logs-card">
   <div class="logs-header">
-    <h3 class="logs-title">📋 DANH SÁCH LƯỢT CHẤM CÔNG VÀ LỌC</h3>
+    <h3 class="logs-title">
+      <app-icon class="logs-title-icon">list</app-icon>
+      DANH SÁCH LƯỢT CHẤM CÔNG VÀ LỌC
+    </h3>
     <button class="csv-export-btn" (click)="exportCsv.emit()" [disabled]="totalCount() === 0">
-      📥 XUẤT BÁO CÁO CSV
+      <app-icon class="logs-title-icon">download</app-icon>
+      XUẤT BÁO CÁO CSV
     </button>
   </div>
 

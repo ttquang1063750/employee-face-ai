@@ -12,7 +12,12 @@ import {
   inject,
   viewChild,
 } from '@angular/core';
-import { ControlValueAccessor, NG_VALUE_ACCESSOR, FormControl, ReactiveFormsModule } from '@angular/forms';
+import {
+  ControlValueAccessor,
+  NG_VALUE_ACCESSOR,
+  FormControl,
+  ReactiveFormsModule,
+} from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { filter, fromEvent, merge, Subscription } from 'rxjs';
 import { toLocalDateString } from '../../utils/date.util';
@@ -140,10 +145,8 @@ export class DatePickerComponent implements ControlValueAccessor, OnDestroy {
     return weeks;
   });
 
-  // eslint-disable-next-line @typescript-eslint/no-empty-function -- overwritten by registerOnChange/registerOnTouched
-  private onChange: (value: string) => void = () => {};
-  // eslint-disable-next-line @typescript-eslint/no-empty-function -- overwritten by registerOnChange/registerOnTouched
-  private onTouched: () => void = () => {};
+  private onChange: (value: string) => void = () => null;
+  private onTouched: () => void = () => null;
 
   writeValue(value: string): void {
     this.value.set(value || '');

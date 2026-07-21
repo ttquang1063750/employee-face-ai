@@ -34,11 +34,18 @@ import {
   HudSelectOption,
 } from '../../../core/components/hud-select/hud-select';
 import { DatePickerComponent } from '../../../core/components/date-picker/date-picker';
+import { IconComponent } from '../../../core/components/icon/icon';
 
 @Component({
   selector: 'app-employee-list',
   standalone: true,
-  imports: [RouterLink, ReactiveFormsModule, HudSelectComponent, DatePickerComponent],
+  imports: [
+    RouterLink,
+    ReactiveFormsModule,
+    HudSelectComponent,
+    DatePickerComponent,
+    IconComponent,
+  ],
   templateUrl: './employee-list.html',
   styleUrl: './employee-list.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -140,6 +140,9 @@
   box-shadow: 0 0 10px rgba(var(--color-cyan-rgb), 0.1);
   transition: all 0.2s ease;
   text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
 
   &:hover {
     background: rgba(var(--color-cyan-rgb), 0.1);

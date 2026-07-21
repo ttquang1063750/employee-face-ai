@@ -1,7 +1,10 @@
 <div class="dashboard-layout">
   <div class="dashboard-content">
     <div class="page-title-row">
-      <h2 class="title">📄 TẢI LÊN TÀI LIỆU MỚI</h2>
+      <h2 class="title">
+        <app-icon class="title-icon">upload</app-icon>
+        TẢI LÊN TÀI LIỆU MỚI
+      </h2>
     </div>
 
     <div class="logs-card" [formGroup]="uploadForm">
@@ -60,7 +63,9 @@
               placeholder="https://..."
               class="hud-input"
             />
-            <span class="field-hint">Chỉ chấp nhận liên kết bắt đầu bằng http:// hoặc https://.</span>
+            <span class="field-hint"
+              >Chỉ chấp nhận liên kết bắt đầu bằng http:// hoặc https://.</span
+            >
           </div>
         } @else {
           <div class="form-group">

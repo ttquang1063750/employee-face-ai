@@ -1,7 +1,10 @@
 <div class="dashboard-layout">
   <div class="dashboard-content">
     <div class="page-title-row">
-      <h2 class="title">📄 QUẢN LÝ TÀI LIỆU NHÂN SỰ</h2>
+      <h2 class="title">
+        <app-icon class="title-icon">document</app-icon>
+        QUẢN LÝ TÀI LIỆU NHÂN SỰ
+      </h2>
       <a class="hud-btn-success" [routerLink]="['new']">TẢI LÊN TÀI LIỆU MỚI</a>
     </div>
 
@@ -39,7 +42,10 @@
     } @else {
       <div class="logs-card">
         <div class="logs-header">
-          <h3 class="logs-title">📋 DANH SÁCH TÀI LIỆU</h3>
+          <h3 class="logs-title">
+            <app-icon class="logs-title-icon">list</app-icon>
+            DANH SÁCH TÀI LIỆU
+          </h3>
         </div>
 
         <div class="logs-table-wrapper">
@@ -63,7 +69,11 @@
                     {{ doc.title }}
                   </td>
                   <td>
-                    {{ doc.employee_name ? doc.employee_name + ' · #' + doc.employee_id : 'Toàn bộ nhân viên' }}
+                    {{
+                      doc.employee_name
+                        ? doc.employee_name + ' · #' + doc.employee_id
+                        : 'Toàn bộ nhân viên'
+                    }}
                   </td>
                   <td>
                     <span

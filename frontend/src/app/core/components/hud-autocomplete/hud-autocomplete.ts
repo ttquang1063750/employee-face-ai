@@ -46,10 +46,8 @@ export class HudAutocompleteComponent<T> implements ControlValueAccessor {
   isOpen = signal<boolean>(false);
   disabled = signal<boolean>(false);
 
-  // eslint-disable-next-line @typescript-eslint/no-empty-function -- overwritten by registerOnChange/registerOnTouched
-  private onChange: (value: string) => void = () => {};
-  // eslint-disable-next-line @typescript-eslint/no-empty-function -- overwritten by registerOnChange/registerOnTouched
-  private onTouched: () => void = () => {};
+  private onChange: (value: string) => void = () => null;
+  private onTouched: () => void = () => null;
 
   writeValue(value: string): void {
     this.value.set(value ?? '');
