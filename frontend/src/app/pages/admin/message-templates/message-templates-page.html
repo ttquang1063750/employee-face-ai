@@ -1,0 +1,54 @@
+<div class="dashboard-layout">
+  <div class="dashboard-content">
+    <div class="page-title-row">
+      <h2 class="title">🗂️ MẪU TIN NHẮN</h2>
+      <a class="hud-btn-primary" [routerLink]="['new']">THÊM MẪU MỚI</a>
+    </div>
+
+    @if (isLoading()) {
+      <div class="hud-loading-state">
+        <div class="hud-spinner"></div>
+        <p>Đang tải danh sách mẫu tin nhắn...</p>
+      </div>
+    } @else if (errorMsg()) {
+      <div class="error-state">
+        <p class="err-text">⚠️ {{ errorMsg() }}</p>
+        <button class="retry-btn" (click)="loadTemplates()">Thử lại</button>
+      </div>
+    } @else {
+      <div class="logs-card">
+        <div class="logs-table-wrapper">
+          <table class="logs-table">
+            <thead>
+              <tr>
+                <th>LOẠI</th>
+                <th>TÊN MẪU</th>
+                <th>NỘI DUNG</th>
+                <th>HÀNH ĐỘNG</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (t of templates(); track t.id) {
+                <tr>
+                  <td>{{ translateMessageCategory(t.category) }}</td>
+                  <td class="log-name">{{ t.name }}</td>
+                  <td class="template-preview">{{ t.content }}</td>
+                  <td>
+                    <div class="review-actions">
+                      <a class="action-btn approve-btn" [routerLink]="[t.id]">Sửa</a>
+                      <button class="action-btn delete-btn" (click)="deleteTemplate(t)">Xóa</button>
+                    </div>
+                  </td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="4" class="no-data">Chưa có mẫu tin nhắn nào.</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    }
+  </div>
+</div>

@@ -12,14 +12,16 @@ import { RealtimeService } from '../../services/realtime.service';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AdminShellComponent implements OnInit {
-  private authService = inject(AuthService);
+  authService = inject(AuthService);
   private router = inject(Router);
   realtimeService = inject(RealtimeService);
 
   pendingCount = computed(() => this.realtimeService.pendingLeaveCount());
+  unreadMessageCount = computed(() => this.realtimeService.unreadMessageCount());
 
   ngOnInit(): void {
     this.realtimeService.refreshLeaveRequests();
+    this.realtimeService.refreshReceivedMessages();
   }
 
   logout(): void {

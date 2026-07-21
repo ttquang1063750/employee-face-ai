@@ -63,14 +63,89 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./pages/admin/documents/documents').then((m) => m.DocumentsComponent),
       },
+      {
+        path: 'messages',
+        title: 'Tin Nhắn - HR Control Panel',
+        loadComponent: () =>
+          import('./pages/messages/messages-page/messages-page').then((m) => m.MessagesPage),
+      },
+      {
+        path: 'messages/new',
+        title: 'Soạn Tin Nhắn - HR Control Panel',
+        loadComponent: () =>
+          import('./pages/messages/compose-message-page/compose-message-page').then(
+            (m) => m.ComposeMessagePage,
+          ),
+      },
+      {
+        path: 'messages/:id',
+        title: 'Chi Tiết Tin Nhắn - HR Control Panel',
+        loadComponent: () =>
+          import('./pages/messages/message-detail-page/message-detail-page').then(
+            (m) => m.MessageDetailPage,
+          ),
+      },
+      {
+        path: 'message-templates',
+        title: 'Mẫu Tin Nhắn - HR Control Panel',
+        loadComponent: () =>
+          import('./pages/admin/message-templates/message-templates-page').then(
+            (m) => m.MessageTemplatesPage,
+          ),
+      },
+      {
+        path: 'message-templates/new',
+        title: 'Thêm Mẫu Tin Nhắn - HR Control Panel',
+        loadComponent: () =>
+          import('./pages/admin/message-templates/template-form-page/template-form-page').then(
+            (m) => m.TemplateFormPage,
+          ),
+      },
+      {
+        path: 'message-templates/:id',
+        title: 'Sửa Mẫu Tin Nhắn - HR Control Panel',
+        loadComponent: () =>
+          import('./pages/admin/message-templates/template-form-page/template-form-page').then(
+            (m) => m.TemplateFormPage,
+          ),
+      },
     ],
   },
   {
     path: 'staff',
-    title: 'Cổng Thông Tin Nhân Sự - Employee Face AI',
     canActivate: [staffGuard],
     loadComponent: () =>
-      import('./pages/staff/staff-profile/staff-profile').then((m) => m.StaffProfileComponent),
+      import('./core/components/admin-shell/admin-shell').then((m) => m.AdminShellComponent),
+    children: [
+      {
+        path: '',
+        title: 'Cổng Thông Tin Nhân Sự - Employee Face AI',
+        loadComponent: () =>
+          import('./pages/staff/staff-profile/staff-profile').then((m) => m.StaffProfileComponent),
+      },
+      {
+        path: 'messages',
+        title: 'Tin Nhắn - Cổng Thông Tin Nhân Sự',
+        loadComponent: () =>
+          import('./pages/messages/messages-page/messages-page').then((m) => m.MessagesPage),
+      },
+      {
+        path: 'messages/new',
+        title: 'Soạn Tin Nhắn - Cổng Thông Tin Nhân Sự',
+        loadComponent: () =>
+          import('./pages/messages/compose-message-page/compose-message-page').then(
+            (m) => m.ComposeMessagePage,
+          ),
+      },
+      {
+        path: 'messages/:id',
+        title: 'Chi Tiết Tin Nhắn - Cổng Thông Tin Nhân Sự',
+        loadComponent: () =>
+          import('./pages/messages/message-detail-page/message-detail-page').then(
+            (m) => m.MessageDetailPage,
+          ),
+      },
+    ],
   },
   {
     path: 'not-found',

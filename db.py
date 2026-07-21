@@ -26,6 +26,12 @@ DB_CONFIG = {
 
 PBKDF2_ITERATIONS = 260_000
 
+# Fixed set of employee_messages.category / message_templates.category values.
+# Not a DB-managed lookup table — these are classification labels only (no
+# scheduling/reminders attached to them), so server.py validates writes
+# against this single source of truth instead of a CHECK constraint.
+MESSAGE_CATEGORIES = ("daily_report", "weekly_report", "monthly_report", "other")
+
 
 def hash_password(plain_password):
     """Hash a plaintext password for storage (PBKDF2-HMAC-SHA256, random salt
@@ -244,6 +250,40 @@ def init_db():
                     (visibility = 'chung' AND employee_id IS NULL)
                     OR (visibility = 'rieng' AND employee_id IS NOT NULL)
                 )
+            );
+        """)
+        conn.commit()
+        # 10. employee_messages — free-form internal messages between any two
+        # employees (not just staff->admin), with a fixed `category` enum
+        # (MESSAGE_CATEGORIES below) rather than a separate lookup table,
+        # since categories are just classification labels, not a managed entity.
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS employee_messages (
+                id SERIAL PRIMARY KEY,
+                sender_id INTEGER REFERENCES employees(id) ON DELETE CASCADE,
+                recipient_id INTEGER REFERENCES employees(id) ON DELETE CASCADE,
+                category VARCHAR(50) NOT NULL,
+                subject VARCHAR(255) NOT NULL,
+                content TEXT NOT NULL,
+                is_read BOOLEAN NOT NULL DEFAULT FALSE,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        """)
+        # Per-side soft delete: each party can hide the message from their own
+        # list without affecting the other party's copy. Once both sides have
+        # deleted it, the row itself is purged (see delete_message_for_employee).
+        cur.execute("ALTER TABLE employee_messages ADD COLUMN IF NOT EXISTS deleted_by_sender BOOLEAN NOT NULL DEFAULT FALSE;")
+        cur.execute("ALTER TABLE employee_messages ADD COLUMN IF NOT EXISTS deleted_by_recipient BOOLEAN NOT NULL DEFAULT FALSE;")
+        # 11. message_templates — global (no employee_id): any employee can use
+        # any template when composing, but only an admin can create/edit/delete
+        # one (enforced in server.py, not here).
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS message_templates (
+                id SERIAL PRIMARY KEY,
+                category VARCHAR(50) NOT NULL,
+                name VARCHAR(255) NOT NULL,
+                content TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
         """)
         conn.commit()
@@ -846,6 +886,223 @@ def delete_document(document_id):
         conn.close()
 
 
+def create_message(sender_id, recipient_id, category, subject, content):
+    conn = get_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute(
+            """
+            INSERT INTO employee_messages (sender_id, recipient_id, category, subject, content)
+            VALUES (%s, %s, %s, %s, %s) RETURNING id;
+        """,
+            (sender_id, recipient_id, category, subject, content),
+        )
+        message_id = cur.fetchone()[0]
+        conn.commit()
+        return message_id
+    except Exception as e:
+        conn.rollback()
+        raise e
+    finally:
+        cur.close()
+        conn.close()
+
+
+def get_received_messages(employee_id):
+    conn = get_connection()
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    try:
+        cur.execute(
+            """
+            SELECT m.id, m.sender_id, e.name AS sender_name, m.category, m.subject,
+                   m.content, m.is_read, m.created_at
+            FROM employee_messages m
+            JOIN employees e ON m.sender_id = e.id
+            WHERE m.recipient_id = %s AND m.deleted_by_recipient = FALSE
+            ORDER BY m.created_at DESC;
+        """,
+            (employee_id,),
+        )
+        rows = cur.fetchall()
+        for r in rows:
+            r["created_at"] = r["created_at"].isoformat()
+        return rows
+    finally:
+        cur.close()
+        conn.close()
+
+
+def get_sent_messages(employee_id):
+    conn = get_connection()
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    try:
+        cur.execute(
+            """
+            SELECT m.id, m.recipient_id, e.name AS recipient_name, m.category, m.subject,
+                   m.content, m.is_read, m.created_at
+            FROM employee_messages m
+            JOIN employees e ON m.recipient_id = e.id
+            WHERE m.sender_id = %s AND m.deleted_by_sender = FALSE
+            ORDER BY m.created_at DESC;
+        """,
+            (employee_id,),
+        )
+        rows = cur.fetchall()
+        for r in rows:
+            r["created_at"] = r["created_at"].isoformat()
+        return rows
+    finally:
+        cur.close()
+        conn.close()
+
+
+def get_message(message_id):
+    conn = get_connection()
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    try:
+        cur.execute(
+            """
+            SELECT m.id, m.sender_id, sender.name AS sender_name,
+                   m.recipient_id, recipient.name AS recipient_name,
+                   m.category, m.subject, m.content, m.is_read, m.created_at,
+                   m.deleted_by_sender, m.deleted_by_recipient
+            FROM employee_messages m
+            JOIN employees sender ON m.sender_id = sender.id
+            JOIN employees recipient ON m.recipient_id = recipient.id
+            WHERE m.id = %s;
+        """,
+            (message_id,),
+        )
+        row = cur.fetchone()
+        if not row:
+            return None
+        row["created_at"] = row["created_at"].isoformat()
+        return dict(row)
+    finally:
+        cur.close()
+        conn.close()
+
+
+def mark_message_read(message_id):
+    conn = get_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute("UPDATE employee_messages SET is_read = TRUE WHERE id = %s;", (message_id,))
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        raise e
+    finally:
+        cur.close()
+        conn.close()
+
+
+def delete_message_for_employee(message_id, employee_id):
+    """Marks the message deleted on whichever side `employee_id` is on
+    (sender or recipient, one atomic UPDATE covers both since a row's
+    sender_id/recipient_id can't both equal employee_id). Once both sides
+    have deleted it, the row is purged rather than left as an orphaned
+    all-deleted soft-delete row."""
+    conn = get_connection()
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    try:
+        cur.execute(
+            """
+            UPDATE employee_messages
+            SET deleted_by_sender = deleted_by_sender OR (sender_id = %(employee_id)s),
+                deleted_by_recipient = deleted_by_recipient OR (recipient_id = %(employee_id)s)
+            WHERE id = %(message_id)s
+            RETURNING deleted_by_sender, deleted_by_recipient;
+        """,
+            {"employee_id": employee_id, "message_id": message_id},
+        )
+        row = cur.fetchone()
+        if row and row["deleted_by_sender"] and row["deleted_by_recipient"]:
+            cur.execute("DELETE FROM employee_messages WHERE id = %s;", (message_id,))
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        raise e
+    finally:
+        cur.close()
+        conn.close()
+
+
+def get_message_templates():
+    conn = get_connection()
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    try:
+        cur.execute("""
+            SELECT id, category, name, content, created_at
+            FROM message_templates
+            ORDER BY category, name;
+        """)
+        rows = cur.fetchall()
+        for r in rows:
+            r["created_at"] = r["created_at"].isoformat()
+        return rows
+    finally:
+        cur.close()
+        conn.close()
+
+
+def create_message_template(category, name, content):
+    conn = get_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute(
+            """
+            INSERT INTO message_templates (category, name, content)
+            VALUES (%s, %s, %s) RETURNING id;
+        """,
+            (category, name, content),
+        )
+        template_id = cur.fetchone()[0]
+        conn.commit()
+        return template_id
+    except Exception as e:
+        conn.rollback()
+        raise e
+    finally:
+        cur.close()
+        conn.close()
+
+
+def update_message_template(template_id, category, name, content):
+    conn = get_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute(
+            """
+            UPDATE message_templates
+            SET category = %s, name = %s, content = %s
+            WHERE id = %s;
+        """,
+            (category, name, content, template_id),
+        )
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        raise e
+    finally:
+        cur.close()
+        conn.close()
+
+
+def delete_message_template(template_id):
+    conn = get_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute("DELETE FROM message_templates WHERE id = %s;", (template_id,))
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        raise e
+    finally:
+        cur.close()
+        conn.close()
+
+
 def delete_employee_profile(employee_id):
     conn = get_connection()
     cur = conn.cursor()
@@ -877,6 +1134,26 @@ def get_all_employees():
                    (SELECT title FROM employee_positions WHERE employee_id = e.id AND end_date IS NULL LIMIT 1) as current_position
             FROM employees e
             ORDER BY e.id DESC;
+        """)
+        return cur.fetchall()
+    finally:
+        cur.close()
+        conn.close()
+
+
+def get_employee_directory():
+    """Minimal, non-admin-gated employee list — just enough for picking a
+    message recipient by name (id, name, current position). Deliberately
+    excludes username/role/photo, unlike get_all_employees() above (Admin
+    only), so this can safely be exposed to any authenticated employee."""
+    conn = get_connection()
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    try:
+        cur.execute("""
+            SELECT e.id, e.name,
+                   (SELECT title FROM employee_positions WHERE employee_id = e.id AND end_date IS NULL LIMIT 1) as current_position
+            FROM employees e
+            ORDER BY e.name;
         """)
         return cur.fetchall()
     finally:

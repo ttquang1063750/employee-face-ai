@@ -1,0 +1,261 @@
+// ============================================================
+//  _messages.scss
+//  Shared page-shell + list/table look for the internal-messages
+//  feature (MessagesPage, ComposeMessagePage, MessageDetailPage,
+//  MessageTemplatesPage) — extracted once here instead of each of
+//  those four new components re-declaring the same
+//  dashboard-layout/logs-card/logs-table boilerplate that
+//  leave-requests.scss/documents.scss repeat per-component today.
+// ============================================================
+
+.dashboard-layout {
+  min-height: 100%;
+  color: var(--color-text-primary);
+  display: flex;
+  flex-direction: column;
+}
+
+.dashboard-content {
+  flex: 1;
+  width: 100%;
+  margin: var(--space-8) auto;
+  padding: 0 var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+
+.page-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  .title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: var(--color-heading);
+    text-shadow: 0 0 10px rgba(var(--color-cyan-rgb), 0.2);
+  }
+}
+
+.logs-card {
+  background: rgba(var(--color-bg-card-rgb), 1);
+  border-radius: 14px;
+  padding: var(--space-6);
+  box-shadow: var(--shadow-card);
+}
+
+.logs-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-6);
+  border-bottom: 1px solid rgba(var(--color-border-rgb), 0.45);
+  padding-bottom: var(--space-3);
+}
+
+.logs-title {
+  font-size: 0.85rem;
+  letter-spacing: 1.5px;
+  color: var(--color-text-secondary);
+}
+
+.logs-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.logs-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-family: 'Inter', sans-serif;
+
+  th,
+  td {
+    padding: 0.85rem var(--space-4);
+    border-bottom: 1px solid rgba(var(--color-border-rgb), 0.45);
+  }
+
+  th {
+    font-family: 'Orbitron', sans-serif;
+    color: var(--color-text-muted);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 1px;
+  }
+
+  td {
+    font-size: var(--text-base);
+  }
+
+  .log-time {
+    color: var(--color-cyan);
+  }
+
+  .log-name {
+    font-weight: 600;
+  }
+
+  tr.clickable-row {
+    cursor: pointer;
+
+    &:hover {
+      background: rgba(var(--color-cyan-rgb), 0.05);
+    }
+  }
+
+  tr:last-child td {
+    border-bottom: none;
+  }
+
+  .no-data {
+    text-align: center;
+    color: var(--color-text-muted);
+    padding: var(--space-8);
+  }
+}
+
+// ─── Đã nhận / Đã gửi tabs (MessagesPage) ──────────────────────
+.tabs-row {
+  display: flex;
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
+}
+
+.tab-btn {
+  background: transparent;
+  border: 1px solid rgba(var(--color-border-rgb), 0.5);
+  color: var(--color-text-secondary);
+  padding: 0.5rem var(--space-5);
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 1px;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: all 0.2s ease;
+
+  &:hover {
+    border-color: var(--color-cyan);
+    color: var(--color-cyan);
+  }
+
+  &.active {
+    background: rgba(var(--color-cyan-rgb), 0.1);
+    border-color: var(--color-cyan);
+    color: var(--color-cyan);
+    box-shadow: 0 0 10px rgba(var(--color-cyan-rgb), 0.15);
+  }
+}
+
+.unread-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-orange);
+  margin-right: var(--space-2);
+}
+
+// ─── ComposeMessagePage ─────────────────────────────────────────
+.form-actions {
+  display: flex;
+  gap: var(--space-4);
+  margin-top: var(--space-6);
+}
+
+.selected-recipient {
+  margin-top: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+}
+
+.link-btn {
+  background: transparent;
+  border: none;
+  color: var(--color-cyan);
+  cursor: pointer;
+  font-size: var(--text-sm);
+  margin-left: var(--space-2);
+  text-decoration: underline;
+  padding: 0;
+}
+
+// ─── MessageDetailPage ──────────────────────────────────────────
+.message-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-5);
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  padding-bottom: var(--space-4);
+  margin-bottom: var(--space-4);
+  border-bottom: 1px solid rgba(var(--color-border-rgb), 0.45);
+}
+
+.message-subject {
+  font-size: 1.05rem;
+  color: var(--color-heading);
+  margin-bottom: var(--space-4);
+}
+
+.message-content {
+  white-space: pre-wrap;
+  line-height: 1.6;
+  color: var(--color-text-primary);
+}
+
+// ─── MessageTemplatesPage ───────────────────────────────────────
+.template-preview {
+  max-width: 360px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--color-text-secondary);
+}
+
+// Row action buttons (Sửa/Xóa) — same look as leave-requests.scss's
+// approve/reject actions, but shared here since MessageTemplatesPage's
+// "Sửa" is a routerLink <a> (not a <button>) and needs text-decoration
+// reset to match.
+.review-actions {
+  display: flex;
+  gap: var(--space-3);
+}
+
+.action-btn {
+  display: inline-block;
+  background: transparent;
+  border: 1px solid;
+  padding: 0.4rem 0.7rem;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+  transition: all 0.2s ease;
+
+  &.approve-btn {
+    border-color: var(--color-green);
+    color: var(--color-green);
+
+    &:hover {
+      background: rgba(var(--color-green-rgb), 0.1);
+      box-shadow: 0 0 10px rgba(var(--color-green-rgb), 0.3);
+    }
+  }
+
+  &.delete-btn {
+    border-color: var(--color-red);
+    color: var(--color-red);
+
+    &:hover {
+      background: rgba(var(--color-red-rgb), 0.1);
+      box-shadow: 0 0 10px rgba(var(--color-red-rgb), 0.3);
+    }
+  }
+}

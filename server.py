@@ -230,10 +230,20 @@ class EmployeeFaceAIRequestHandler(BaseHTTPRequestHandler):
             self.handle_get_logs()
         elif self.path == "/api/employees":
             self.handle_get_employees()
+        elif self.path == "/api/employees/directory":
+            self.handle_get_employee_directory()
         elif self.path == "/api/leave-requests":
             self.handle_get_all_leave_requests()
         elif self.path == "/api/documents":
             self.handle_get_all_documents()
+        elif self.path == "/api/messages/received":
+            self.handle_get_received_messages()
+        elif self.path == "/api/messages/sent":
+            self.handle_get_sent_messages()
+        elif self.path == "/api/message-templates":
+            self.handle_get_message_templates()
+        elif self.path.startswith("/api/messages/"):
+            self.handle_get_message_detail()
         elif self.path.startswith("/api/documents/") and self.path.endswith("/download"):
             self.handle_download_document()
         elif self.path.startswith("/api/employees/check-username"):
@@ -271,6 +281,10 @@ class EmployeeFaceAIRequestHandler(BaseHTTPRequestHandler):
             self.handle_create_leave_request()
         elif self.path == "/api/documents":
             self.handle_create_document()
+        elif self.path == "/api/messages":
+            self.handle_create_message()
+        elif self.path == "/api/message-templates":
+            self.handle_create_message_template()
         elif self.path == "/api/attendance":
             self.handle_attendance()
         else:
@@ -279,6 +293,10 @@ class EmployeeFaceAIRequestHandler(BaseHTTPRequestHandler):
     def do_PUT(self):
         if self.path.startswith("/api/leave-requests/"):
             self.handle_update_leave_request_status()
+        elif self.path.startswith("/api/messages/") and self.path.endswith("/read"):
+            self.handle_mark_message_read()
+        elif self.path.startswith("/api/message-templates/"):
+            self.handle_update_message_template()
         elif self.path.startswith("/api/employees/") and self.path.endswith("/skills"):
             self.handle_update_skills()
         elif self.path.startswith("/api/employees/") and self.path.endswith("/projects"):
@@ -303,6 +321,10 @@ class EmployeeFaceAIRequestHandler(BaseHTTPRequestHandler):
             self.handle_delete_log()
         elif self.path.startswith("/api/documents/"):
             self.handle_delete_document()
+        elif self.path.startswith("/api/message-templates/"):
+            self.handle_delete_message_template()
+        elif self.path.startswith("/api/messages/"):
+            self.handle_delete_message()
         else:
             self.send_error(404, "Endpoint Not Found")
 
@@ -444,6 +466,20 @@ class EmployeeFaceAIRequestHandler(BaseHTTPRequestHandler):
 
         try:
             employees = db.get_all_employees()
+            self.send_json_response(200, {"success": True, "data": employees})
+        except Exception as e:
+            self.send_json_response(500, {"success": False, "error": str(e)})
+
+    def handle_get_employee_directory(self):
+        # Any authenticated employee (not just Admin) — used by the message
+        # compose page's recipient picker, which lets anyone message anyone.
+        user = self.get_authenticated_user()
+        if not user:
+            self.send_json_response(401, {"success": False, "error": "Unauthorized access"})
+            return
+
+        try:
+            employees = db.get_employee_directory()
             self.send_json_response(200, {"success": True, "data": employees})
         except Exception as e:
             self.send_json_response(500, {"success": False, "error": str(e)})
@@ -1411,6 +1447,214 @@ class EmployeeFaceAIRequestHandler(BaseHTTPRequestHandler):
             document_id = int(self.path.split("/")[-1])
             db.delete_document(document_id)
             self.send_json_response(200, {"success": True, "message": "Xóa tài liệu thành công."})
+        except Exception as e:
+            self.send_json_response(500, {"success": False, "error": str(e)})
+
+    def handle_create_message(self):
+        # Any authenticated employee can message any other employee — no
+        # manager/hierarchy restriction, recipient is a free pick.
+        user = self.get_authenticated_user()
+        if not user:
+            self.send_json_response(401, {"success": False, "error": "Unauthorized access"})
+            return
+        try:
+            content_length = int(self.headers["Content-Length"])
+            post_data = self.rfile.read(content_length)
+            data = json.loads(post_data.decode("utf-8"))
+
+            recipient_id = data.get("recipient_id")
+            category = data.get("category")
+            subject = (data.get("subject") or "").strip()
+            content = (data.get("content") or "").strip()
+
+            if not recipient_id or not subject or not content:
+                self.send_json_response(
+                    400, {"success": False, "error": "Vui lòng chọn người nhận, tiêu đề và nội dung."}
+                )
+                return
+            if category not in db.MESSAGE_CATEGORIES:
+                self.send_json_response(400, {"success": False, "error": "Loại tin nhắn không hợp lệ."})
+                return
+            if not db.get_employee_basic(recipient_id):
+                self.send_json_response(400, {"success": False, "error": "Người nhận không tồn tại."})
+                return
+
+            message_id = db.create_message(user["employee_id"], recipient_id, category, subject, content)
+            self.send_json_response(
+                200, {"success": True, "message": "Gửi tin nhắn thành công.", "id": message_id}
+            )
+        except Exception as e:
+            self.send_json_response(500, {"success": False, "error": str(e)})
+
+    def handle_get_received_messages(self):
+        user = self.get_authenticated_user()
+        if not user:
+            self.send_json_response(401, {"success": False, "error": "Unauthorized access"})
+            return
+        try:
+            messages = db.get_received_messages(user["employee_id"])
+            self.send_json_response(200, {"success": True, "data": messages})
+        except Exception as e:
+            self.send_json_response(500, {"success": False, "error": str(e)})
+
+    def handle_get_sent_messages(self):
+        user = self.get_authenticated_user()
+        if not user:
+            self.send_json_response(401, {"success": False, "error": "Unauthorized access"})
+            return
+        try:
+            messages = db.get_sent_messages(user["employee_id"])
+            self.send_json_response(200, {"success": True, "data": messages})
+        except Exception as e:
+            self.send_json_response(500, {"success": False, "error": str(e)})
+
+    def handle_get_message_detail(self):
+        user = self.get_authenticated_user()
+        if not user:
+            self.send_json_response(401, {"success": False, "error": "Unauthorized access"})
+            return
+        try:
+            message_id = int(self.path.split("/")[-1])
+            message = db.get_message(message_id)
+            if not message:
+                self.send_json_response(404, {"success": False, "error": "Không tìm thấy tin nhắn."})
+                return
+            is_sender = message["sender_id"] == user["employee_id"]
+            is_recipient = message["recipient_id"] == user["employee_id"]
+            if not is_sender and not is_recipient:
+                self.send_json_response(401, {"success": False, "error": "Unauthorized access"})
+                return
+            # A message the caller has soft-deleted from their own side is
+            # gone as far as they're concerned, even though the other party
+            # may still see it.
+            if (is_sender and message["deleted_by_sender"]) or (
+                is_recipient and message["deleted_by_recipient"]
+            ):
+                self.send_json_response(404, {"success": False, "error": "Không tìm thấy tin nhắn."})
+                return
+            message.pop("deleted_by_sender", None)
+            message.pop("deleted_by_recipient", None)
+            self.send_json_response(200, {"success": True, "data": message})
+        except Exception as e:
+            self.send_json_response(500, {"success": False, "error": str(e)})
+
+    def handle_delete_message(self):
+        user = self.get_authenticated_user()
+        if not user:
+            self.send_json_response(401, {"success": False, "error": "Unauthorized access"})
+            return
+        try:
+            message_id = int(self.path.split("/")[-1])
+            message = db.get_message(message_id)
+            if not message:
+                self.send_json_response(404, {"success": False, "error": "Không tìm thấy tin nhắn."})
+                return
+            is_sender = message["sender_id"] == user["employee_id"]
+            is_recipient = message["recipient_id"] == user["employee_id"]
+            if not is_sender and not is_recipient:
+                self.send_json_response(401, {"success": False, "error": "Unauthorized access"})
+                return
+
+            db.delete_message_for_employee(message_id, user["employee_id"])
+            self.send_json_response(200, {"success": True, "message": "Đã xóa tin nhắn."})
+        except Exception as e:
+            self.send_json_response(500, {"success": False, "error": str(e)})
+
+    def handle_mark_message_read(self):
+        user = self.get_authenticated_user()
+        if not user:
+            self.send_json_response(401, {"success": False, "error": "Unauthorized access"})
+            return
+        try:
+            message_id = int(self.path.split("/")[-2])
+            message = db.get_message(message_id)
+            if not message:
+                self.send_json_response(404, {"success": False, "error": "Không tìm thấy tin nhắn."})
+                return
+            if message["recipient_id"] != user["employee_id"]:
+                self.send_json_response(401, {"success": False, "error": "Unauthorized access"})
+                return
+
+            db.mark_message_read(message_id)
+            self.send_json_response(200, {"success": True, "message": "Đã đánh dấu đọc."})
+        except Exception as e:
+            self.send_json_response(500, {"success": False, "error": str(e)})
+
+    def handle_get_message_templates(self):
+        user = self.get_authenticated_user()
+        if not user:
+            self.send_json_response(401, {"success": False, "error": "Unauthorized access"})
+            return
+        try:
+            templates = db.get_message_templates()
+            self.send_json_response(200, {"success": True, "data": templates})
+        except Exception as e:
+            self.send_json_response(500, {"success": False, "error": str(e)})
+
+    def handle_create_message_template(self):
+        user = self.get_authenticated_user()
+        if not user or user["role"] != "admin":
+            self.send_json_response(401, {"success": False, "error": "Unauthorized access"})
+            return
+        try:
+            content_length = int(self.headers["Content-Length"])
+            post_data = self.rfile.read(content_length)
+            data = json.loads(post_data.decode("utf-8"))
+
+            category = data.get("category")
+            name = (data.get("name") or "").strip()
+            content = (data.get("content") or "").strip()
+
+            if category not in db.MESSAGE_CATEGORIES:
+                self.send_json_response(400, {"success": False, "error": "Loại tin nhắn không hợp lệ."})
+                return
+            if not name or not content:
+                self.send_json_response(400, {"success": False, "error": "Vui lòng nhập tên và nội dung mẫu."})
+                return
+
+            template_id = db.create_message_template(category, name, content)
+            self.send_json_response(
+                200, {"success": True, "message": "Tạo mẫu tin nhắn thành công.", "id": template_id}
+            )
+        except Exception as e:
+            self.send_json_response(500, {"success": False, "error": str(e)})
+
+    def handle_update_message_template(self):
+        user = self.get_authenticated_user()
+        if not user or user["role"] != "admin":
+            self.send_json_response(401, {"success": False, "error": "Unauthorized access"})
+            return
+        try:
+            template_id = int(self.path.split("/")[-1])
+            content_length = int(self.headers["Content-Length"])
+            post_data = self.rfile.read(content_length)
+            data = json.loads(post_data.decode("utf-8"))
+
+            category = data.get("category")
+            name = (data.get("name") or "").strip()
+            content = (data.get("content") or "").strip()
+
+            if category not in db.MESSAGE_CATEGORIES:
+                self.send_json_response(400, {"success": False, "error": "Loại tin nhắn không hợp lệ."})
+                return
+            if not name or not content:
+                self.send_json_response(400, {"success": False, "error": "Vui lòng nhập tên và nội dung mẫu."})
+                return
+
+            db.update_message_template(template_id, category, name, content)
+            self.send_json_response(200, {"success": True, "message": "Cập nhật mẫu tin nhắn thành công."})
+        except Exception as e:
+            self.send_json_response(500, {"success": False, "error": str(e)})
+
+    def handle_delete_message_template(self):
+        user = self.get_authenticated_user()
+        if not user or user["role"] != "admin":
+            self.send_json_response(401, {"success": False, "error": "Unauthorized access"})
+            return
+        try:
+            template_id = int(self.path.split("/")[-1])
+            db.delete_message_template(template_id)
+            self.send_json_response(200, {"success": True, "message": "Xóa mẫu tin nhắn thành công."})
         except Exception as e:
             self.send_json_response(500, {"success": False, "error": str(e)})
 

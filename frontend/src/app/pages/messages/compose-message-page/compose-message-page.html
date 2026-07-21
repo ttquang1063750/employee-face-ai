@@ -1,0 +1,102 @@
+<div class="dashboard-layout">
+  <div class="dashboard-content">
+    <div class="page-title-row">
+      <h2 class="title">✍️ SOẠN TIN NHẮN MỚI</h2>
+    </div>
+
+    <div class="logs-card" [formGroup]="form">
+      <div class="form-fields">
+        <div class="form-group">
+          <label for="compose-recipient">NGƯỜI NHẬN</label>
+          <div class="hud-autocomplete">
+            <div class="hud-search-wrapper">
+              <input
+                id="compose-recipient"
+                type="text"
+                [formControl]="recipientQueryControl"
+                (focus)="showRecipientSuggestions.set(true)"
+                (blur)="closeSuggestions()"
+                placeholder="Tìm kiếm theo tên nhân viên..."
+                class="hud-search-input"
+                autocomplete="off"
+              />
+            </div>
+            @if (showRecipientSuggestions() && recipientSuggestions().length > 0) {
+              <ul class="hud-autocomplete-list">
+                @for (emp of recipientSuggestions(); track emp.id) {
+                  <li class="hud-autocomplete-item" (mousedown)="selectRecipient(emp)">
+                    <span class="ac-icon">👤</span>
+                    <span class="ac-info">
+                      <span class="ac-name">{{ emp.name }}</span>
+                      <span class="ac-meta">{{ emp.current_position || 'Chưa có chức vụ' }}</span>
+                    </span>
+                  </li>
+                }
+              </ul>
+            }
+          </div>
+          @if (selectedRecipient(); as recipient) {
+            <p class="selected-recipient">
+              Gửi đến: <strong>{{ recipient.name }}</strong>
+              <button type="button" class="link-btn" (click)="clearRecipient()">Đổi</button>
+            </p>
+          }
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="compose-category">LOẠI TIN NHẮN</label>
+            <app-hud-select
+              [selectId]="'compose-category'"
+              [options]="categoryOptions"
+              formControlName="category"
+            ></app-hud-select>
+          </div>
+          <div class="form-group">
+            <label for="compose-template">MẪU CÓ SẴN (TÙY CHỌN)</label>
+            <app-hud-select
+              [selectId]="'compose-template'"
+              [options]="templateSelectOptions()"
+              placeholder="-- Không dùng mẫu --"
+              formControlName="templateId"
+            ></app-hud-select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="compose-subject">TIÊU ĐỀ</label>
+          <input
+            id="compose-subject"
+            type="text"
+            formControlName="subject"
+            placeholder="VD: Báo cáo công việc ngày 20/07/2026"
+            class="hud-input"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="compose-content">NỘI DUNG</label>
+          <textarea
+            id="compose-content"
+            formControlName="content"
+            rows="10"
+            class="hud-textarea"
+            placeholder="Nội dung báo cáo..."
+          ></textarea>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button
+          type="button"
+          class="hud-btn-primary"
+          [disabled]="!canSubmit() || isSubmitting()"
+          (click)="submit()"
+        >
+          {{ isSubmitting() ? 'ĐANG GỬI...' : '📤 GỬI TIN NHẮN' }}
+        </button>
+        <button type="button" class="hud-btn-outline" (click)="cancel()">HỦY</button>
+      </div>
+    </div>
+  </div>
+</div>

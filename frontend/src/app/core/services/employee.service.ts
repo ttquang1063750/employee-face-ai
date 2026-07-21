@@ -3,7 +3,13 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { ApiResponse } from '../models/api-response.model';
-import { DetailedEmployee, EmployeeBase, Skill, Project } from '../models/employee.model';
+import {
+  DetailedEmployee,
+  EmployeeBase,
+  EmployeeDirectoryEntry,
+  Skill,
+  Project,
+} from '../models/employee.model';
 import { LeaveRequest } from '../models/leave-request.model';
 import { EmployeeDocument } from '../models/document.model';
 
@@ -82,6 +88,12 @@ export class EmployeeService {
 
   getAll(): Observable<ApiResponse<EmployeeBase[]>> {
     return this.http.get<ApiResponse<EmployeeBase[]>>(this.baseUrl);
+  }
+
+  // Admin-only on the backend — for the recipient picker in
+  // ComposeMessagePage (any employee, not just Admin), use getDirectory().
+  getDirectory(): Observable<ApiResponse<EmployeeDirectoryEntry[]>> {
+    return this.http.get<ApiResponse<EmployeeDirectoryEntry[]>>(`${this.baseUrl}/directory`);
   }
 
   getById(id: number): Observable<ApiResponse<DetailedEmployee>> {

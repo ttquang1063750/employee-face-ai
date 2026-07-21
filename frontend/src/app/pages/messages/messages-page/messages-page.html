@@ -1,0 +1,114 @@
+<div class="dashboard-layout">
+  <div class="dashboard-content">
+    <div class="page-title-row">
+      <h2 class="title">✉️ TIN NHẮN NỘI BỘ</h2>
+      <a class="hud-btn-primary" [routerLink]="['new']">✍️ Soạn tin nhắn mới</a>
+    </div>
+
+    @if (isLoading()) {
+      <div class="hud-loading-state">
+        <div class="hud-spinner"></div>
+        <p>Đang tải danh sách tin nhắn...</p>
+      </div>
+    } @else if (errorMsg()) {
+      <div class="error-state">
+        <p class="err-text">⚠️ {{ errorMsg() }}</p>
+        <button class="retry-btn" (click)="loadMessages()">Thử lại</button>
+      </div>
+    } @else {
+      <div class="logs-card">
+        <div class="tabs-row">
+          <button
+            type="button"
+            class="tab-btn"
+            [class.active]="activeTab() === 'received'"
+            (click)="selectTab('received')"
+          >
+            ĐÃ NHẬN ({{ receivedMessages().length }})
+          </button>
+          <button
+            type="button"
+            class="tab-btn"
+            [class.active]="activeTab() === 'sent'"
+            (click)="selectTab('sent')"
+          >
+            ĐÃ GỬI ({{ sentMessages().length }})
+          </button>
+        </div>
+
+        @if (activeTab() === 'received') {
+          <div class="logs-table-wrapper">
+            <table class="logs-table">
+              <thead>
+                <tr>
+                  <th>NGƯỜI GỬI</th>
+                  <th>LOẠI</th>
+                  <th>TIÊU ĐỀ</th>
+                  <th>THỜI GIAN</th>
+                  <th>HÀNH ĐỘNG</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (msg of receivedMessages(); track msg.id) {
+                  <tr class="clickable-row" [routerLink]="[msg.id]">
+                    <td class="log-name">{{ msg.sender_name }}</td>
+                    <td>{{ translateMessageCategory(msg.category) }}</td>
+                    <td>
+                      @if (!msg.is_read) {
+                        <span class="unread-dot"></span>
+                      }
+                      {{ msg.subject }}
+                    </td>
+                    <td class="log-time">{{ msg.created_at | date: 'HH:mm dd/MM/yyyy' }}</td>
+                    <td>
+                      <button class="action-btn delete-btn" (click)="deleteMessage(msg, $event)">
+                        Xóa
+                      </button>
+                    </td>
+                  </tr>
+                } @empty {
+                  <tr>
+                    <td colspan="5" class="no-data">Chưa nhận được tin nhắn nào.</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        } @else {
+          <div class="logs-table-wrapper">
+            <table class="logs-table">
+              <thead>
+                <tr>
+                  <th>NGƯỜI NHẬN</th>
+                  <th>LOẠI</th>
+                  <th>TIÊU ĐỀ</th>
+                  <th>THỜI GIAN</th>
+                  <th>HÀNH ĐỘNG</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (msg of sentMessages(); track msg.id) {
+                  <tr class="clickable-row" [routerLink]="[msg.id]">
+                    <td class="log-name">{{ msg.recipient_name }}</td>
+                    <td>{{ translateMessageCategory(msg.category) }}</td>
+                    <td>{{ msg.subject }}</td>
+                    <td class="log-time">{{ msg.created_at | date: 'HH:mm dd/MM/yyyy' }}</td>
+                    <td>
+                      <button class="action-btn delete-btn" (click)="deleteMessage(msg, $event)">
+                        Xóa
+                      </button>
+                    </td>
+                  </tr>
+                } @empty {
+                  <tr>
+                    <td colspan="5" class="no-data">Chưa gửi tin nhắn nào.</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </div>
+    }
+  </div>
+</div>

@@ -1,0 +1,59 @@
+<div class="dashboard-layout">
+  <div class="dashboard-content">
+    <div class="page-title-row">
+      <h2 class="title">{{ isEditMode() ? '✏️ SỬA MẪU TIN NHẮN' : 'THÊM MẪU TIN NHẮN MỚI' }}</h2>
+    </div>
+
+    @if (isLoading()) {
+      <div class="hud-loading-state">
+        <div class="hud-spinner"></div>
+        <p>Đang tải mẫu tin nhắn...</p>
+      </div>
+    } @else {
+      <div class="logs-card" [formGroup]="form">
+        <div class="form-fields">
+          <div class="form-group">
+            <label for="template-category">LOẠI</label>
+            <app-hud-select
+              [selectId]="'template-category'"
+              [options]="categoryOptions"
+              formControlName="category"
+            ></app-hud-select>
+          </div>
+          <div class="form-group">
+            <label for="template-name">TÊN MẪU</label>
+            <input
+              id="template-name"
+              type="text"
+              formControlName="name"
+              placeholder="VD: Mẫu báo cáo công việc hằng ngày"
+              class="hud-input"
+            />
+          </div>
+          <div class="form-group">
+            <label for="template-content">NỘI DUNG MẪU</label>
+            <textarea
+              id="template-content"
+              formControlName="content"
+              rows="10"
+              class="hud-textarea"
+              placeholder="Nội dung sẽ điền sẵn vào ô nội dung khi người dùng chọn mẫu này"
+            ></textarea>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button
+            type="button"
+            class="hud-btn-primary"
+            [disabled]="form.invalid || isSaving()"
+            (click)="save()"
+          >
+            {{ isSaving() ? 'ĐANG LƯU...' : 'LƯU MẪU TIN NHẮN' }}
+          </button>
+          <button type="button" class="hud-btn-outline" (click)="cancel()">HỦY</button>
+        </div>
+      </div>
+    }
+  </div>
+</div>

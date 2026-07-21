@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { AuthService } from './auth.service';
 import { ApiResponse } from '../models/api-response.model';
 import { LeaveRequest } from '../models/leave-request.model';
+import { ReceivedMessage } from '../models/message.model';
 import { environment } from '../../../environments/environment';
 
 @Injectable({
@@ -20,10 +21,19 @@ export class RealtimeService implements OnDestroy {
     () => this.leaveRequests().filter((r) => r.status === 'pending').length,
   );
 
+  // Single shared poll of /api/messages/received — for any logged-in
+  // employee (Admin and Staff are peers for messaging), unlike
+  // refreshLeaveRequests above which is Admin-only.
+  receivedMessages = signal<ReceivedMessage[]>([]);
+  unreadMessageCount = computed(
+    () => this.receivedMessages().filter((m) => !m.is_read).length,
+  );
+
   private pollIntervalId: ReturnType<typeof setInterval> | null = null;
 
   constructor() {
     this.refreshLeaveRequests();
+    this.refreshReceivedMessages();
     this.startPolling();
   }
 
@@ -31,6 +41,7 @@ export class RealtimeService implements OnDestroy {
     if (this.pollIntervalId) return;
     this.pollIntervalId = setInterval(() => {
       this.refreshLeaveRequests();
+      this.refreshReceivedMessages();
     }, 3000);
   }
 
@@ -53,6 +64,26 @@ export class RealtimeService implements OnDestroy {
         next: (res) => {
           if (res.success && res.data) {
             this.leaveRequests.set(res.data);
+          }
+        },
+        error: () => {
+          // Silent ignore if unauthorized or server offline
+        },
+      });
+  }
+
+  refreshReceivedMessages(): void {
+    if (!this.authService.isAuthenticated()) {
+      this.receivedMessages.set([]);
+      return;
+    }
+
+    this.http
+      .get<ApiResponse<ReceivedMessage[]>>(`${environment.apiBaseUrl}/messages/received`)
+      .subscribe({
+        next: (res) => {
+          if (res.success && res.data) {
+            this.receivedMessages.set(res.data);
           }
         },
         error: () => {

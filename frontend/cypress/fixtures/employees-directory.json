@@ -1,0 +1,7 @@
+{
+  "success": true,
+  "data": [
+    { "id": 1, "name": "HR Admin", "current_position": "HR Director" },
+    { "id": 11, "name": "Tăng Thanh Quang", "current_position": "JS Developer" }
+  ]
+}

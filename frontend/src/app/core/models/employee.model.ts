@@ -10,6 +10,16 @@ export interface EmployeeBase {
   current_position: string;
 }
 
+// Minimal, non-admin-gated shape from GET /api/employees/directory — just
+// enough to pick a message recipient by name, not the full admin employee
+// list (which also requires role=admin server-side and includes
+// username/role/photo that a recipient picker doesn't need).
+export interface EmployeeDirectoryEntry {
+  id: number;
+  name: string;
+  current_position: string | null;
+}
+
 export interface Position {
   id: number;
   title: string;

@@ -9,20 +9,36 @@
     </div>
 
     <nav class="side-nav">
-      <a routerLink="/admin/dashboard" routerLinkActive="active">📊 Bảng thống kê</a>
-      <a
-        routerLink="/admin/employees"
-        routerLinkActive="active"
-        [routerLinkActiveOptions]="{ exact: false }"
-        >👥 Quản lý Nhân viên</a
-      >
-      <a routerLink="/admin/leave-requests" routerLinkActive="active">
-        <span>🌴 Đơn xin nghỉ</span>
-        @if (pendingCount() > 0) {
-          <span class="pending-badge">{{ pendingCount() }}</span>
+      @if (authService.isAdmin()) {
+        <a routerLink="/admin/dashboard" routerLinkActive="active">📊 Bảng thống kê</a>
+        <a
+          routerLink="/admin/employees"
+          routerLinkActive="active"
+          [routerLinkActiveOptions]="{ exact: false }"
+          >👥 Quản lý Nhân viên</a
+        >
+        <a routerLink="/admin/leave-requests" routerLinkActive="active">
+          <span>🌴 Đơn xin nghỉ</span>
+          @if (pendingCount() > 0) {
+            <span class="pending-badge">{{ pendingCount() }}</span>
+          }
+        </a>
+        <a routerLink="/admin/documents" routerLinkActive="active">📄 Tài liệu</a>
+      }
+
+      <!-- Shared by both roles — a relative routerLink so it resolves to
+           /admin/messages under the admin shell mount and /staff/messages
+           under the staff one, without forking this link per role. -->
+      <a routerLink="messages" routerLinkActive="active">
+        <span>✉️ Tin nhắn</span>
+        @if (unreadMessageCount() > 0) {
+          <span class="pending-badge">{{ unreadMessageCount() }}</span>
         }
       </a>
-      <a routerLink="/admin/documents" routerLinkActive="active">📄 Tài liệu</a>
+
+      @if (authService.isAdmin()) {
+        <a routerLink="/admin/message-templates" routerLinkActive="active">🗂️ Mẫu tin nhắn</a>
+      }
     </nav>
 
     <button class="logout" (click)="logout()">⏻ Đăng xuất</button>
