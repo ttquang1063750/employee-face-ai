@@ -17,12 +17,17 @@ const LABELS: Record<'vi' | 'en', Record<MessageCategory, string>> = {
 };
 
 /** Localized label for a MessageCategory, for table cells and detail views. */
-export function translateMessageCategory(category: MessageCategory, lang: 'vi' | 'en' = 'vi'): string {
+export function translateMessageCategory(
+  category: MessageCategory,
+  lang: 'vi' | 'en' = 'vi',
+): string {
   return LABELS[lang][category] ?? LABELS[lang].other;
 }
 
 /** Options for the category <app-hud-select> in compose/template forms. */
-export function messageCategoryOptions(lang: 'vi' | 'en' = 'vi'): HudSelectOption<MessageCategory>[] {
+export function messageCategoryOptions(
+  lang: 'vi' | 'en' = 'vi',
+): HudSelectOption<MessageCategory>[] {
   return (Object.keys(LABELS[lang]) as MessageCategory[]).map((value) => ({
     value,
     label: LABELS[lang][value],

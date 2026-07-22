@@ -34,7 +34,8 @@ export const EN = {
     prev: '◀ PREV',
     next: 'NEXT ▶',
     pageInfo: 'PAGE {{current}} / {{total}}',
-    passwordHint: 'At least 8 characters, with uppercase, lowercase, a number, and a special character.',
+    passwordHint:
+      'At least 8 characters, with uppercase, lowercase, a number, and a special character.',
   },
   nav: {
     dashboard: 'Dashboard',
@@ -101,7 +102,7 @@ export const EN = {
   },
   dashboard: {
     retry: 'Retry',
-    birthdayToday: "Today is the birthday of",
+    birthdayToday: 'Today is the birthday of',
     birthdaySendWishes: '— send them your wishes!',
     birthdayUpcoming: 'Coming up:',
     birthdayDaysLeft: '{{days}} days left',
@@ -132,7 +133,8 @@ export const EN = {
     csvHeaderMood: 'Mood',
     csvFilenamePrefix: 'attendance_report',
     deleteLogConfirmTitle: 'CONFIRM DELETE',
-    deleteLogConfirmMessage: 'Are you sure you want to delete this attendance scan? This cannot be undone.',
+    deleteLogConfirmMessage:
+      'Are you sure you want to delete this attendance scan? This cannot be undone.',
     deleteLogError: 'Could not delete the attendance scan.',
     serverConnectionError: 'Server connection error.',
   },
@@ -177,7 +179,8 @@ export const EN = {
     initialSkillsLabel: 'INITIAL SKILLS (Format: Skill: Description, comma-separated)',
     initialSkillsPlaceholder: 'Angular: Core proficiency, Python: REST API experience',
     initialProjectsLabel: 'INITIAL PROJECTS (Format: Project: Role: Description)',
-    initialProjectsPlaceholder: 'Employee Face AI: Lead Developer: Built the attendance UI in Angular',
+    initialProjectsPlaceholder:
+      'Employee Face AI: Lead Developer: Built the attendance UI in Angular',
     referencePhoto: 'REFERENCE PHOTO (SAMPLE)',
     capturePhoto: '📸 CAPTURE PHOTO',
     capturedAlt: 'Captured reference photo',
@@ -407,8 +410,7 @@ export const EN = {
     connectionError: 'API server connection error.',
     genericServerError: 'Server connection error.',
     deleteConfirmTitle: 'CONFIRM DOCUMENT DELETION',
-    deleteConfirmMessage:
-      'Are you sure you want to delete "{{title}}"? This cannot be undone.',
+    deleteConfirmMessage: 'Are you sure you want to delete "{{title}}"? This cannot be undone.',
     downloadError: 'Could not download the document.',
   },
   uploadDocument: {
@@ -591,7 +593,8 @@ export const EN = {
   },
   auditPhoto: {
     viewTooltip: 'View attendance photo',
-    loadFailed: 'Could not load the photo — it may have been removed under the 90-day retention policy.',
+    loadFailed:
+      'Could not load the photo — it may have been removed under the 90-day retention policy.',
     modalTitle: '📸 ATTENDANCE PHOTO',
     imageAlt: 'Attendance photo',
   },

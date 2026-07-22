@@ -21,7 +21,9 @@
     } @else if (errorMsg()) {
       <div class="error-state">
         <p class="err-text">⚠️ {{ errorMsg() }}</p>
-        <button class="retry-btn" (click)="loadMessages()">{{ 'messages.reload' | translate }}</button>
+        <button class="retry-btn" (click)="loadMessages()">
+          {{ 'messages.reload' | translate }}
+        </button>
       </div>
     } @else {
       <div class="logs-card">

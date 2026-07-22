@@ -321,7 +321,8 @@ export class EmployeeListComponent implements OnInit {
         this.isSubmitting.set(false);
         await this.dialogService.alert(
           this.translate.instant('employees.registerErrorTitle'),
-          this.translate.instant('employees.registerErrorPrefix') + (err.error?.error || err.message),
+          this.translate.instant('employees.registerErrorPrefix') +
+            (err.error?.error || err.message),
         );
       },
     });
@@ -346,7 +347,8 @@ export class EmployeeListComponent implements OnInit {
         error: async (err: HttpErrorResponse) => {
           await this.dialogService.alert(
             this.translate.instant('employees.deleteErrorTitle'),
-            this.translate.instant('employees.deleteErrorPrefix') + (err.error?.error || err.message),
+            this.translate.instant('employees.deleteErrorPrefix') +
+              (err.error?.error || err.message),
           );
         },
       });

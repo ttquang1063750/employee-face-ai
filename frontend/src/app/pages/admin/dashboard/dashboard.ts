@@ -226,14 +226,24 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.translate.currentLang(); // recompute labels when the language changes
     const m = this.moodStats();
     return buildDonutSegments([
-      { key: 'happy', label: this.translate.instant('mood.happy'), value: m.happy, color: 'var(--color-cyan)' },
+      {
+        key: 'happy',
+        label: this.translate.instant('mood.happy'),
+        value: m.happy,
+        color: 'var(--color-cyan)',
+      },
       {
         key: 'neutral',
         label: this.translate.instant('mood.neutral'),
         value: m.neutral,
         color: 'var(--color-info)',
       },
-      { key: 'sad', label: this.translate.instant('mood.sad'), value: m.sad, color: 'var(--color-red)' },
+      {
+        key: 'sad',
+        label: this.translate.instant('mood.sad'),
+        value: m.sad,
+        color: 'var(--color-red)',
+      },
       {
         key: 'stressed',
         label: this.translate.instant('mood.stressed'),

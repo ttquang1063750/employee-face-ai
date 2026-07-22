@@ -104,7 +104,8 @@ export class IncomeHistoryComponent {
       error: async (err: HttpErrorResponse) => {
         await this.dialogService.alert(
           this.translate.instant('incomeHistory.deleteErrorTitle'),
-          this.translate.instant('incomeHistory.deleteErrorPrefix') + (err.error?.error || err.message),
+          this.translate.instant('incomeHistory.deleteErrorPrefix') +
+            (err.error?.error || err.message),
         );
       },
     });

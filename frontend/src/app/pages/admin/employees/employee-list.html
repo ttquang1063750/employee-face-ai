@@ -13,7 +13,9 @@
     <!-- Search HUD panel -->
     <div class="hud-filter-bar">
       <div class="hud-field grow-3">
-        <label class="hud-label" for="emp-search-input">{{ 'employees.searchLabel' | translate }}</label>
+        <label class="hud-label" for="emp-search-input">{{
+          'employees.searchLabel' | translate
+        }}</label>
         <input
           id="emp-search-input"
           type="text"
@@ -32,7 +34,9 @@
     } @else if (errorMsg()) {
       <div class="error-state">
         <p class="err-text">⚠️ {{ 'common.error' | translate }}: {{ errorMsg() }}</p>
-        <button class="retry-btn" (click)="loadEmployees()">{{ 'employees.reload' | translate }}</button>
+        <button class="retry-btn" (click)="loadEmployees()">
+          {{ 'employees.reload' | translate }}
+        </button>
       </div>
     } @else {
       <!-- Employees Table -->
@@ -274,7 +278,9 @@
               </div>
 
               <div class="form-group">
-                <label for="new-emp-projects">{{ 'employees.initialProjectsLabel' | translate }}</label>
+                <label for="new-emp-projects">{{
+                  'employees.initialProjectsLabel' | translate
+                }}</label>
                 <input
                   id="new-emp-projects"
                   type="text"

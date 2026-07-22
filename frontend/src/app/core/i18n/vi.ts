@@ -81,7 +81,8 @@ export const VI = {
     moodLabel: 'Đánh giá tâm lý (Mood):',
     errorTitle: '⚠️ LỖI GHI NHẬN',
     cameraNotReady: 'Camera chưa sẵn sàng!',
-    cameraAccessError: '⚠️ Không thể truy cập Camera: {{message}}. Vui lòng cấp quyền truy cập camera.',
+    cameraAccessError:
+      '⚠️ Không thể truy cập Camera: {{message}}. Vui lòng cấp quyền truy cập camera.',
     genericError: 'Lỗi kết nối máy chủ hoặc lỗi nhận diện.',
     capturedFrameAlt: 'Ảnh vừa chụp',
   },
@@ -132,7 +133,8 @@ export const VI = {
     csvHeaderMood: 'Cảm xúc (Mood)',
     csvFilenamePrefix: 'bao_cao_tong_hop',
     deleteLogConfirmTitle: 'XÁC NHẬN XÓA',
-    deleteLogConfirmMessage: 'Bạn có chắc chắn muốn xóa lượt chấm công này? Thao tác này không thể hoàn tác.',
+    deleteLogConfirmMessage:
+      'Bạn có chắc chắn muốn xóa lượt chấm công này? Thao tác này không thể hoàn tác.',
     deleteLogError: 'Không thể xóa lượt chấm công.',
     serverConnectionError: 'Lỗi kết nối máy chủ.',
   },

@@ -96,7 +96,7 @@ Open a browser at the system's root address (e.g. `http://<server-address>/`).
 
 1. Allow the browser to access the camera when prompted.
 2. Choose **CHECK IN** (start of shift) or **CHECK OUT** (end of shift).
-3. Press **BẮT ĐẦU QUÉT KHUÔN MẶT** (start face scan) and look straight at the camera.
+3. Press **START FACE SCAN** and look straight at the camera.
 4. The system takes a photo, recognizes the face, and automatically records
    the employee's name, the action (check in/out), the time, and the mood
    detected at that moment — used for the happiness-index stats on the Admin
@@ -134,39 +134,38 @@ The first page after an admin login:
 - View total headcount, number of check-ins/outs, average happiness index.
 - View a chart of peak attendance hours and mood distribution.
 - View the detailed attendance log (with the photo captured at scan time),
-  export it as CSV via the **XUẤT BÁO CÁO CSV** (export CSV report) button.
+  export it as CSV via the **EXPORT CSV REPORT** button.
 
 #### 3.2. Employee management
 
 ![Employee management](docs/screenshots/admin-employee-list.png)
 
 - **View the list**: search by name, ID, or position.
-- **Register a new employee**: the **ĐĂNG KÝ NHÂN VIÊN MỚI** (register new
-  employee) button — enter name, date of birth, position, starting salary,
-  role (Staff/Admin), username, **login password** (leave blank if this
-  employee only needs to clock in and doesn't need to log in and view their
-  profile), and capture/upload a face photo for recognition.
-- **View full profile** (the "Xem hồ sơ" button on each row): edit basic
+- **Register a new employee**: the **REGISTER NEW EMPLOYEE** button — enter
+  name, date of birth, position, starting salary, role (Staff/Admin),
+  username, **login password** (leave blank if this employee only needs to
+  clock in and doesn't need to log in and view their profile), and
+  capture/upload a face photo for recognition.
+- **View full profile** (the **View profile** button on each row): edit basic
   info, change avatar, change login password, add career-position/raise
   history, update skills and projects, view that employee's own attendance stats.
-- **Delete an employee**: the "Xóa" button on each row (not available for Admin accounts).
+- **Delete an employee**: the **Delete** button on each row (not available for Admin accounts).
 
 #### 3.3. Leave requests
 
 ![Leave requests](docs/screenshots/admin-leave-requests.png)
 
 - Filter by status (Pending / Approved / Rejected), by date, by name/position.
-- For a **pending** request: **Duyệt** (Approve) or **Từ chối** (Reject)
-  button (rejecting lets you record a reason — the employee will see it on
-  their own profile page).
+- For a **pending** request: **Approve** or **Reject** button (rejecting
+  lets you record a reason — the employee will see it on their own profile page).
 
 #### 3.4. HR documents
 
 ![HR documents](docs/screenshots/admin-documents.png)
 
-- The **TẢI LÊN TÀI LIỆU MỚI** (upload new document) button: choose the
-  recipient employee (or leave it blank to send to **every employee**),
-  upload a file or paste a link, then save.
+- The **UPLOAD NEW DOCUMENT** button: choose the recipient employee (or
+  leave it blank to send to **every employee**), upload a file or paste a
+  link, then save.
 - The list shows who can see it and the upload date; employees see the
   matching document on their own profile page.
 
@@ -174,11 +173,11 @@ The first page after an admin login:
 
 ![Internal messages](docs/screenshots/admin-messages.png)
 
-- **ĐÃ NHẬN / ĐÃ GỬI** (Received / Sent) tabs for the inbox.
-- The **Soạn tin nhắn mới** (compose new message) button: pick a recipient,
-  message category, subject, content (supports bold/italic/headings/text
-  color/font size, inserting images, drawing illustrations). A saved
-  **template** can be picked to auto-fill the subject/content.
+- **Received / Sent** tabs for the inbox.
+- The **Compose new message** button: pick a recipient, message category,
+  subject, content (supports bold/italic/headings/text color/font size,
+  inserting images, drawing illustrations). A saved **template** can be
+  picked to auto-fill the subject/content.
 - Deleting a message only hides it on your side — the other party still
   sees it normally until they delete it too.
 
@@ -197,10 +196,10 @@ After logging in, staff land straight on their **Personal profile page**, which 
 - **My profile**: avatar, position, age; can self-service **change avatar**
   and **change login password** (cannot edit salary/position themselves —
   only an Admin can).
-- **Request leave**: the **Xin nghỉ phép** (request leave) button — pick a
-  start date, end date, reason, then **Gửi đơn** (submit). Track the
-  request's status (Pending/Approved/Rejected, with the rejection reason if
-  applicable) right in the **ĐƠN XIN NGHỈ ĐÃ GỬI** (leave requests sent) section.
+- **Request leave**: the **Request leave** button — pick a start date, end
+  date, reason, then **SUBMIT REQUEST**. Track the request's status
+  (Pending/Approved/Rejected, with the rejection reason if applicable) right
+  in the **LEAVE REQUESTS SENT** section.
 - **My documents**: documents an Admin sent just to you or broadcast to the
   whole company — click to download or open the link.
 - **Career / income / skills / project history**: view-only, cannot be edited.

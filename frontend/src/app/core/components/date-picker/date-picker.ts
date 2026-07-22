@@ -30,20 +30,7 @@ const WEEKDAY_LABELS: Record<'vi' | 'en', string[]> = {
 };
 const MONTH_LABELS: Record<'vi' | 'en', string[]> = {
   vi: Array.from({ length: 12 }, (_, i) => `Th${i + 1}`),
-  en: [
-    'Jan',
-    'Feb',
-    'Mar',
-    'Apr',
-    'May',
-    'Jun',
-    'Jul',
-    'Aug',
-    'Sep',
-    'Oct',
-    'Nov',
-    'Dec',
-  ],
+  en: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
 };
 
 interface CalendarCell {

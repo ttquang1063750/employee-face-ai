@@ -4,7 +4,11 @@
       <h2 class="title">
         <app-icon class="title-icon">pencil</app-icon>
 
-        {{ isEditMode() ? ('templateForm.editTitle' | translate) : ('templateForm.newTitle' | translate) }}
+        {{
+          isEditMode()
+            ? ('templateForm.editTitle' | translate)
+            : ('templateForm.newTitle' | translate)
+        }}
       </h2>
     </div>
 
@@ -50,7 +54,9 @@
             [disabled]="form.invalid || isSaving()"
             (click)="save()"
           >
-            {{ isSaving() ? ('templateForm.saving' | translate) : ('templateForm.save' | translate) }}
+            {{
+              isSaving() ? ('templateForm.saving' | translate) : ('templateForm.save' | translate)
+            }}
           </button>
           <button type="button" class="hud-btn-outline" (click)="cancel()">
             {{ 'templateForm.cancel' | translate }}

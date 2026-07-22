@@ -18,7 +18,11 @@ export class DialogService {
 
   dialogState = signal<DialogState | null>(null);
 
-  alert(title: string, message: string, confirmText = this.translate.instant('common.ok')): Promise<void> {
+  alert(
+    title: string,
+    message: string,
+    confirmText = this.translate.instant('common.ok'),
+  ): Promise<void> {
     return new Promise<void>((resolve) => {
       this.dialogState.set({
         title,

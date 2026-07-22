@@ -55,7 +55,9 @@
 
         @if (uploadForm.controls.sourceType.value === 'link') {
           <div class="form-group">
-            <label for="doc-external-url">{{ 'uploadDocument.externalUrlLabel' | translate }}</label>
+            <label for="doc-external-url">{{
+              'uploadDocument.externalUrlLabel' | translate
+            }}</label>
             <input
               id="doc-external-url"
               type="text"

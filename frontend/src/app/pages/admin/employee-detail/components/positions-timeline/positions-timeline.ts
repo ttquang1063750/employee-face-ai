@@ -74,7 +74,8 @@ export class PositionsTimelineComponent {
         this.isSaving.set(false);
         await this.dialogService.alert(
           this.translate.instant('positionsTimeline.errorTitle'),
-          this.translate.instant('positionsTimeline.errorPrefix') + (err.error?.error || err.message),
+          this.translate.instant('positionsTimeline.errorPrefix') +
+            (err.error?.error || err.message),
         );
       },
     });

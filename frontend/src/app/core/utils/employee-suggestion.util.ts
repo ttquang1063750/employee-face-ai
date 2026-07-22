@@ -19,7 +19,10 @@ const NO_POSITION_LABEL: Record<'vi' | 'en', string> = {
   en: 'No position yet',
 };
 
-export function employeeSuggestionMeta(e: EmployeeSuggestionLike, lang: 'vi' | 'en' = 'vi'): string {
+export function employeeSuggestionMeta(
+  e: EmployeeSuggestionLike,
+  lang: 'vi' | 'en' = 'vi',
+): string {
   const position = e.current_position || NO_POSITION_LABEL[lang];
   return `${position} · #${e.id}`;
 }

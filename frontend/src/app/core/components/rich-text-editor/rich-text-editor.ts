@@ -282,17 +282,17 @@ export class RichTextEditor implements ControlValueAccessor, AfterViewInit, OnDe
             this.insertImage(`${environment.serverBaseUrl}${res.data.url}`);
           } else {
             await this.dialogService.alert(
-            this.translate.instant('common.error'),
-            res.error || this.translate.instant('richEditor.uploadError'),
-          );
+              this.translate.instant('common.error'),
+              res.error || this.translate.instant('richEditor.uploadError'),
+            );
           }
         },
         error: async () => {
           this.isUploadingImage.set(false);
           await this.dialogService.alert(
-          this.translate.instant('common.error'),
-          this.translate.instant('richEditor.genericServerError'),
-        );
+            this.translate.instant('common.error'),
+            this.translate.instant('richEditor.genericServerError'),
+          );
         },
       });
     };

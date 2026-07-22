@@ -21,14 +21,23 @@
     } @else if (errorMsg()) {
       <div class="error-state">
         <p class="err-text">⚠️ {{ errorMsg() }}</p>
-        <button class="retry-btn" (click)="loadMessage()">{{ 'messageDetail.reload' | translate }}</button>
+        <button class="retry-btn" (click)="loadMessage()">
+          {{ 'messageDetail.reload' | translate }}
+        </button>
       </div>
     } @else if (message(); as msg) {
       <div class="logs-card">
         <div class="message-meta-row">
-          <span><strong>{{ 'messageDetail.from' | translate }}</strong> {{ msg.sender_name }}</span>
-          <span><strong>{{ 'messageDetail.to' | translate }}</strong> {{ msg.recipient_name }}</span>
-          <span><strong>{{ 'messageDetail.type' | translate }}</strong> {{ categoryLabel(msg.category) }}</span>
+          <span
+            ><strong>{{ 'messageDetail.from' | translate }}</strong> {{ msg.sender_name }}</span
+          >
+          <span
+            ><strong>{{ 'messageDetail.to' | translate }}</strong> {{ msg.recipient_name }}</span
+          >
+          <span
+            ><strong>{{ 'messageDetail.type' | translate }}</strong>
+            {{ categoryLabel(msg.category) }}</span
+          >
           <span
             ><strong>{{ 'messageDetail.time' | translate }}</strong>
             {{ msg.created_at | date: 'HH:mm dd/MM/yyyy' }}</span

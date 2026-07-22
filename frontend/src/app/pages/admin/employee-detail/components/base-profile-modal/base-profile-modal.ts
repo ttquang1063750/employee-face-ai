@@ -177,7 +177,8 @@ export class BaseProfileModalComponent implements OnInit {
         this.isSaving.set(false);
         await this.dialogService.alert(
           this.translate.instant('baseProfileModal.errorTitle'),
-          this.translate.instant('baseProfileModal.errorPrefix') + (err.error?.error || err.message),
+          this.translate.instant('baseProfileModal.errorPrefix') +
+            (err.error?.error || err.message),
         );
       },
     });

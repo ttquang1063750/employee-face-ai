@@ -27,7 +27,9 @@
         <app-date-picker [formControl]="filterEndDateInput"></app-date-picker>
       </div>
       <div class="hud-field filter-apply-field">
-        <span class="hud-label hud-label-spacer">{{ 'leaveRequests.filterLabel' | translate }}</span>
+        <span class="hud-label hud-label-spacer">{{
+          'leaveRequests.filterLabel' | translate
+        }}</span>
         <div class="filter-actions-row">
           <button class="hud-btn-outline" (click)="applyDateFilter()">
             {{ 'leaveRequests.apply' | translate }}
@@ -98,9 +100,8 @@
                     <div>{{ req.reason }}</div>
                     @if (req.status === 'rejected' && req.rejection_reason) {
                       <div class="rejection-reason">
-                        {{ 'leaveRequests.rejectionReasonPrefix' | translate }}{{
-                          req.rejection_reason
-                        }}
+                        {{ 'leaveRequests.rejectionReasonPrefix' | translate
+                        }}{{ req.rejection_reason }}
                       </div>
                     }
                   </td>

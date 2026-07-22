@@ -11,7 +11,13 @@ import { IconComponent } from '../../../../../core/components/icon/icon';
 @Component({
   selector: 'app-logs-table',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink, AuditPhotoButtonComponent, IconComponent, TranslatePipe],
+  imports: [
+    ReactiveFormsModule,
+    RouterLink,
+    AuditPhotoButtonComponent,
+    IconComponent,
+    TranslatePipe,
+  ],
   templateUrl: './logs-table.html',
   styleUrl: './logs-table.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
